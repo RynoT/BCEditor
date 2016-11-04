@@ -3,6 +3,7 @@ package ui;
 import ui.component.IButton;
 import ui.component.IMenu;
 import ui.component.IMenuBar;
+import ui.component.event.IActionEvent;
 
 import javax.swing.*;
 import java.awt.*;
@@ -66,6 +67,10 @@ public class Canvas extends JFrame {
             final IMenuBar menuBar = new IMenuBar();
             {
                 IButton button = new IButton("File", KeyEvent.VK_F);
+               // button.setToggle(true);
+                button.addEvent(() -> {
+                    System.out.println("bob");
+                });
                 //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
                 menuBar.add(button);
                 menuBar.add(new IButton("Edit", KeyEvent.VK_E));

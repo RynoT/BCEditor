@@ -20,6 +20,7 @@ public abstract class IComponent extends JPanel {
 
     public static final Color DEFAULT_HOVERED = new Color(182, 76, 0);
     public static final Color DEFAULT_PRESSED = new Color(117, 47, 0);
+    public static final Color DEFAULT_SELECTED = new Color(56, 56, 57);
 
 //    public static final Color DEFAULT_HOVERED = new Color(151, 55, 150);
 //    public static final Color DEFAULT_PRESSED = new Color(93, 33, 92);

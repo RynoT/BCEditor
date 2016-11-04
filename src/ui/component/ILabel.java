@@ -20,6 +20,7 @@ public class ILabel extends IComponent {
     public static final int TEXT_HEIGHT_PADDING = 8;
 
     private String text;
+    private Color color;
     private int mnemonic = -1;
 
     private boolean hasIcon, updateText = false;
@@ -44,8 +45,9 @@ public class ILabel extends IComponent {
         this.icon = icon;
         this.hasIcon = icon != null;
         this.textRender = this.generateTextRender();
+        this.color = IComponent.DEFAULT_FOREGROUND;
 
-        super.setBackground(Color.PINK);
+        super.setOpaque(false);
         //super.addMouseListener(new IForwardMouseEvent()); //we only need this if we make labels clickable, which right now we're not
     }
 
@@ -73,6 +75,12 @@ public class ILabel extends IComponent {
 
     public void setText(final String text){
         this.text = text;
+        this.updateText = true;
+        super.repaint();
+    }
+
+    public void setColor(final Color color){
+        this.color = color;
         this.updateText = true;
         super.repaint();
     }
@@ -147,11 +155,7 @@ public class ILabel extends IComponent {
         final Graphics2D g2d = image.createGraphics();
         {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            //g2d.setColor(Color.ORANGE);
-            //g2d.fillRect(0, 0, 100, 100);
-            g2d.setColor(Color.BLACK);
-            //g2d.setFont(super.getFont());
-            //g2d.drawString(this.text, 0, image.getHeight() - 2);
+            g2d.setColor(this.color);
 
             final AttributedString as = new AttributedString(this.text);
             as.addAttribute(TextAttribute.FONT, super.getFont());

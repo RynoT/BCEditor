@@ -56,7 +56,6 @@ public class IForwardMouseEvent extends MouseAdapter {
         if(event.getComponent() instanceof IComponent){
             final IComponent component = (IComponent) event.getComponent();
             component.forwardMouseEvent(event);
-            System.out.println(134);
         } else {
             System.err.printf("IForwardMouseEvent was added to invalid component (%s)\n", event.getComponent().toString());
         }

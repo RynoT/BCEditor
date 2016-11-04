@@ -3,6 +3,9 @@ package ui.mnemonic;
 import ui.component.IActionComponent;
 import ui.component.event.IActionEvent;
 
+import java.awt.*;
+import java.awt.event.MouseEvent;
+
 /**
  * Created by Ryan Thomson on 13/10/2016.
  */
@@ -22,6 +25,6 @@ public class MnemonicKey {
     }
 
     public void runKey(){
-        this.component.simulateClick();
+        this.component.click();
     }
 }

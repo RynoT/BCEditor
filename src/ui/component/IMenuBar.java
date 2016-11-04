@@ -14,8 +14,8 @@ public class IMenuBar extends IComponent {
         super.setLayout(new FlowLayout(FlowLayout.LEADING, 0, 0));
         //super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
-        super.setBackground(Color.RED);
         this.setHeight(IMenuBar.DEFAULT_HEIGHT);
+        super.setBackground(IComponent.DEFAULT_BACKGROUND);
     }
 
     @Override

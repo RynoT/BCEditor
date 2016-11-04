@@ -1,6 +1,5 @@
 package ui.component;
 
-import ui.component.event.IActionEvent;
 import ui.mnemonic.MnemonicKey;
 import ui.mnemonic.MnemonicManager;
 import ui.mnemonic.MnemonicNode;
@@ -20,57 +19,80 @@ public class IButton extends IActionComponent {
     private ILabel label;
     private MnemonicKey mnemonic = null;
 
-    public IButton(final String text){
+    private boolean toggleButton = false;
+    private boolean selected = false;
+
+    private Color defaultColor, pressedColor, hoveredColor, selectedColor;
+
+    public IButton(final String text) {
         this(text, -1);
     }
 
-    public IButton(final String text, final int mnemonic){
+    public IButton(final String text, final int mnemonic) {
         this(text, mnemonic, null);
     }
 
-    public IButton(final String text, final BufferedImage icon){
+    public IButton(final String text, final BufferedImage icon) {
         this(text, -1, icon);
     }
 
-    public IButton(final String text, final int mnemonic, final BufferedImage icon){
+    public IButton(final String text, final int mnemonic, final BufferedImage icon) {
         this.label = new ILabel(text, icon);
 
-        super.setBackground(Color.BLUE);
+        this.defaultColor = IComponent.DEFAULT_BACKGROUND;
+        this.pressedColor = IComponent.DEFAULT_PRESSED;
+        this.hoveredColor = IComponent.DEFAULT_HOVERED;
+        this.selectedColor = IComponent.DEFAULT_SELECTED;
+
+        super.setBackground(this.defaultColor);
 
         super.setLayout(new BorderLayout(0, 0));
         super.add(this.label, BorderLayout.CENTER);
         super.addMouseListener(new IButtonMouseListener());
 
         this.setDimensions();
-        if(mnemonic != -1){
+        if(mnemonic != -1) {
             this.setMnemonic(mnemonic);
         }
     }
 
-    public ILabel getInternalLabel(){
+    // returns true if this button is a toggle button and it is currently down
+    public boolean isSelected(){
+        return this.selected;
+    }
+
+    public boolean isToggleButton() {
+        return this.toggleButton;
+    }
+
+    public ILabel getInternalLabel() {
         return this.label;
     }
 
-    public void setMnemonic(final int key){
+    public void setToggle(final boolean toggle) {
+        this.selected = false;
+        this.toggleButton = toggle;
+    }
+
+    public void setMnemonic(final int key) {
         this.label.setMnemonic(key);
         Component parent = super.getParent();
-        while(parent != null){
-            if(parent instanceof IMenu){
+        while(parent != null) {
+            if(parent instanceof IMenu) {
                 break;
             }
             parent = parent.getParent();
         }
         final MnemonicNode node;
-        if(parent != null){
+        if(parent != null) {
             node = ((IMenu) parent).getMnemonicNode();
         } else {
             node = MnemonicManager.getManager().getRootNode();
         }
-        if(this.mnemonic != null){
+        if(this.mnemonic != null) {
             node.unregister(this.mnemonic);
         }
-        if(key != -1){
-            System.out.println(1);
+        if(key != -1) {
             node.register(this.mnemonic = new MnemonicKey(key, this));
         } else {
             this.mnemonic = null;
@@ -84,30 +106,50 @@ public class IButton extends IActionComponent {
 
     private class IButtonMouseListener extends MouseAdapter {
 
-        private boolean pressed = false, hovered = false;
-
         @Override
         public void mousePressed(final MouseEvent event) {
-            this.pressed = true;
-            System.out.println(1);
+            IButton.super.setPressed(true);
+            IButton.super.setBackground(IButton.this.pressedColor);
         }
 
         @Override
         public void mouseReleased(final MouseEvent event) {
-            this.pressed = false;
-            System.out.println(2);
+            if(IButton.super.isHovered()){
+                if(IButton.this.toggleButton) {
+                    IButton.this.selected = !IButton.this.selected;
+                }
+                if(IButton.this.selected){
+                    IButton.super.setBackground(IButton.this.selectedColor);
+                } else {
+                    IButton.super.setBackground(IButton.this.hoveredColor);
+                }
+                if(IButton.super.isPressed() && (!IButton.this.toggleButton || IButton.this.selected)){
+                    IButton.super.runEvents();
+                }
+            } else {
+                if(IButton.this.selected){
+                    IButton.super.setBackground(IButton.this.selectedColor);
+                } else {
+                    IButton.super.setBackground(IButton.this.defaultColor);
+                }
+            }
+            IButton.super.setPressed(false);
         }
 
         @Override
         public void mouseEntered(final MouseEvent event) {
-            this.hovered = true;
-            System.out.println(3);
+            IButton.super.setHovered(true);
+            if(!IButton.super.isPressed() && !IButton.this.selected){
+                IButton.super.setBackground(IButton.this.hoveredColor);
+            }
         }
 
         @Override
         public void mouseExited(final MouseEvent event) {
-            this.hovered = false;
-            System.out.println(4);
+            IButton.super.setHovered(false);
+            if(!IButton.super.isPressed() && !IButton.this.selected){
+                IButton.super.setBackground(IButton.this.defaultColor);
+            }
         }
     }
 
