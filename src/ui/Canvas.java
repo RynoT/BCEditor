@@ -1,8 +1,7 @@
 package ui;
 
-import ui.component.IButton;
-import ui.component.IMenu;
-import ui.component.IMenuBar;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+import ui.component.*;
 import ui.component.event.IActionEvent;
 
 import javax.swing.*;
@@ -69,11 +68,18 @@ public class Canvas extends JFrame {
                 IButton button = new IButton("File", KeyEvent.VK_F);
                // button.setToggle(true);
                 button.addEvent(() -> {
-                    System.out.println("bob");
+                    System.out.println("file");
                 });
-                //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
+                button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
                 menuBar.add(button);
-                menuBar.add(new IButton("Edit", KeyEvent.VK_E));
+
+                IButton edit = new IButton("Edit", KeyEvent.VK_E);
+                {
+                    edit.addEvent(() -> {
+                        System.out.println("edit");
+                    });
+                }
+                menuBar.add(edit);
             }
             content.add(menuBar, BorderLayout.NORTH);
 
@@ -81,7 +87,37 @@ public class Canvas extends JFrame {
             {
                 mainPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
+//                final JPanel main = new JPanel();
+//                {
+//                    main.setLayout(new BorderLayout(0, 0));
+//                    main.setBackground(Color.RED);
+//                    main.setPreferredSize(new Dimension(200, Integer.MAX_VALUE));
+//
+//                    final JPanel left = new JPanel();
+//                    {
+//                        left.setBackground(Color.GREEN);
+//                        left.setPreferredSize(new Dimension(20, Integer.MAX_VALUE));
+//                    }
+//                    main.add(left, BorderLayout.WEST);
+//
+//                    final JPanel right = new JPanel();
+//                    {
+//                        right.setBackground(Color.PINK);
+//                        right.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+//                    }
+//                    main.add(right, BorderLayout.EAST);
+//                }
+//                mainPanel.add(main, BorderLayout.WEST);
 
+                final IToolbar toolbar = new IToolbar(IOrientation.WEST);
+                {
+                    IButton button = new IButton("Button");
+                    button.setToggle(true);
+                    toolbar.addTab(new ITab(button, new IToolbar(IOrientation.EAST)));
+                    //button.getInternalLabel().setOrientation(IOrientation.SOUTH);
+                    //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
+                }
+                mainPanel.add(toolbar, toolbar.getOrientation().getBorder());
             }
             content.add(mainPanel, BorderLayout.CENTER);
         }

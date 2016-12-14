@@ -4,11 +4,14 @@ import util.async.Async;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 /**
  * Created by Ryan Thomson on 13/10/2016.
  */
 public class Base {
+
+    private static final boolean ESCAPE_TO_CLOSE = true;
 
     private Base(){
     }
@@ -30,5 +33,15 @@ public class Base {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(MnemonicManager.getManager());
         // when the application closes, request that our Async threads are all stopped
         Runtime.getRuntime().addShutdownHook(new Thread(null, Async::shutdown, "Shutdown"));
+
+        // convenience shortcut for closing the application (for development purposes)
+        if(Base.ESCAPE_TO_CLOSE){
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+                if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
+                    System.exit(0);
+                }
+                return false;
+            });
+        }
     }
 }

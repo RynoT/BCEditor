@@ -32,13 +32,14 @@ public abstract class IComponent extends JPanel {
         super.setFont(IComponent.DEFAULT_FONT);
     }
 
-    protected abstract void setDimensions();
+    protected void setDimensions() { }
 
     protected final void updateDimensions() {
         if(super.getParent() instanceof IComponent) {
-            ((IComponent) super.getParent()).setDimensions();
             ((IComponent) super.getParent()).updateDimensions();
         }
+        this.setDimensions();
+        super.revalidate();
     }
 
     public void forwardMouseEvent(final MouseEvent event) {

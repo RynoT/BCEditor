@@ -4,7 +4,6 @@ import ui.component.event.IActionEvent;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Arrays;
 
 /**
  * Created by Ryan Thomson on 14/10/2016.

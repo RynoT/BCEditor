@@ -18,9 +18,11 @@ public class IButton extends IActionComponent {
 
     private ILabel label;
     private MnemonicKey mnemonic = null;
+    private IOrientation orientation = IOrientation.NORTH;
 
-    private boolean toggleButton = false;
     private boolean selected = false;
+    private boolean toggleButton = false;
+    private boolean restrictHeight = true;
 
     private Color defaultColor, pressedColor, hoveredColor, selectedColor;
 
@@ -74,6 +76,29 @@ public class IButton extends IActionComponent {
         this.toggleButton = toggle;
     }
 
+    public void setRestrictHeight(final boolean restrict){
+        if(this.restrictHeight == restrict){
+            return;
+        }
+        this.restrictHeight = restrict;
+        super.updateDimensions();
+    }
+
+    public void setOrientation(final IOrientation orientation){
+        this.setOrientation(orientation, this.restrictHeight);
+    }
+
+    public void setOrientation(final IOrientation orientation, final boolean restrictHeight){
+        if(this.orientation == orientation){
+            return;
+        }
+        this.orientation = orientation;
+        this.restrictHeight = restrictHeight;
+        this.label.setOrientation(orientation);
+
+        super.updateDimensions();
+    }
+
     public void setMnemonic(final int key) {
         this.label.setMnemonic(key);
         Component parent = super.getParent();
@@ -101,7 +126,13 @@ public class IButton extends IActionComponent {
 
     @Override
     protected void setDimensions() {
-        super.setPreferredSize(new Dimension(this.label.getLabelWidth() + IButton.PADDING_WIDTH, this.label.getLabelHeight()));
+        final int width = this.label.getLabelWidth() + IButton.PADDING_WIDTH, height = this.label.getLabelHeight();
+        if(this.orientation.isVertical()){
+            super.setPreferredSize(new Dimension(width, this.restrictHeight ? height : Integer.MAX_VALUE));
+        } else {
+            super.setPreferredSize(new Dimension(this.restrictHeight ? height : Integer.MAX_VALUE, width));
+        }
+        super.setMaximumSize(super.getPreferredSize());
     }
 
     private class IButtonMouseListener extends MouseAdapter {
@@ -123,9 +154,9 @@ public class IButton extends IActionComponent {
                 } else {
                     IButton.super.setBackground(IButton.this.hoveredColor);
                 }
-                if(IButton.super.isPressed() && (!IButton.this.toggleButton || IButton.this.selected)){
-                    IButton.super.runEvents();
-                }
+                //if(IButton.super.isPressed() && (!IButton.this.toggleButton || IButton.this.selected)){
+                    IButton.super.runEvents(); //run events on press and release
+               // }
             } else {
                 if(IButton.this.selected){
                     IButton.super.setBackground(IButton.this.selectedColor);
