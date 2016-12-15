@@ -89,7 +89,7 @@ public class Canvas extends JFrame {
             {
                 mainPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-                final IToolbar toolbar = new IToolbar(IOrientation.WEST);
+                final IToolbar toolbar = new IToolbar(IOrientation.SOUTH);
                 {
                     final IButton project = new IButton("1: Project", KeyEvent.VK_1);
                     {
