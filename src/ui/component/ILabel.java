@@ -51,6 +51,7 @@ public class ILabel extends IComponent {
 
         super.setOpaque(false);
         super.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
         //super.addMouseListener(new IForwardMouseEvent()); //we only need this if we make labels clickable, which right now we're not
     }
 
@@ -149,11 +150,8 @@ public class ILabel extends IComponent {
         }
 
         final Graphics2D g2d = (Graphics2D) g;
-        final AffineTransform transform = g2d.getTransform();
         if(this.orientation != IOrientation.NORTH) {
-            int w = super.getWidth(), h = super.getHeight();
-            g2d.setTransform(AffineTransform.getRotateInstance(this.orientation.getRadians(),
-                    Math.ceil(super.getWidth() / 2.0f), Math.ceil(super.getHeight() / 2.0f)));
+            g2d.rotate(this.orientation.getRadians(), Math.ceil(super.getWidth() / 2.0f), Math.ceil(super.getHeight() / 2.0f));
         }
 
         final int y = super.getHeight() / 2 - this.textRender.getHeight() / 2;
@@ -166,7 +164,6 @@ public class ILabel extends IComponent {
             g2d.drawImage(this.icon, super.getWidth() / 2 - totalWidth / 2, super.getHeight() / 2 - this.icon.getHeight() / 2 + 1, null);
             g2d.drawImage(this.textRender, super.getWidth() / 2 - totalWidth / 2 + this.icon.getWidth() + ILabel.ICON_TEXT_PADDING, y, null);
         }
-        g2d.setTransform(transform);
     }
 
     private BufferedImage generateTextRender() {

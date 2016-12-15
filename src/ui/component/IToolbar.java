@@ -64,9 +64,9 @@ public class IToolbar extends IComponent {
                 button.addEvent(() -> IToolbar.this.contentPanel.setContentTab(tab, button.isSelected()));
             }
             // We only need to change the orientation of the buttons if this toolbar is EAST or WEST
-            if(this.orientation.isHorizontal()) {
+            //if(this.orientation.isHorizontal()) {
                 button.setOrientation(IOrientation.getOpposite(this.orientation), false);
-            }
+            //}
         }
         this.buttonPanel.add(button, top ? this.buttonPanel.getComponentZOrder(this.buttonSeparator) : this.buttonPanel.getComponentCount());
     }
