@@ -11,9 +11,10 @@ public abstract class IComponent extends JPanel {
 
     public static final Font DEFAULT_FONT = new Font("Helvetica", Font.PLAIN, 12);
 
-    public static final Color DEFAULT_BACKGROUND = new Color(78, 79, 80);
+    public static final Color DEFAULT_BACKGROUND = new Color(68, 69, 70);
     public static final Color DEFAULT_FOREGROUND = new Color(240, 242, 244);
-    public static final Color DEFAULT_HIGHLIGHT = new Color(45, 46, 47, 235);
+    public static final Color DEFAULT_HIGHLIGHT_DARK = new Color(45, 46, 47, 235);
+    public static final Color DEFAULT_HIGHLIGHT_LIGHT = new Color(85, 86, 87, 250);
 
 //    public static final Color DEFAULT_HOVERED = new Color(10, 97, 116);
 //    public static final Color DEFAULT_PRESSED = new Color(4, 59, 70);

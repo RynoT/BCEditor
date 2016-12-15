@@ -23,13 +23,14 @@ public class IToolbar extends IComponent {
     public IToolbar(final IOrientation orientation) {
         this.orientation = orientation;
 
-        super.setBackground(IComponent.DEFAULT_HIGHLIGHT);
+        super.setBackground(IComponent.DEFAULT_HIGHLIGHT_LIGHT);
         super.setLayout(new BorderLayout(0, 0));
 
         final JPanel buttonPanel = new JPanel();
         {
             buttonPanel.setBackground(IComponent.DEFAULT_BACKGROUND);
             buttonPanel.setLayout(new BoxLayout(buttonPanel, orientation.isVertical() ? BoxLayout.X_AXIS : BoxLayout.Y_AXIS));
+            buttonPanel.setBorder(new IBorder(1, 2, 1, 0));
 
             this.buttonSeparator = Box.createGlue();
             buttonPanel.add(this.buttonSeparator);

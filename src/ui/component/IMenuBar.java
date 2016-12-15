@@ -1,6 +1,5 @@
 package ui.component;
 
-import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -8,14 +7,15 @@ import java.awt.*;
  */
 public class IMenuBar extends IComponent {
 
-    public static final int DEFAULT_HEIGHT = 24;
+    public static final int DEFAULT_HEIGHT = 26;
 
     public IMenuBar(){
         super.setLayout(new FlowLayout(FlowLayout.LEADING, 0, 0));
-        //super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
         this.setHeight(IMenuBar.DEFAULT_HEIGHT);
         super.setBackground(IComponent.DEFAULT_BACKGROUND);
+
+        super.setBorder(new IBorder(0, 0, 2,0));
     }
 
     @Override
