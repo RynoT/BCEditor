@@ -11,8 +11,11 @@ import java.awt.event.MouseEvent;
  */
 public class IResizer extends IComponent implements ComponentListener {
 
-    public static final int RESIZER_SIZE_NORMAL = 4;
+    public static final int RESIZER_SIZE_NORMAL = 2;
     public static final int RESIZER_SIZE_DETAILED = 7;
+
+    public static final int RESIZER_DETAILED_DOT_FREQUENCY = 8;
+    public static final float RESIZER_DETAILED_DOT_SPACE = 0.25f; //take 25% of space (form middle)
 
     public static final int COMPONENT_MIN_SIZE = 20;
 
@@ -32,13 +35,15 @@ public class IResizer extends IComponent implements ComponentListener {
         super.addMouseListener(adapter);
         super.addMouseMotionListener(adapter);
 
-        super.setBackground(Color.CYAN);
+        super.setBackground(IComponent.DEFAULT_BACKGROUND);
         super.setCursor(Cursor.getPredefinedCursor(orientation.isHorizontal() ? Cursor.N_RESIZE_CURSOR : Cursor.E_RESIZE_CURSOR));
 
         final Dimension dimension;
         if(orientation.isHorizontal()) {
+            super.setBorder(new IBorder(1, 0, 1, 0));
             dimension = new Dimension(Integer.MAX_VALUE, this.getResizerSize());
         } else {
+            super.setBorder(new IBorder(0, 1, 0, 1));
             dimension = new Dimension(this.getResizerSize(), Integer.MAX_VALUE);
         }
         super.setPreferredSize(dimension);
@@ -48,6 +53,22 @@ public class IResizer extends IComponent implements ComponentListener {
 
     public int getResizerSize(){
         return this.detailed ? IResizer.RESIZER_SIZE_DETAILED : IResizer.RESIZER_SIZE_NORMAL;
+    }
+
+    @Override
+    protected void paintComponent(final Graphics g) {
+        super.paintComponent(g);
+
+        if(this.detailed){
+            g.setColor(IComponent.DEFAULT_FOREGROUND);
+
+            final int dist = (int)(super.getWidth() * IResizer.RESIZER_DETAILED_DOT_SPACE);
+            final int y = super.getHeight() / 2;
+            for(int i = super.getWidth() / 2 - dist / 2; i < super.getWidth() / 2 + dist / 2;
+                i += IResizer.RESIZER_DETAILED_DOT_FREQUENCY){
+                g.drawLine(i, y, i, y); // draw dot
+            }
+        }
     }
 
     @Override
