@@ -1,5 +1,6 @@
 package ui.component;
 
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -9,5 +10,12 @@ public class IBreakdown extends IComponent {
 
     public IBreakdown(){
         super.setBackground(Color.PINK);
+        super.setLayout(new BorderLayout(0, 0));
+
+        final JPanel content = new JPanel();
+        {
+            content.setBackground(Color.MAGENTA);
+        }
+        super.add(content, BorderLayout.CENTER);
     }
 }

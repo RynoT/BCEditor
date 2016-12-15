@@ -19,6 +19,9 @@ public class Canvas extends JFrame {
     public static final int DEFAULT_WIDTH = 1200;
     public static final int DEFAULT_HEIGHT = 700;
 
+    public static final int DEFAULT_MIN_WIDTH = 250;
+    public static final int DEFAULT_MIN_HEIGHT = 140;
+
     public static final int MAX_ACTIVE_MENUS = 3;
 
     // Canvas is a singleton. Accessed using Canvas.getCanvas()
@@ -58,6 +61,7 @@ public class Canvas extends JFrame {
     private void init(){
         super.setResizable(true);
         super.setSize(Canvas.DEFAULT_WIDTH, Canvas.DEFAULT_HEIGHT);
+        super.setMinimumSize(new Dimension(Canvas.DEFAULT_MIN_WIDTH, Canvas.DEFAULT_MIN_HEIGHT));
         super.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE); // we control closing through a window event
 
         // content pane consists of a menu bar and a main panel
@@ -89,7 +93,7 @@ public class Canvas extends JFrame {
             {
                 mainPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-                final IToolbar toolbar = new IToolbar(IOrientation.SOUTH);
+                final IToolbar toolbar = new IToolbar(IOrientation.WEST);
                 {
                     final IButton project = new IButton("1: Project", KeyEvent.VK_1);
                     {
@@ -97,11 +101,15 @@ public class Canvas extends JFrame {
                     }
                     toolbar.addTab(new ITab(project, new IProjectExplorer(), true), true);
 
+                    project.click();
+
                     final IButton breakdown = new IButton("2: Breakdown", KeyEvent.VK_2);
                     {
                         breakdown.setToggle(true);
                     }
                     toolbar.addTab(new ITab(breakdown, new IBreakdown(), false), false);
+
+                    breakdown.click();
                 }
                 mainPanel.add(toolbar, toolbar.getOrientation().getBorder());
             }

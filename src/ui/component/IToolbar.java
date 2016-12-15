@@ -10,6 +10,7 @@ public class IToolbar extends IComponent {
 
     public static final int TOOLBAR_DEFAULT_SIZE = 26;
     public static final int CONTENT_DEFAULT_SIZE = 300;
+    public static final int DEFAULT_LOWER_SIZE = 250;
 
     private final IOrientation orientation;
 
@@ -63,7 +64,7 @@ public class IToolbar extends IComponent {
                 button.addEvent(() -> IToolbar.this.contentPanel.setContentTab(tab, button.isSelected()));
             }
             // We only need to change the orientation of the buttons if this toolbar is EAST or WEST
-            if(this.orientation.isHorizontal()){
+            if(this.orientation.isHorizontal()) {
                 button.setOrientation(IOrientation.getOpposite(this.orientation), false);
             }
         }
@@ -75,68 +76,87 @@ public class IToolbar extends IComponent {
         private static final int UPPER_INDEX = 0;
         private static final int LOWER_INDEX = 1;
 
-        private int size = IToolbar.CONTENT_DEFAULT_SIZE;
+        private IResizer resizer = null;
         private final ITab[] tabs = new ITab[2];
-
-        private int lowerSize = 250;
 
         private IToolbarContent() {
             super.setBackground(Color.YELLOW);
             super.setLayout(new BorderLayout(0, 0));
 
             if(IToolbar.this.orientation.isHorizontal()) {
-                super.setPreferredSize(new Dimension(this.size, Integer.MAX_VALUE));
+                super.setPreferredSize(new Dimension(IToolbar.CONTENT_DEFAULT_SIZE, Integer.MAX_VALUE));
             } else {
-                super.setPreferredSize(new Dimension(Integer.MAX_VALUE, this.size));
+                super.setPreferredSize(new Dimension(Integer.MAX_VALUE, IToolbar.CONTENT_DEFAULT_SIZE));
             }
 
             super.setVisible(false);
         }
 
-        private int getContentSize(){
-            return super.isVisible() ? size : 0;
+        private int getContentSize() {
+            if(!super.isVisible()) {
+                return 0;
+            }
+            return IToolbar.CONTENT_DEFAULT_SIZE;
         }
 
-        private Dimension getUpperDimension(){
+        private Dimension getUpperDimension() {
             final boolean horizontal = IToolbar.this.orientation.isHorizontal();
             return new Dimension(horizontal ? 0 : Integer.MAX_VALUE, horizontal ? Integer.MAX_VALUE : 0);
         }
 
-        private Dimension getLowerDimension(){
+        private Dimension getLowerDimension() {
             final boolean horizontal = IToolbar.this.orientation.isHorizontal();
-            return new Dimension(horizontal ? 0 : this.lowerSize, horizontal ? this.lowerSize : 0);
+            return new Dimension(horizontal ? 0 : IToolbar.DEFAULT_LOWER_SIZE, horizontal ? IToolbar.DEFAULT_LOWER_SIZE : 0);
         }
 
-        private void enableTab(final ITab tab){
+        private void createResizer(final IComponent upper, final IComponent lower) {
+            assert (this.resizer == null);
+            lower.add(this.resizer = new IResizer(this, upper, lower, IToolbar.this.orientation, true),
+                    IToolbar.this.orientation.isHorizontal() ? BorderLayout.NORTH : BorderLayout.WEST);
+            super.addComponentListener(this.resizer);
+        }
+
+        private void destroyResizer(final IComponent lower) {
+            assert (this.resizer != null);
+            lower.remove(this.resizer);
+            super.removeComponentListener(this.resizer);
+            this.resizer = null;
+        }
+
+        private void enableTab(final ITab tab) {
             final int index = tab.isMainTab() ? IToolbarContent
                     .UPPER_INDEX : IToolbarContent.LOWER_INDEX;
-            if(this.tabs[index] != null){
+            if(this.tabs[index] != null) {
                 this.disableTab(this.tabs[index]);
             }
             tab.display();
             this.tabs[index] = tab;
 
-            if(tab.isMainTab()){
-                tab.getContent().setPreferredSize(this.getUpperDimension());
-                if(this.tabs[IToolbarContent.LOWER_INDEX] != null){
-                    this.tabs[IToolbarContent.LOWER_INDEX].getContent().setPreferredSize(this.getLowerDimension());
+            final IComponent content = tab.getContent();
+            if(tab.isMainTab()) {
+                content.setPreferredSize(this.getUpperDimension());
+                if(this.tabs[IToolbarContent.LOWER_INDEX] != null) {
+                    final IComponent lowerContent = this.tabs[IToolbarContent.LOWER_INDEX].getContent();
+                    this.createResizer(content, lowerContent);
+                    lowerContent.setPreferredSize(this.getLowerDimension());
                 }
-                super.add(tab.getContent(), BorderLayout.CENTER);
+                super.add(content, BorderLayout.CENTER);
             } else {
-                if(this.tabs[IToolbarContent.UPPER_INDEX] == null){
-                    tab.getContent().setPreferredSize(this.getUpperDimension());
+                if(this.tabs[IToolbarContent.UPPER_INDEX] == null) {
+                    content.setPreferredSize(this.getUpperDimension());
                 } else {
-                    tab.getContent().setPreferredSize(this.getLowerDimension());
+                    this.createResizer(this.tabs[IToolbarContent.UPPER_INDEX].getContent(), content);
+                    content.setPreferredSize(this.getLowerDimension());
                 }
-                super.add(tab.getContent(), IToolbar.this.orientation.isHorizontal() ? BorderLayout.SOUTH : BorderLayout.EAST);
+                super.add(content, IToolbar.this.orientation.isHorizontal() ? BorderLayout.SOUTH : BorderLayout.EAST);
             }
             super.revalidate();
         }
 
-        private void disableTab(final ITab tab){
+        private void disableTab(final ITab tab) {
             final int index = tab.isMainTab() ? IToolbarContent
                     .UPPER_INDEX : IToolbarContent.LOWER_INDEX;
-            if(this.tabs[index] == null || this.tabs[index] != tab){
+            if(this.tabs[index] == null || this.tabs[index] != tab) {
                 return;
             }
             tab.hide();
@@ -144,13 +164,19 @@ public class IToolbar extends IComponent {
 
             super.remove(tab.getContent());
 
-            if(tab.isMainTab() && this.tabs[IToolbarContent.LOWER_INDEX] != null){
-                this.tabs[IToolbarContent.LOWER_INDEX].getContent().setPreferredSize(this.getUpperDimension());
+            if(!tab.isMainTab()) {
+                if(this.tabs[IToolbarContent.UPPER_INDEX] != null) {
+                    this.destroyResizer(tab.getContent());
+                }
+            } else if(tab.isMainTab() && this.tabs[IToolbarContent.LOWER_INDEX] != null) {
+                final IComponent lowerContent = this.tabs[IToolbarContent.LOWER_INDEX].getContent();
+                this.destroyResizer(lowerContent);
+                lowerContent.setPreferredSize(this.getUpperDimension());
             }
         }
 
-        private void setContentTab(final ITab tab, final boolean visible){
-            assert(tab.getContent() != null);
+        private void setContentTab(final ITab tab, final boolean visible) {
+            assert (tab.getContent() != null);
             if(visible) {
                 this.enableTab(tab);
             } else {
@@ -158,7 +184,7 @@ public class IToolbar extends IComponent {
             }
             boolean showContent = this.tabs[IToolbarContent.UPPER_INDEX] != null
                     || this.tabs[IToolbarContent.LOWER_INDEX] != null;
-            if(super.isVisible() != showContent){
+            if(super.isVisible() != showContent) {
                 super.setVisible(showContent);
                 IToolbar.this.setDimensions();
             }
