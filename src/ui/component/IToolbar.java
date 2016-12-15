@@ -2,6 +2,8 @@ package ui.component;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 /**
  * Created by Ryan Thomson on 04/11/2016.
@@ -21,7 +23,7 @@ public class IToolbar extends IComponent {
     public IToolbar(final IOrientation orientation) {
         this.orientation = orientation;
 
-        super.setBackground(Color.PINK);
+        super.setBackground(IComponent.DEFAULT_HIGHLIGHT);
         super.setLayout(new BorderLayout(0, 0));
 
         final JPanel buttonPanel = new JPanel();
@@ -64,9 +66,9 @@ public class IToolbar extends IComponent {
                 button.addEvent(() -> IToolbar.this.contentPanel.setContentTab(tab, button.isSelected()));
             }
             // We only need to change the orientation of the buttons if this toolbar is EAST or WEST
-            //if(this.orientation.isHorizontal()) {
+            if(this.orientation.isHorizontal()) {
                 button.setOrientation(IOrientation.getOpposite(this.orientation), false);
-            //}
+            }
         }
         this.buttonPanel.add(button, top ? this.buttonPanel.getComponentZOrder(this.buttonSeparator) : this.buttonPanel.getComponentCount());
     }
@@ -76,7 +78,9 @@ public class IToolbar extends IComponent {
         private static final int UPPER_INDEX = 0;
         private static final int LOWER_INDEX = 1;
 
-        private IResizer resizer = null;
+        private final JPanel innerPanel;
+        private IResizer innerResizer = null;
+        private final IResizer outerReszier;
         private final ITab[] tabs = new ITab[2];
 
         private IToolbarContent() {
@@ -89,6 +93,22 @@ public class IToolbar extends IComponent {
                 super.setPreferredSize(new Dimension(Integer.MAX_VALUE, IToolbar.CONTENT_DEFAULT_SIZE));
             }
 
+            final JPanel inner = new JPanel();
+            {
+                inner.setLayout(new BorderLayout(0, 0));
+            }
+            super.add(this.innerPanel = inner, BorderLayout.CENTER);
+
+            final IOrientation orientation = IToolbar.this.orientation.isHorizontal() ? IOrientation.NORTH : IOrientation.EAST;
+            this.outerReszier = new IResizer(null, null, this, orientation,false);
+            super.add(this.outerReszier, IOrientation.getOpposite(IToolbar.this.orientation).getBorder());
+
+            super.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(final ComponentEvent e) {
+                    IToolbar.this.setDimensions();
+                }
+            });
             super.setVisible(false);
         }
 
@@ -96,7 +116,9 @@ public class IToolbar extends IComponent {
             if(!super.isVisible()) {
                 return 0;
             }
-            return IToolbar.CONTENT_DEFAULT_SIZE;
+            //return IToolbar.CONTENT_DEFAULT_SIZE;
+            final Dimension size = super.getPreferredSize();
+            return IToolbar.this.orientation.isHorizontal() ? size.width : size.height;
         }
 
         private Dimension getUpperDimension() {
@@ -109,18 +131,18 @@ public class IToolbar extends IComponent {
             return new Dimension(horizontal ? 0 : IToolbar.DEFAULT_LOWER_SIZE, horizontal ? IToolbar.DEFAULT_LOWER_SIZE : 0);
         }
 
-        private void createResizer(final IComponent upper, final IComponent lower) {
-            assert (this.resizer == null);
-            lower.add(this.resizer = new IResizer(this, upper, lower, IToolbar.this.orientation, true),
+        private void createInnerResizer(final IComponent upper, final IComponent lower) {
+            assert (this.innerResizer == null);
+            lower.add(this.innerResizer = new IResizer(this, upper, lower, IToolbar.this.orientation, true),
                     IToolbar.this.orientation.isHorizontal() ? BorderLayout.NORTH : BorderLayout.WEST);
-            super.addComponentListener(this.resizer);
+            super.addComponentListener(this.innerResizer);
         }
 
         private void destroyResizer(final IComponent lower) {
-            assert (this.resizer != null);
-            lower.remove(this.resizer);
-            super.removeComponentListener(this.resizer);
-            this.resizer = null;
+            assert (this.innerResizer != null);
+            lower.remove(this.innerResizer);
+            super.removeComponentListener(this.innerResizer);
+            this.innerResizer = null;
         }
 
         private void enableTab(final ITab tab) {
@@ -137,18 +159,18 @@ public class IToolbar extends IComponent {
                 content.setPreferredSize(this.getUpperDimension());
                 if(this.tabs[IToolbarContent.LOWER_INDEX] != null) {
                     final IComponent lowerContent = this.tabs[IToolbarContent.LOWER_INDEX].getContent();
-                    this.createResizer(content, lowerContent);
+                    this.createInnerResizer(content, lowerContent);
                     lowerContent.setPreferredSize(this.getLowerDimension());
                 }
-                super.add(content, BorderLayout.CENTER);
+                this.innerPanel.add(content, BorderLayout.CENTER);
             } else {
                 if(this.tabs[IToolbarContent.UPPER_INDEX] == null) {
                     content.setPreferredSize(this.getUpperDimension());
                 } else {
-                    this.createResizer(this.tabs[IToolbarContent.UPPER_INDEX].getContent(), content);
+                    this.createInnerResizer(this.tabs[IToolbarContent.UPPER_INDEX].getContent(), content);
                     content.setPreferredSize(this.getLowerDimension());
                 }
-                super.add(content, IToolbar.this.orientation.isHorizontal() ? BorderLayout.SOUTH : BorderLayout.EAST);
+                this.innerPanel.add(content, IToolbar.this.orientation.isHorizontal() ? BorderLayout.SOUTH : BorderLayout.EAST);
             }
             super.revalidate();
         }
@@ -162,7 +184,7 @@ public class IToolbar extends IComponent {
             tab.hide();
             this.tabs[index] = null;
 
-            super.remove(tab.getContent());
+            this.innerPanel.remove(tab.getContent());
 
             if(!tab.isMainTab()) {
                 if(this.tabs[IToolbarContent.UPPER_INDEX] != null) {
