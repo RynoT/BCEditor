@@ -100,9 +100,9 @@ public class IToolbar extends IComponent {
             }
             super.add(this.innerPanel = inner, BorderLayout.CENTER);
 
-            final IOrientation orientation = IToolbar.this.orientation.isHorizontal() ? IOrientation.NORTH : IOrientation.EAST;
+            final IOrientation orientation = IOrientation.getOpposite(IToolbar.this.orientation);
             this.outerReszier = new IResizer(null, null, this, orientation,false);
-            super.add(this.outerReszier, IOrientation.getOpposite(IToolbar.this.orientation).getBorder());
+            super.add(this.outerReszier, orientation.getBorder());
 
             super.addComponentListener(new ComponentAdapter() {
                 @Override
@@ -117,7 +117,6 @@ public class IToolbar extends IComponent {
             if(!super.isVisible()) {
                 return 0;
             }
-            //return IToolbar.CONTENT_DEFAULT_SIZE;
             final Dimension size = super.getPreferredSize();
             return IToolbar.this.orientation.isHorizontal() ? size.width : size.height;
         }
@@ -134,8 +133,9 @@ public class IToolbar extends IComponent {
 
         private void createInnerResizer(final IComponent upper, final IComponent lower) {
             assert (this.innerResizer == null);
-            lower.add(this.innerResizer = new IResizer(this, upper, lower, IToolbar.this.orientation, true),
-                    IToolbar.this.orientation.isHorizontal() ? BorderLayout.NORTH : BorderLayout.WEST);
+            final IOrientation orientation = IToolbar.this.orientation.isHorizontal() ? IOrientation.NORTH : IOrientation.WEST;
+            this.innerResizer = new IResizer(this, upper, lower, orientation, true);
+            lower.add(this.innerResizer, orientation.getBorder());
             super.addComponentListener(this.innerResizer);
         }
 

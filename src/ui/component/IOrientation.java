@@ -40,6 +40,21 @@ public enum IOrientation {
         return this.rotation == 90 || this.rotation == 270;
     }
 
+    public static IOrientation getNext(final IOrientation current){
+        switch(current){
+            case NORTH:
+                return IOrientation.EAST;
+            case EAST:
+                return IOrientation.SOUTH;
+            case SOUTH:
+                return IOrientation.WEST;
+            case WEST:
+                return IOrientation.NORTH;
+        }
+        assert(false);
+        return current;
+    }
+
     public static IOrientation getOpposite(final IOrientation current){
         switch(current){
             case NORTH:
@@ -51,6 +66,7 @@ public enum IOrientation {
             case WEST:
                 return IOrientation.EAST;
         }
+        assert(false);
         return current;
     }
 }
