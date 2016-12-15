@@ -65,15 +65,15 @@ public class Canvas extends JFrame {
         {
             final IMenuBar menuBar = new IMenuBar();
             {
-                IButton button = new IButton("File", KeyEvent.VK_F);
-               // button.setToggle(true);
-                button.addEvent(() -> {
-                    System.out.println("file");
-                });
-                button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
-                menuBar.add(button);
+                final IButton file = new IButton("File", KeyEvent.VK_F);
+                {
+                    file.addEvent(() -> {
+                        System.out.println("file");
+                    });
+                }
+                menuBar.add(file);
 
-                IButton edit = new IButton("Edit", KeyEvent.VK_E);
+                final IButton edit = new IButton("Edit", KeyEvent.VK_E);
                 {
                     edit.addEvent(() -> {
                         System.out.println("edit");
@@ -82,40 +82,26 @@ public class Canvas extends JFrame {
                 menuBar.add(edit);
             }
             content.add(menuBar, BorderLayout.NORTH);
+            //button.getInternalLabel().setOrientation(IOrientation.SOUTH);
+            //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
 
             final JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
             {
                 mainPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
-//                final JPanel main = new JPanel();
-//                {
-//                    main.setLayout(new BorderLayout(0, 0));
-//                    main.setBackground(Color.RED);
-//                    main.setPreferredSize(new Dimension(200, Integer.MAX_VALUE));
-//
-//                    final JPanel left = new JPanel();
-//                    {
-//                        left.setBackground(Color.GREEN);
-//                        left.setPreferredSize(new Dimension(20, Integer.MAX_VALUE));
-//                    }
-//                    main.add(left, BorderLayout.WEST);
-//
-//                    final JPanel right = new JPanel();
-//                    {
-//                        right.setBackground(Color.PINK);
-//                        right.setPreferredSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-//                    }
-//                    main.add(right, BorderLayout.EAST);
-//                }
-//                mainPanel.add(main, BorderLayout.WEST);
-
                 final IToolbar toolbar = new IToolbar(IOrientation.WEST);
                 {
-                    IButton button = new IButton("Button");
-                    button.setToggle(true);
-                    toolbar.addTab(new ITab(button, new IToolbar(IOrientation.EAST)));
-                    //button.getInternalLabel().setOrientation(IOrientation.SOUTH);
-                    //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
+                    final IButton project = new IButton("1: Project", KeyEvent.VK_1);
+                    {
+                        project.setToggle(true);
+                    }
+                    toolbar.addTab(new ITab(project, new IProjectExplorer(), true), true);
+
+                    final IButton breakdown = new IButton("2: Breakdown", KeyEvent.VK_2);
+                    {
+                        breakdown.setToggle(true);
+                    }
+                    toolbar.addTab(new ITab(breakdown, new IBreakdown(), false), false);
                 }
                 mainPanel.add(toolbar, toolbar.getOrientation().getBorder());
             }
