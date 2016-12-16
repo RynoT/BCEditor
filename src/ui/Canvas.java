@@ -1,15 +1,12 @@
 package ui;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import ui.component.*;
-import ui.component.event.IActionEvent;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 
 /**
  * Created by Ryan Thomson on 13/10/2016.
@@ -30,35 +27,35 @@ public class Canvas extends JFrame {
     private int activeMenuCount = 0;
     private IMenu[] activeMenu = new IMenu[Canvas.MAX_ACTIVE_MENUS];
 
-    private Canvas(){
+    private Canvas() {
         // initialize the JFrame and populate it with content
         this.init();
     }
 
-    public static Canvas getCanvas(){
+    public static Canvas getCanvas() {
         return Canvas.canvas;
     }
 
-    public int getActiveMenuCount(){
+    public int getActiveMenuCount() {
         return this.activeMenuCount;
     }
 
-    public IMenu getActiveMenu(final int index){
+    public IMenu getActiveMenu(final int index) {
         assert (index >= 0 && index < this.activeMenu.length);
         return this.activeMenu[index];
     }
 
-    public void popActiveMenu(){
+    public void popActiveMenu() {
         assert (this.activeMenuCount > 0);
         this.activeMenu[this.activeMenuCount--] = null;
     }
 
-    public void pushActiveMenu(final IMenu menu){
-        assert(this.activeMenuCount + 1 < this.activeMenu.length);
+    public void pushActiveMenu(final IMenu menu) {
+        assert (this.activeMenuCount + 1 < this.activeMenu.length);
         this.activeMenu[this.activeMenuCount++] = menu;
     }
 
-    private void init(){
+    private void init() {
         super.setResizable(true);
         super.setSize(Canvas.DEFAULT_WIDTH, Canvas.DEFAULT_HEIGHT);
         super.setMinimumSize(new Dimension(Canvas.DEFAULT_MIN_WIDTH, Canvas.DEFAULT_MIN_HEIGHT));
@@ -72,7 +69,17 @@ public class Canvas extends JFrame {
                 final IButton file = new IButton("File", KeyEvent.VK_F);
                 {
                     file.addEvent(() -> {
-                        System.out.println("file");
+                        final IMenu menu = new IMenu(file);
+                        {
+                            final IMenuItem open = new IMenuItem("Open...", "E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png");
+                            {
+                                open.setMnemonic(KeyEvent.VK_O);
+                                open.getInternalButton().addEvent(() -> System.out.println("open"));
+                            }
+                            menu.addItem(open);
+                            //menu.addItem(new ISeparator(IOrientation.EAST));
+                        }
+                        this.pushActiveMenu(menu);
                     });
                 }
                 menuBar.add(file);
@@ -112,6 +119,11 @@ public class Canvas extends JFrame {
                     breakdown.click();
                 }
                 mainPanel.add(toolbar, toolbar.getOrientation().getBorder());
+
+                final IToolbar bottomBar = new IToolbar(IOrientation.SOUTH);
+                {
+                }
+                mainPanel.add(bottomBar, bottomBar.getOrientation().getBorder());
             }
             content.add(mainPanel, BorderLayout.CENTER);
         }

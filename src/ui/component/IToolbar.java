@@ -30,7 +30,20 @@ public class IToolbar extends IComponent {
         {
             buttonPanel.setBackground(IComponent.DEFAULT_BACKGROUND);
             buttonPanel.setLayout(new BoxLayout(buttonPanel, orientation.isVertical() ? BoxLayout.X_AXIS : BoxLayout.Y_AXIS));
-            buttonPanel.setBorder(new IBorder(1, 2, 1, 0));
+            switch(orientation){
+                case NORTH:
+                    buttonPanel.setBorder(new IBorder(0, 0, 2, 0));
+                    break;
+                case EAST:
+                    buttonPanel.setBorder(new IBorder(1, 0, 1, 2));
+                    break;
+                case SOUTH:
+                    buttonPanel.setBorder(new IBorder(2, 0, 0, 0));
+                    break;
+                case WEST:
+                    buttonPanel.setBorder(new IBorder(1, 2, 1, 0));
+                    break;
+            }
 
             this.buttonSeparator = Box.createGlue();
             buttonPanel.add(this.buttonSeparator);

@@ -11,6 +11,7 @@ public class MnemonicNode {
 
     private final Set<MnemonicKey> mnemonics = new HashSet<>();
 
+    // Represents an item which contains mnemonics. The latest mnemonic node is always prioritised.
     public MnemonicNode(){
     }
 

@@ -12,10 +12,11 @@ import java.awt.event.MouseEvent;
 public class IResizer extends IComponent implements ComponentListener {
 
     public static final int RESIZER_SIZE_NORMAL = 3;
-    public static final int RESIZER_SIZE_DETAILED = 7;
+    public static final int RESIZER_SIZE_DETAILED = 9;
 
     public static final int RESIZER_DETAILED_DOT_FREQUENCY = 8;
     public static final float RESIZER_DETAILED_DOT_SPACE = 0.25f; //take 25% of space (form middle)
+    public static final Color RESIZER_DETAILED_DOT_COLOR = new Color(230, 232, 234, 220);
 
     public static final int COMPONENT_MIN_SIZE = 20;
 
@@ -35,7 +36,7 @@ public class IResizer extends IComponent implements ComponentListener {
         super.addMouseListener(adapter);
         super.addMouseMotionListener(adapter);
 
-        super.setBackground(IComponent.DEFAULT_BACKGROUND);
+        super.setBackground(detailed ? IComponent.DEFAULT_BACKGROUND : IComponent.DEFAULT_HIGHLIGHT_LIGHT);
         super.setCursor(Cursor.getPredefinedCursor(orientation.isHorizontal() ? Cursor.E_RESIZE_CURSOR : Cursor.N_RESIZE_CURSOR));
 
         final Dimension dimension;
@@ -60,7 +61,7 @@ public class IResizer extends IComponent implements ComponentListener {
         super.paintComponent(g);
 
         if(this.detailed){
-            g.setColor(IComponent.DEFAULT_FOREGROUND);
+            g.setColor(IResizer.RESIZER_DETAILED_DOT_COLOR);
 
             if(this.orientation.isHorizontal()) {
                 final int dist = (int) (super.getHeight() * IResizer.RESIZER_DETAILED_DOT_SPACE);

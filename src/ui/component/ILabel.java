@@ -23,6 +23,7 @@ public class ILabel extends IComponent {
     private String text;
     private Color color;
     private int mnemonic = -1;
+    private ITextAlign alignment = ITextAlign.CENTER;
     private IOrientation orientation = IOrientation.NORTH;
 
     private boolean hasIcon, updateText = false;
@@ -98,6 +99,14 @@ public class ILabel extends IComponent {
         super.repaint();
     }
 
+    public void setAlignment(final ITextAlign align){
+        if(this.alignment == align){
+            return;
+        }
+        this.alignment = align;
+        super.repaint();
+    }
+
     public void setOrientation(final IOrientation orientation) {
         if(this.orientation == orientation) {
             return;
@@ -155,10 +164,21 @@ public class ILabel extends IComponent {
         }
 
         final int y = super.getHeight() / 2 - this.textRender.getHeight() / 2;
-        if(!this.hasIcon || this.icon == null) {
-            // if we only have to render the text
-            g2d.drawImage(this.textRender, super.getWidth() / 2 - this.textRender.getWidth() / 2, y, null);
+        if(!this.hasIcon || this.icon == null) { // if we only have to render the text
+            final int x;
+            switch(this.alignment){
+                case CENTER:
+                    x = super.getWidth() / 2 - this.textRender.getWidth() / 2;
+                    break;
+                case RIGHT:
+                    x = super.getWidth() - this.textRender.getWidth();
+                    break;
+                case LEFT:
+                default: x = 0;
+            }
+            g2d.drawImage(this.textRender, x, y, null);
         } else {
+            assert(this.alignment == ITextAlign.CENTER); //we don't support other alignments for labels that have icons yet
             // the icon should be square and have the similar height as the text
             final int totalWidth = this.icon.getWidth() + ILabel.ICON_TEXT_PADDING + this.textRender.getWidth();
             g2d.drawImage(this.icon, super.getWidth() / 2 - totalWidth / 2, super.getHeight() / 2 - this.icon.getHeight() / 2 + 1, null);
