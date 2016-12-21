@@ -1,5 +1,6 @@
 package ui.component;
 
+import util.AssetManager;
 import util.async.Async;
 import util.async.AsyncEvent;
 
@@ -136,8 +137,8 @@ public class IMenuItem extends IComponent {
             super.setOpaque(false);
             super.setPreferredSize(new Dimension(IMenuItem.ITEM_HEIGHT, IMenuItem.ITEM_HEIGHT));
 
-            if(iconPath != null) { //there's nothing to load if we have no path, don't put pointless cpu-wastes in the queue
-                Async.loadImage(new File(iconPath), new AsyncEvent<BufferedImage>() {
+            if(iconPath != null) { //there's nothing to load if we have no path - don't put pointless cpu-wastes in the queue
+                AssetManager.loadImage(iconPath, new AsyncEvent<BufferedImage>() {
                     @Override
                     public void onComplete(final BufferedImage item) {
                         icon = item;
