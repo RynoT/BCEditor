@@ -4,7 +4,6 @@ import util.async.Async;
 import util.async.AsyncEvent;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.*;
 
 /**
@@ -16,7 +15,19 @@ public class AssetManager {
 
     public static final String EXPANDED_ICON = AssetManager.RESOURCE_FOLDER + "expanded.png";
     public static final String COLLAPSED_ICON = AssetManager.RESOURCE_FOLDER + "collapsed.png";
-    public static final String MENU_EXPAND_ICON = AssetManager.RESOURCE_FOLDER + "collapsed.png";
+    public static final String MENU_EXPAND_ICON = AssetManager.RESOURCE_FOLDER + "menu_expand.png";
+
+    public static final String FOLDER_ICON = AssetManager.RESOURCE_FOLDER + "folder.png";
+    public static final String CLASS_ICON = AssetManager.RESOURCE_FOLDER + "class.png";
+    public static final String ENUM_ICON = AssetManager.RESOURCE_FOLDER + "enum.png";
+    public static final String INTERFACE_ICON = AssetManager.RESOURCE_FOLDER + "interface.png";
+    public static final String TEXT_ICON = AssetManager.RESOURCE_FOLDER + "text.png";
+    public static final String IMAGE_ICON = AssetManager.RESOURCE_FOLDER + "image.png";
+    public static final String UNKNOWN_ICON = AssetManager.RESOURCE_FOLDER + "unknown.png";
+
+    public static final String ABSTRACT_MOD_ICON = AssetManager.RESOURCE_FOLDER + "mod_abstract.png";
+    public static final String FINAL_MOD_ICON = AssetManager.RESOURCE_FOLDER + "mod_final.png";
+    public static final String MAIN_MOD_ICON = AssetManager.RESOURCE_FOLDER + "mod_main.png";
 
     private static final AssetManager instance = new AssetManager();
 
@@ -36,6 +47,9 @@ public class AssetManager {
     // Loads an image using a cache. Cache items remain in memory until cleared manually (although the JVM may automatically discard some assets over time if not used).
     public static void loadImage(final String path, final AsyncEvent<BufferedImage> event){
         assert(event != null);
+        if(path == null){
+            return;
+        }
 
         final AssetManager instance = AssetManager.instance;
         synchronized(AssetManager.class){

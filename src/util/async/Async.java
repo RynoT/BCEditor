@@ -51,10 +51,10 @@ public class Async {
         Async.async.launch(() -> {
             BufferedImage image;
             try {
-                //image = ImageIO.read(new File(file));
-
                 final URL url = Async.class.getResource(path);
                 assert (url != null);
+
+                System.out.println("[Async] Loading image from: " + path);
                 image = ImageIO.read(url);
             } catch(final IOException e) {
                 image = null;

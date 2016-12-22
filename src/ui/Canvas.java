@@ -1,12 +1,18 @@
 package ui;
 
+import project.Project;
+import project.ZipProject;
 import ui.component.*;
+import util.AssetManager;
+import util.async.Async;
+import util.async.AsyncType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
 /**
  * Created by Ryan Thomson on 13/10/2016.
@@ -23,6 +29,7 @@ public class Canvas extends JFrame {
 
     // Canvas is a singleton. Accessed using Canvas.getCanvas()
     private static final Canvas canvas = new Canvas();
+    private static IProjectExplorer explorer;
 
     private int activeMenuCount = 0;
     private IMenu[] activeMenu = new IMenu[Canvas.MAX_ACTIVE_MENUS];
@@ -34,6 +41,13 @@ public class Canvas extends JFrame {
 
     public static Canvas getCanvas() {
         return Canvas.canvas;
+    }
+
+    public static IProjectExplorer getProjectExplorer(){
+        if(Canvas.explorer == null){
+            Canvas.explorer = new IProjectExplorer();
+        }
+        return Canvas.explorer;
     }
 
     public int getActiveMenuCount() {
@@ -71,10 +85,23 @@ public class Canvas extends JFrame {
                     file.addEvent(() -> {
                         final IMenu menu = new IMenu(file);
                         {
-                            final IMenuItem open = new IMenuItem("Open...", "E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png");
+                            final IMenuItem open = new IMenuItem("Open...", AssetManager.MENU_EXPAND_ICON);
                             {
                                 open.setMnemonic(KeyEvent.VK_O);
-                                open.getInternalButton().addEvent(() -> System.out.println("open"));
+                                open.getInternalButton().addEvent(() -> {
+                                    final Project project = new ZipProject("E:\\Files and Documents\\RSBot-7037.jar");
+                                    Async.submit(() -> {
+                                        try {
+                                            if(project.load()){
+                                                SwingUtilities.invokeLater(() -> Canvas.getProjectExplorer().setProject(project));
+                                            } else {
+                                                System.err.println("[Project] An error occurred whilst loading the project");
+                                            }
+                                        } catch(final IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }, AsyncType.SINGLE);
+                                });
                             }
                             menu.addItem(open);
                             //menu.addItem(new ISeparator(IOrientation.EAST));
@@ -106,7 +133,7 @@ public class Canvas extends JFrame {
                     {
                         project.setToggle(true);
                     }
-                    toolbar.addTab(new ITab(project, new IProjectExplorer(), true), true);
+                    toolbar.addTab(new ITab(project, Canvas.getProjectExplorer(), true), true);
 
                     project.click();
 

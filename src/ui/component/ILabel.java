@@ -25,6 +25,7 @@ public class ILabel extends IComponent {
     private int mnemonic = -1;
     private ITextAlign alignment = ITextAlign.CENTER;
     private IOrientation orientation = IOrientation.NORTH;
+    private int paddingTop, paddingRight, paddingBottom, paddingLeft;
 
     private boolean hasIcon, updateText = false;
     private BufferedImage icon;
@@ -80,6 +81,15 @@ public class ILabel extends IComponent {
         return this.orientation.isVertical() ? this.getDefaultHeight() : this.getDefaultWidth();
     }
 
+    public void setPadding(final int top, final int right, final int bottom, final int left){
+        this.paddingTop = top;
+        this.paddingRight = right;
+        this.paddingBottom = bottom;
+        this.paddingLeft = left;
+        this.updateText = true;
+        this.repaint();
+    }
+
     // Package local because mnemonics only work with buttons. Buttons will call this.
     void setMnemonic(final int key) {
         this.mnemonic = key;
@@ -124,8 +134,8 @@ public class ILabel extends IComponent {
     }
 
     // This method will load the icon async
-    public void setIcon(final File file) {
-        assert (file.exists());
+    public void setIcon(final String file) {
+        assert (new File(file).exists());
         // assume we are going to successfully load the icon
         this.hasIcon = true;
         Async.loadImage(file, new AsyncEvent<BufferedImage>() {
@@ -189,8 +199,8 @@ public class ILabel extends IComponent {
     private BufferedImage generateTextRender() {
         final FontMetrics metrics = super.getFontMetrics(super.getFont());
         final Rectangle2D bounds = metrics.getStringBounds(this.text, super.getGraphics());
-        final BufferedImage image = new BufferedImage(Math.round((float) bounds.getWidth()),
-                Math.round((float) bounds.getHeight()), BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage image = new BufferedImage(Math.round((float) bounds.getWidth() + this.paddingLeft + this.paddingRight),
+                Math.round((float) bounds.getHeight() + this.paddingTop + this.paddingBottom), BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g2d = image.createGraphics();
         {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -211,7 +221,7 @@ public class ILabel extends IComponent {
                     as.addAttribute(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON, index, index + 1);
                 }
             }
-            g2d.drawString(as.getIterator(), 0, image.getHeight() - 2);
+            g2d.drawString(as.getIterator(), this.paddingLeft, image.getHeight() - 2 - this.paddingBottom);
         }
         g2d.dispose();
 

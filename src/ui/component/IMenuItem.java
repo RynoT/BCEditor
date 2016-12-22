@@ -1,23 +1,20 @@
 package ui.component;
 
 import util.AssetManager;
-import util.async.Async;
 import util.async.AsyncEvent;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 
 /**
  * Created by Ryan Thomson on 15/12/2016.
  */
 public class IMenuItem extends IComponent {
 
-    public static final int ITEM_HEIGHT = 23;
+    public static final int ITEM_SIZE = 23; //height
     public static final int TEXT_TO_SHORTCUT_SEPARATION = 10;
     public static final int ITEM_MIN_WIDTH = 150;
 
@@ -48,24 +45,51 @@ public class IMenuItem extends IComponent {
         super.setLayout(new BorderLayout(0, 0));
         super.setBorder(new IBorder(1, 1, 1, 1));
 
-        final int width = Math.max(IMenuItem.ITEM_MIN_WIDTH, IMenuItem.ITEM_HEIGHT + this.button
-                .getInternalLabel().getLabelWidth() + IMenuItem.TEXT_TO_SHORTCUT_SEPARATION + IMenuItem.ITEM_HEIGHT);
-        super.setPreferredSize(new Dimension(width, IMenuItem.ITEM_HEIGHT));
+        final int width = Math.max(IMenuItem.ITEM_MIN_WIDTH, IMenuItem.ITEM_SIZE + this.button
+                .getInternalLabel().getLabelWidth() + IMenuItem.TEXT_TO_SHORTCUT_SEPARATION + IMenuItem.ITEM_SIZE);
+        super.setPreferredSize(new Dimension(width, IMenuItem.ITEM_SIZE));
 
-        final JPanel iconPanel = new IMenuItemIconPanel(iconPath);
-        super.add(iconPanel, BorderLayout.WEST);
+        final IImagePanel westPanel = new IImagePanel();
+        {
+            westPanel.setPreferredSize(new Dimension(IMenuItem.ITEM_SIZE, IMenuItem.ITEM_SIZE));
+
+            if(iconPath != null){
+                AssetManager.loadImage(iconPath, new AsyncEvent<BufferedImage>() {
+                    @Override
+                    public void onComplete(final BufferedImage image) {
+                        westPanel.setImage(image);
+                    }
+                });
+            }
+        }
+        super.add(westPanel, BorderLayout.WEST);
 
         super.add(this.button, BorderLayout.CENTER);
 
-        final JPanel eastPanel = new JPanel();
+        final IImagePanel eastPanel = new IImagePanel();
         {
-            eastPanel.setOpaque(false);
-            eastPanel.setPreferredSize(new Dimension(IMenuItem.ITEM_HEIGHT, IMenuItem.ITEM_HEIGHT));
+            eastPanel.setPreferredSize(new Dimension(IMenuItem.ITEM_SIZE, IMenuItem.ITEM_SIZE));
         }
         super.add(eastPanel, BorderLayout.EAST);
 
         // Copy the background color of the button to the icon and east panel
-        final MouseAdapter backgroundCopy = new MouseAdapter() {
+        this.button.addMouseListener(this.getCopyAdapter());
+
+        final MouseAdapter eventPass = this.getPassAdapter();
+        westPanel.addMouseListener(eventPass);
+        eastPanel.addMouseListener(eventPass);
+    }
+
+    public IButton getInternalButton() {
+        return this.button;
+    }
+
+    public void setMnemonic(final int key) {
+        this.button.setMnemonic(key);
+    }
+
+    private MouseAdapter getCopyAdapter(){
+        return new MouseAdapter() {
             @Override
             public void mousePressed(final MouseEvent e) {
                 this.copyBackground();
@@ -87,12 +111,13 @@ public class IMenuItem extends IComponent {
             }
 
             private void copyBackground(){
-                IMenuItem.super.setBackground(button.getBackground());
+                IMenuItem.super.setBackground(IMenuItem.this.button.getBackground());
             }
         };
-        this.button.addMouseListener(backgroundCopy);
+    }
 
-        final MouseAdapter eventPass = new MouseAdapter() {
+    private MouseAdapter getPassAdapter(){
+        return new MouseAdapter() {
             @Override
             public void mousePressed(final MouseEvent e) {
                 this.pass(e);
@@ -114,48 +139,8 @@ public class IMenuItem extends IComponent {
             }
 
             private void pass(final MouseEvent e){
-                button.dispatchEvent(e);
+                IMenuItem.this.button.dispatchEvent(e);
             }
         };
-        iconPanel.addMouseListener(eventPass);
-        eastPanel.addMouseListener(eventPass);
-    }
-
-    public IButton getInternalButton() {
-        return this.button;
-    }
-
-    public void setMnemonic(final int key) {
-        this.button.setMnemonic(key);
-    }
-
-    private class IMenuItemIconPanel extends JPanel {
-
-        private BufferedImage icon = null;
-
-        private IMenuItemIconPanel(final String iconPath) {
-            super.setOpaque(false);
-            super.setPreferredSize(new Dimension(IMenuItem.ITEM_HEIGHT, IMenuItem.ITEM_HEIGHT));
-
-            if(iconPath != null) { //there's nothing to load if we have no path - don't put pointless cpu-wastes in the queue
-                AssetManager.loadImage(iconPath, new AsyncEvent<BufferedImage>() {
-                    @Override
-                    public void onComplete(final BufferedImage item) {
-                        icon = item;
-                        repaint();
-                    }
-                });
-            }
-        }
-
-        @Override
-        protected void paintComponent(final Graphics g) {
-            super.paintComponent(g);
-
-            if(this.icon != null) {
-                g.drawImage(this.icon, super.getWidth() / 2 - this.icon.getWidth() / 2,
-                        super.getHeight() / 2 - this.icon.getHeight() / 2, null);
-            }
-        }
     }
 }
