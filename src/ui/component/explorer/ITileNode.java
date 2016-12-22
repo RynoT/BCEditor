@@ -53,6 +53,8 @@ public abstract class ITileNode extends IComponent {
 
     public abstract void init();
 
+    public abstract void action();
+
     public boolean isRootNode() {
         return this.parent == null;
     }

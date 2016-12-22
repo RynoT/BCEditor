@@ -35,7 +35,7 @@ public abstract class Project {
     public abstract InputStream getStream(final String path);
 
     public final InputStream getStream(final FileType file){
-        return this.getStream(file.getPath() + file.getName() + "." + file.getExtension());
+        return this.getStream(file.getFullPath());
     }
 
     public final String getName(){

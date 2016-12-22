@@ -50,7 +50,6 @@ public class AssetManager {
         if(path == null){
             return;
         }
-
         final AssetManager instance = AssetManager.instance;
         synchronized(AssetManager.class){
             // Check to see if asset is already loaded

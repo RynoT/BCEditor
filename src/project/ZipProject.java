@@ -30,6 +30,8 @@ public class ZipProject extends Project {
             this.zipFile = null;
         }
         super.files.clear();
+
+        System.out.println("[ZipProject] Project unloaded (" + this.name + ")");
     }
 
     @Override

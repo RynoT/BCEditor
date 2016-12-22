@@ -85,14 +85,7 @@ public class IFolderNode extends ITileNode {
             expandPanel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(final MouseEvent e) {
-                    if(IFolderNode.this.collapsed) {
-                        IFolderNode.this.expand();
-                    } else {
-                        IFolderNode.this.collapse();
-                    }
-                    final Container parent = IFolderNode.super.getParent();
-                    parent.revalidate();
-                    parent.repaint();
+                    IFolderNode.this.action();
                 }
             });
         }
@@ -107,6 +100,17 @@ public class IFolderNode extends ITileNode {
         }
         this.folderPanel = folderPanel;
         super.add(folderPanel);
+    }
+
+    @Override
+    public void action() {
+        if(this.collapsed) {
+            this.expand();
+        } else {
+            this.collapse();
+        }
+        super.getParent().revalidate();
+        super.getParent().repaint();
     }
 
     public void expand() {

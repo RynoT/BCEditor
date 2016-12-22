@@ -23,8 +23,16 @@ public abstract class FileType {
         return this.extension;
     }
 
+    public final String getFullName(){
+        return this.name + "." + this.extension;
+    }
+
     public final String getPath(){
         return this.path;
+    }
+
+    public final String getFullPath(){
+        return this.path + this.getFullName();
     }
 
     public static FileType create(final String filePath) {

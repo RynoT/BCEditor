@@ -48,6 +48,11 @@ public class IFileNode extends ITileNode {
         super.add(this.iconPanel);
     }
 
+    @Override
+    public void action() {
+        System.out.println("Opening file: " + this.file.getFullName());
+    }
+
     public void updateIcon() {
         if(this.iconPanel.getImage() != null) {
             return; //image is already loaded so we won't do it again

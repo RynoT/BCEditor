@@ -9,6 +9,7 @@ import ui.component.explorer.ITileNode;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.Set;
 
 /**
@@ -17,8 +18,10 @@ import java.util.Set;
 public class IProjectExplorer extends IComponent {
 
     public static final Color BACKGROUND_COLOR = new Color(80, 80, 82);
-    public static final Color TITLE_BACKGROUND_COLOR_PROJECT = new Color(70, 70, 90);
+    public static final Color TITLE_BACKGROUND_COLOR_PROJECT = new Color(80, 80, 90);
     public static final Color TITLE_BACKGROUND_COLOR_NO_PROJECT = new Color(75, 65, 65);
+
+    public static final Color TILE_FOCUSED_BACKGROUND_COLOR = new Color(107, 55, 33);
 
     public static final int TITLE_BAR_HEIGHT = 24;
 
@@ -29,6 +32,7 @@ public class IProjectExplorer extends IComponent {
 
     private Project project = null;
     private IRootNode root = null;
+    private ITileNode focused = null;
 
     public IProjectExplorer() {
         super.setLayout(new BorderLayout(0, 0));
@@ -53,6 +57,45 @@ public class IProjectExplorer extends IComponent {
         {
             project.setOpaque(false);
             project.setLayout(new BoxLayout(project, BoxLayout.Y_AXIS));
+
+            // Set up the click listener so that we can interact with tiles added to the project panel
+            project.addContainerListener(new ContainerAdapter() {
+
+                private final MouseAdapter adapter = new MouseAdapter() {
+                    @Override
+                    public void mousePressed(final MouseEvent e) {
+                        assert(e.getComponent() instanceof ITileNode); //this adapter should only be added to ITileNode's
+
+                        final ITileNode node = (ITileNode) e.getComponent();
+                        if(IProjectExplorer.this.focused != null){
+                            // Let this node no longer be focused
+                            IProjectExplorer.this.focused.setOpaque(false);
+                            IProjectExplorer.this.focused.repaint();
+                        }
+                        IProjectExplorer.this.focused = node;
+
+                        // Set the background color for our focused node
+                        node.setOpaque(true);
+                        node.setBackground(IProjectExplorer.TILE_FOCUSED_BACKGROUND_COLOR);
+                        node.repaint();
+
+                        // Check to see if we need to 'open' this node (happens on double click, as standard)
+                        if(e.getClickCount() == 2){
+                            node.action();
+                        }
+                    }
+                };
+
+                @Override
+                public void componentAdded(final ContainerEvent e) {
+                    final Component child = e.getChild();
+
+                    // Only add our click event if the added component is a ITileNode and it doesn't already have the listener
+                    if(child instanceof ITileNode && child.getMouseListeners().length == 0){
+                        child.addMouseListener(this.adapter);
+                    }
+                }
+            });
         }
         this.projectPanel = project;
 
