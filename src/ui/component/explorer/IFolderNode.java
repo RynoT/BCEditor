@@ -18,7 +18,7 @@ import java.util.List;
 public class IFolderNode extends ITileNode {
 
     private int folderCount = 0;
-    protected final List<ITileNode> children = new ArrayList<>();
+    private final List<ITileNode> children = new ArrayList<>();
 
     private boolean collapsed = true;
     private IImagePanel expandPanel, folderPanel;
