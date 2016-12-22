@@ -11,6 +11,7 @@ public class IScrollPanel extends IComponent {
 
     public static final int SCROLLER_SIZE = 8;
     public static final int SCROLLER_MIN_SCALE = 8;
+    public static final int SCROLLER_WHEEL_SENSITIVITY = 4;
 
     public static final Color SCROLLER_COLOR = new Color(110, 110, 110);
     public static final Color SCROLLER_HOVER_COLOR = new Color(135, 135, 135);
@@ -39,7 +40,8 @@ public class IScrollPanel extends IComponent {
         if(vertical) {
             super.add(this.vertical, BorderLayout.EAST);
 
-            content.addMouseWheelListener(e -> IScrollPanel.this.vertical.move(e.getUnitsToScroll()));
+            content.addMouseWheelListener(e -> IScrollPanel.this.vertical.move((int)(e
+                    .getUnitsToScroll() * IScrollPanel.this.vertical.getWheelMultiplier())));
         }
         this.updateScale();
 
@@ -67,12 +69,11 @@ public class IScrollPanel extends IComponent {
         if(this.vertical != null) {
             if(target.height == 0 || super.getHeight() >= target.height){
                 this.vertical.y = 0;
-                this.vertical.perc = 0.0f;
                 this.vertical.height = -1;
             } else {
                 this.vertical.height = Math.max(IScrollPanel.SCROLLER_MIN_SCALE,
                         super.getHeight() * super.getHeight() / target.height);
-                this.vertical.y = (int)((super.getHeight() - this.vertical.height) * this.vertical.perc);
+                this.vertical.y = (int)(super.getHeight() * this.viewport.getViewPosition().y / (float)target.height);
             }
             this.vertical.limitPosition();
             this.vertical.repaint();
@@ -80,12 +81,11 @@ public class IScrollPanel extends IComponent {
         if(this.horizontal != null){
             if(target.width == 0 || super.getWidth() >= target.width){
                 this.horizontal.x = 0;
-                this.horizontal.perc = 0.0f;
                 this.horizontal.width = -1;
             } else {
                 this.horizontal.width = Math.max(IScrollPanel.SCROLLER_MIN_SCALE,
                         super.getWidth() * super.getWidth() / target.width);
-                this.horizontal.x = (int)((super.getHeight() - this.horizontal.width) * this.horizontal.perc);
+                this.horizontal.x = (int)(super.getWidth() * this.viewport.getViewPosition().x / (float)target.width);
             }
             this.horizontal.limitPosition();
             this.horizontal.repaint();
@@ -96,7 +96,6 @@ public class IScrollPanel extends IComponent {
 
         private final boolean horizontal;
 
-        private float perc = 0.0f;
         private int x = 0, y = 0, width, height;
         private boolean hovered = false, scrolling = false;
 
@@ -162,7 +161,7 @@ public class IScrollPanel extends IComponent {
 
                 @Override
                 public void mouseWheelMoved(final MouseWheelEvent e) {
-                    IScroller.this.move(e.getUnitsToScroll());
+                    IScroller.this.move((int)(e.getUnitsToScroll() * IScroller.this.getWheelMultiplier()));
                 }
 
                 private boolean isHovered(final Point p){
@@ -174,6 +173,11 @@ public class IScrollPanel extends IComponent {
             super.addMouseListener(mouse);
             super.addMouseWheelListener(mouse);
             super.addMouseMotionListener(mouse);
+        }
+
+        private float getWheelMultiplier(){
+            final float multiplier = super.getHeight() * 0.001f;
+            return multiplier > 1.0f ? IScrollPanel.SCROLLER_WHEEL_SENSITIVITY : IScrollPanel.SCROLLER_WHEEL_SENSITIVITY * multiplier;
         }
 
         private void move(final int offset){
@@ -190,10 +194,8 @@ public class IScrollPanel extends IComponent {
         private void limitPosition(){
             if(this.horizontal){
                 this.x = Math.max(0, Math.min(IScrollPanel.super.getWidth() - this.width, this.x));
-                this.perc = Math.max(0.0f, Math.min(1.0f, this.x / (IScrollPanel.super.getWidth() - (float)this.width)));
             } else {
                 this.y = Math.max(0, Math.min(IScrollPanel.super.getHeight() - this.height, this.y));
-                this.perc = Math.max(0.0f, Math.min(1.0f, this.y / (IScrollPanel.super.getHeight() - (float)this.height)));
             }
         }
 
@@ -202,9 +204,9 @@ public class IScrollPanel extends IComponent {
             final Point viewPosition = viewport.getViewPosition();
             final Dimension target = IScrollPanel.this.content.getPreferredSize();
             if(this.horizontal){
-                viewport.setViewPosition(new Point((int)(target.width * this.x / (float)super.getWidth()), viewPosition.y));
+                viewport.setViewPosition(new Point((int)((target.width - super.getWidth()) * this.x / (float)(super.getWidth() - this.width)), viewPosition.y));
             } else {
-                viewport.setViewPosition(new Point(viewPosition.x, (int)(target.height * this.y / (float)super.getHeight())));
+                viewport.setViewPosition(new Point(viewPosition.x, (int)((target.height - super.getHeight()) * this.y / (float)(super.getHeight() - this.height))));
             }
         }
 
