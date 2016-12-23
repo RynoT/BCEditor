@@ -28,7 +28,7 @@ public class _LineNumberTable extends AttributeInfo {
 
         private final int startPc, lineNumber;
 
-        public LineNumber(final DataInputStream dis) throws IOException {
+        private LineNumber(final DataInputStream dis) throws IOException {
             this.startPc = dis.readUnsignedShort();
             this.lineNumber = dis.readUnsignedShort();
         }

@@ -56,8 +56,8 @@ public abstract class AttributeInfo {
         switch(((TagUTF8) pool.getEntry(nameIndex)).getValue()){
             case AttributeInfo.CONSTANT_VALUE:
                 return new _ConstantValue(dis, nameIndex, length);
-            //case AttributeInfo.CODE:
-            //    return new _Code(dis, nameIndex, length);
+            case AttributeInfo.CODE:
+                return new _Code(dis, nameIndex, length, pool);
             case AttributeInfo.EXCEPTIONS:
                 return new _Exceptions(dis, nameIndex, length);
             case AttributeInfo.INNER_CLASSES:

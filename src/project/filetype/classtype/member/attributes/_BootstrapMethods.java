@@ -33,7 +33,7 @@ public class _BootstrapMethods extends AttributeInfo {
         private final int methodIndex;
         private final int[] argumentIndices;
 
-        public BootstrapMethod(final DataInputStream dis) throws IOException {
+        private BootstrapMethod(final DataInputStream dis) throws IOException {
             this.methodIndex = dis.readUnsignedShort();
             this.argumentIndices = new int[dis.readUnsignedShort()];
             for(int i = 0; i < this.argumentIndices.length; i++){

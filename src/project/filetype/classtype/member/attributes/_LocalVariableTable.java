@@ -33,7 +33,7 @@ public class _LocalVariableTable extends AttributeInfo {
         private final int nameIndex, descriptorIndex;
         private final int index;
 
-        public LocalVariable(final DataInputStream dis) throws IOException {
+        private LocalVariable(final DataInputStream dis) throws IOException {
             this.startPc = dis.readUnsignedShort();
             this.length = dis.readUnsignedShort();
             this.nameIndex = dis.readUnsignedShort();
