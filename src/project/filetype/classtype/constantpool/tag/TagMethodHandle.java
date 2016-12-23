@@ -16,6 +16,8 @@ public class TagMethodHandle extends PoolTag {
     public TagMethodHandle(final DataInputStream dis) throws IOException {
         this.kind = dis.readUnsignedShort();
         this.index = dis.readUnsignedShort();
+
+        assert (this.kind >= 1 && this.kind <= 9);
     }
 
     public int getReferenceKind(){
@@ -26,6 +28,10 @@ public class TagMethodHandle extends PoolTag {
         return this.index;
     }
 
+    public PoolTag getTagReference(final ConstantPool pool){
+        return pool.getEntry(this.index);
+    }
+
     @Override
     public int getTagId() {
         return PoolTag.TAG_METHOD_HANDLE;
@@ -33,6 +39,6 @@ public class TagMethodHandle extends PoolTag {
 
     @Override
     public String getContentString(final ConstantPool pool) {
-        return "method handle";
+        return this.kind + " (" + this.getTagReference(pool).getContentString(pool) + ")";
     }
 }

@@ -2,6 +2,7 @@ package project.filetype.classtype.constantpool.tag;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.PoolTag;
+import project.filetype.classtype.member.attributes._BootstrapMethods;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -26,6 +27,14 @@ public class TagInvokeDynamic extends PoolTag {
         return this.nameTypeIndex;
     }
 
+    public _BootstrapMethods.BootstrapMethod getBootstrapMethod(final _BootstrapMethods methods){
+        return methods.getBootstrapMethods()[this.bootstrapMethodIndex];
+    }
+
+    public TagNameAndType getTagNameAndType(final ConstantPool pool){
+        return (TagNameAndType) pool.getEntry(this.nameTypeIndex);
+    }
+
     @Override
     public int getTagId() {
         return PoolTag.TAG_INVOKE_DYNAMIC;
@@ -33,6 +42,8 @@ public class TagInvokeDynamic extends PoolTag {
 
     @Override
     public String getContentString(final ConstantPool pool) {
-        return "invoke dynamic";
+        // We don't have access to the class attributes here so we can't get the bootstrap method.
+        // All we can do is tell the user what index the bootstrap method is.
+        return "(bootstrap #" + this.bootstrapMethodIndex + ") " + this.getTagNameAndType(pool).getContentString(pool);
     }
 }

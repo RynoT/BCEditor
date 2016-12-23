@@ -38,15 +38,15 @@ public abstract class AttributeInfo {
         this.nameIndex = nameIndex;
     }
 
-    public int getNameIndex(){
+    public final int getNameIndex(){
         return this.nameIndex;
     }
 
-    public TagUTF8 getTagName(final ConstantPool pool){
+    public final TagUTF8 getTagName(final ConstantPool pool){
         return (TagUTF8) pool.getEntry(this.nameIndex);
     }
 
-    public boolean isSupported(){
+    public final boolean isSupported(){
         return !(this instanceof _Default);
     }
 
@@ -58,7 +58,30 @@ public abstract class AttributeInfo {
                 return new _ConstantValue(dis, nameIndex, length);
             //case AttributeInfo.CODE:
             //    return new _Code(dis, nameIndex, length);
-
+            case AttributeInfo.EXCEPTIONS:
+                return new _Exceptions(dis, nameIndex, length);
+            case AttributeInfo.INNER_CLASSES:
+                return new _InnerClasses(dis, nameIndex, length);
+            case AttributeInfo.ENCLOSING_METHOD:
+                return new _EnclosingMethod(dis, nameIndex, length);
+            case AttributeInfo.SYNTHETIC:
+                return new _Synthetic(dis, nameIndex, length);
+            case AttributeInfo.SIGNATURE:
+                return new _Signature(dis, nameIndex, length);
+            case AttributeInfo.SOURCE_FILE:
+                return new _SourceFile(dis, nameIndex, length);
+            case AttributeInfo.SOURCE_DEBUG_EXTENSION:
+                return new _SourceDebugExtension(dis, nameIndex, length);
+            case AttributeInfo.LINE_NUMBER_TABLE:
+                return new _LineNumberTable(dis, nameIndex, length);
+            case AttributeInfo.LOCAL_VARIABLE_TABLE:
+                return new _LocalVariableTable(dis, nameIndex, length);
+            case AttributeInfo.LOCAL_VARIABLE_TYPE_TABLE:
+                return new _LocalVariableTypeTable(dis, nameIndex, length);
+            case AttributeInfo.DEPRECATED:
+                return new _Deprecated(dis, nameIndex, length);
+            case AttributeInfo.BOOTSTRAP_METHODS:
+                return new _BootstrapMethods(dis, nameIndex, length);
         }
         return new _Default(dis, nameIndex, length);
     }
