@@ -10,4 +10,9 @@ public class TextType extends FileType {
     public TextType(final String name, final String extension, final String path){
         super(name, extension, path);
     }
+
+    @Override
+    public boolean load() {
+        return false;
+    }
 }

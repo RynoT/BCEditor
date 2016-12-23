@@ -1,5 +1,9 @@
 package project.filetype;
 
+import ui.Canvas;
+
+import java.io.InputStream;
+
 /**
  * Created by Ryan Thomson on 16/12/2016.
  */
@@ -14,6 +18,8 @@ public abstract class FileType {
         this.extension = extension;
         this.path = path;
     }
+
+    public abstract boolean load();
 
     public final String getName(){
         return this.name;
@@ -33,6 +39,10 @@ public abstract class FileType {
 
     public final String getFullPath(){
         return this.path + this.getFullName();
+    }
+
+    public final InputStream getStream(){
+        return Canvas.getProjectExplorer().getProject().getStream(this);
     }
 
     public static FileType create(final String filePath) {

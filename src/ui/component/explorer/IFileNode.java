@@ -50,7 +50,7 @@ public class IFileNode extends ITileNode {
 
     @Override
     public void action() {
-        System.out.println("Opening file: " + this.file.getFullName());
+        Canvas.getCanvas().open(this.file);
     }
 
     public void updateIcon() {
@@ -66,9 +66,10 @@ public class IFileNode extends ITileNode {
         } else if(this.file instanceof ImageType) {
             iconAsset = AssetManager.IMAGE_ICON;
 
+            // Load in an image and resize it to an icon, and set that icon
             Async.submit(() -> {
                 final BufferedImage in;
-                try (final InputStream is = Canvas.getProjectExplorer().getProject().getStream(IFileNode.this.file)){
+                try (final InputStream is = IFileNode.this.file.getStream()){
                     in = ImageIO.read(is);
                 } catch(final IOException e) {
                     e.printStackTrace(System.err);
@@ -98,7 +99,7 @@ public class IFileNode extends ITileNode {
             iconAsset = AssetManager.UNKNOWN_ICON;
         }
         //if(iconAsset == null){
-        //    System.err.println("[IFileNode] No icon for file-type: " + this.file.getName() + "." + this.file.getExtension());
+        //    System.err.println("[IFileNode] No icon for file-type: " + this.file.getTagName() + "." + this.file.getExtension());
         //}
         AssetManager.loadImage(iconAsset, new AsyncEvent<BufferedImage>() {
             @Override

@@ -2,6 +2,7 @@ package ui;
 
 import project.Project;
 import project.ZipProject;
+import project.filetype.FileType;
 import ui.component.*;
 import util.AssetManager;
 import util.async.Async;
@@ -13,6 +14,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by Ryan Thomson on 13/10/2016.
@@ -67,6 +69,11 @@ public class Canvas extends JFrame {
     public void pushActiveMenu(final IMenu menu) {
         assert (this.activeMenuCount + 1 < this.activeMenu.length);
         this.activeMenu[this.activeMenuCount++] = menu;
+    }
+
+    public void open(final FileType file){
+        assert(file != null);
+        file.load();
     }
 
     private void init() {

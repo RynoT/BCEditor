@@ -9,6 +9,7 @@ import java.io.IOException;
 /**
  * Created by Ryan Thomson on 23/12/2016.
  */
+// int, short, char, byte, boolean
 public class TagInteger extends PoolTag {
 
     private final int value;

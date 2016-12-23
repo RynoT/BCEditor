@@ -8,4 +8,9 @@ public class BinaryType extends FileType {
     public BinaryType(final String name, final String extension, final String path){
         super(name, extension, path);
     }
+
+    @Override
+    public boolean load() {
+        return false;
+    }
 }
