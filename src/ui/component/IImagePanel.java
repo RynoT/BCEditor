@@ -20,24 +20,54 @@ public class IImagePanel extends IComponent {
         return this.images.length;
     }
 
-    public BufferedImage[] getImages(){
-        return this.images;
+//    public BufferedImage[] getImages(){
+//        return this.images;
+//    }
+
+//    public void removeImages(){
+//        this.setImages();
+//    }
+//
+//    public void setImage(final BufferedImage image){
+//        this.setImages(image);
+//    }
+//
+//    public void setImages(final BufferedImage... images){
+//        this.images = images == null ? new BufferedImage[0] : images;
+//        super.repaint();
+//    }
+
+    public void setImageCount(final int count){
+        if(this.images.length == count){
+            return;
+        }
+        this.images = new BufferedImage[count];
+        super.repaint();
     }
 
-    public void removeImages(){
-        this.setImages();
+    public void setImage(final int index, final BufferedImage image){
+        assert(index >= 0 && index < this.images.length);
+        this.images[index] = image;
+        super.repaint();
     }
 
     public void setImage(final BufferedImage image){
-        this.setImages(image);
-    }
-
-    public void setImages(final BufferedImage... images){
-        this.images = images == null ? new BufferedImage[0] : images;
+        if(this.images.length != 1){
+            this.setImageCount(1);
+        }
+        this.images[0] = image;
         super.repaint();
     }
 
     public void addImage(final BufferedImage image){
+        for(int i = 0; i < this.images.length; i++){
+            if(this.images[i] != null){
+                continue;
+            }
+            this.images[i] = image;
+            super.repaint();
+            return;
+        }
         final BufferedImage[] tmp = new BufferedImage[this.images.length + 1];
         System.arraycopy(this.images, 0, tmp, 0, this.images.length);
         tmp[tmp.length - 1] = image;

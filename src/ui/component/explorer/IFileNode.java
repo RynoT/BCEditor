@@ -81,7 +81,7 @@ public class IFileNode extends ITileNode {
         }
         g2d.dispose();
         synchronized(this.iconSyncLock) {
-            this.iconPanel.setImage(out);
+            this.iconPanel.addImage(out);
         }
     }
 
@@ -98,22 +98,25 @@ public class IFileNode extends ITileNode {
         } else if(index.isInterface()) {
             this.setIcon(AssetManager.INTERFACE_ICON);
         } else {
-            this.addToIcon(AssetManager.CLASS_ICON);
+            synchronized(this.iconSyncLock) {
+                this.iconPanel.setImageCount(3);
+            }
+            this.setIconImage(AssetManager.CLASS_ICON, 0);
             if(index.isMainClass()) {
-                this.addToIcon(AssetManager.MAIN_MOD_ICON);
+                this.setIconImage(AssetManager.MAIN_MOD_ICON, 1);
             }
             if(index.isFinal()) {
-                this.addToIcon(AssetManager.FINAL_MOD_ICON);
+                this.setIconImage(AssetManager.FINAL_MOD_ICON, 2);
             }
             if(index.isAbstract()) {
-                this.addToIcon(AssetManager.ABSTRACT_MOD_ICON);
+                this.setIconImage(AssetManager.ABSTRACT_MOD_ICON, 2);
             }
         }
     }
 
-    public void resetIcon(){
-        synchronized(this.iconSyncLock){
-            this.iconPanel.removeImages();
+    public void resetIcon() {
+        synchronized(this.iconSyncLock) {
+            this.iconPanel.setImageCount(0);
         }
     }
 
@@ -122,18 +125,19 @@ public class IFileNode extends ITileNode {
             @Override
             public void onComplete(final BufferedImage image) {
                 synchronized(IFileNode.this.iconSyncLock) {
-                    IFileNode.this.iconPanel.setImage(image);
+                    IFileNode.this.iconPanel.setImageCount(1);
+                    IFileNode.this.iconPanel.setImage(0, image);
                 }
             }
         });
     }
 
-    private void addToIcon(final String path) {
+    private void setIconImage(final String path, final int index){
         AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
             @Override
             public void onComplete(final BufferedImage image) {
                 synchronized(IFileNode.this.iconSyncLock) {
-                    IFileNode.this.iconPanel.addImage(image);
+                    IFileNode.this.iconPanel.setImage(index, image);
                 }
             }
         });
@@ -149,27 +153,22 @@ public class IFileNode extends ITileNode {
         // Load icon according to file type
         final String iconAsset;
         if(this.file instanceof ClassType) {
-            iconAsset = AssetManager.CLASS_ICON;
+            //iconAsset = AssetManager.CLASS_ICON;
+
+            // Load class icon
             Async.submit(this::setClassIcon, AsyncType.MULTI);
+            return;
+        } else if(this.file instanceof ImageType) {
+            //iconAsset = AssetManager.IMAGE_ICON;
+
+            // Load image into icon
+            Async.submit(this::setImageIcon, AsyncType.MULTI);
+            return;
         } else if(this.file instanceof TextType) {
             iconAsset = AssetManager.TEXT_ICON;
-        } else if(this.file instanceof ImageType) {
-            iconAsset = AssetManager.IMAGE_ICON;
-            Async.submit(this::setImageIcon, AsyncType.MULTI);
         } else {
-            // for undefined/binary types
             iconAsset = AssetManager.UNKNOWN_ICON;
         }
-        AssetManager.loadImage(iconAsset, new AsyncEvent<BufferedImage>() {
-            @Override
-            public void onComplete(final BufferedImage image) {
-                synchronized(IFileNode.this.iconSyncLock) {
-                    if(IFileNode.this.iconPanel.getImageCount() != 0){
-                        return;
-                    }
-                    IFileNode.this.iconPanel.setImage(image);
-                }
-            }
-        });
+        this.setIcon(iconAsset);
     }
 }
