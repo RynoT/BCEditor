@@ -12,6 +12,10 @@ public class TextType extends FileType {
     }
 
     @Override
+    public void unload() {
+    }
+
+    @Override
     public boolean load() {
         return false;
     }

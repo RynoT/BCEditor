@@ -27,6 +27,14 @@ public enum AccessFlags {
         return this.verbose;
     }
 
+    public static boolean containsFlag(final int modifier, final AccessFlags flag){
+        return AccessFlags.containsFlag(modifier, flag.mask());
+    }
+
+    public static boolean containsFlag(final int modifier, final int mask){
+        return (modifier & mask) == mask;
+    }
+
     public static String decode(int modifier, final Type type) {
         if(modifier <= 0){
             return "";

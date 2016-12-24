@@ -3,7 +3,9 @@ package util;
 import util.async.Async;
 import util.async.AsyncEvent;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -34,32 +36,75 @@ public class AssetManager {
     private final Map<String, BufferedImage> assets = new WeakHashMap<>();
     private final Map<String, Set<AsyncEvent<BufferedImage>>> pending = new HashMap<>();
 
-    private AssetManager(){
+    private AssetManager() {
     }
 
-    public static void clearCache(){
-        synchronized(AssetManager.class) {
+    public static void clearCache() {
+        synchronized(AssetManager.instance) {
             AssetManager.instance.assets.clear();
             AssetManager.instance.pending.clear();
         }
     }
 
-    // Loads an image using a cache. Cache items remain in memory until cleared manually (although the JVM may automatically discard some assets over time if not used).
-    public static void loadImage(final String path, final AsyncEvent<BufferedImage> event){
-        assert(event != null);
-        if(path == null){
+//    public static boolean containsImage(final String path) {
+//        synchronized(AssetManager.instance) {
+//            return AssetManager.instance.assets.containsKey(path);
+//        }
+//    }
+//
+//    public static void addImage(final String path, final BufferedImage image) {
+//        if(path == null) {
+//            return;
+//        }
+//        synchronized(AssetManager.instance) {
+//            if(AssetManager.instance.assets.containsKey(path)) {
+//                return;
+//            }
+//            AssetManager.instance.assets.put(path, image);
+//        }
+//    }
+
+    // Loads an image using a cache. Not async.
+//    public static BufferedImage loadImage(final String path) {
+//        if(path == null) {
+//            return null;
+//        }
+//        final AssetManager instance = AssetManager.instance;
+//        synchronized(AssetManager.instance) {
+//            // Check to see if asset is already loaded
+//            if(instance.assets.containsKey(path)) {
+//                return instance.assets.get(path);
+//            }
+//            // The asset is not loaded, load it
+//            BufferedImage image = null;
+//            try {
+//                image = ImageIO.read(AssetManager.class.getResource(path));
+//            } catch(final IOException e) {
+//                e.printStackTrace(System.err);
+//            }
+//            if(image != null) {
+//                instance.assets.put(path, image);
+//            }
+//            return image;
+//        }
+//    }
+
+    // Loads an image async using a cache. Cache items remain in memory until cleared manually (although the JVM may automatically discard some assets over time if not used).
+    public static void loadImage(final String path, final AsyncEvent<BufferedImage> event) {
+        assert (event != null);
+        if(path == null) {
             return;
         }
         final AssetManager instance = AssetManager.instance;
-        synchronized(AssetManager.class){
+        synchronized(AssetManager.instance) {
             // Check to see if asset is already loaded
-            if(instance.assets.containsKey(path)){
+            if(instance.assets.containsKey(path)) {
                 // Return the pre-loaded asset if we have it. This does not happen async (it happens during method call).
                 event.onComplete(instance.assets.get(path));
                 return;
             }
             // Check to see if the asset is currently being loaded by someone else
-            if(instance.pending.containsKey(path)){
+            if(instance.pending.containsKey(path)) {
                 // If it is, just let them know that we want it to
                 instance.pending.get(path).add(event);
             } else {
@@ -75,14 +120,15 @@ public class AssetManager {
                     @Override
                     public void onComplete(final BufferedImage image) {
                         final AssetManager instance = AssetManager.instance;
-                        synchronized(AssetManager.class){
-                            assert(!instance.assets.containsKey(path));
-                            assert(instance.pending.containsKey(path));
+                        synchronized(AssetManager.instance) {
+                            assert (instance.pending.containsKey(path));
 
                             // Put the asset into a cache so that we can easily access it later
-                            instance.assets.put(path, image);
+                            if(!instance.assets.containsKey(path)) {
+                                instance.assets.put(path, image);
+                            }
                             // Loop through all the pending requests for this asset (including our own) and let them know we loaded it
-                            for(final AsyncEvent<BufferedImage> event : instance.pending.get(path)){
+                            for(final AsyncEvent<BufferedImage> event : instance.pending.get(path)) {
                                 event.onComplete(image);
                             }
                             // Let the application know that we are no longer loading this asset, and all the pending requests have been fulfilled

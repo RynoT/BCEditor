@@ -19,6 +19,8 @@ public abstract class FileType {
         this.path = path;
     }
 
+    public abstract void unload();
+
     public abstract boolean load();
 
     public final String getName(){

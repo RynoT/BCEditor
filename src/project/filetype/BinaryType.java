@@ -10,6 +10,10 @@ public class BinaryType extends FileType {
     }
 
     @Override
+    public void unload() {
+    }
+
+    @Override
     public boolean load() {
         return false;
     }

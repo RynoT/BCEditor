@@ -48,7 +48,7 @@ public class ZipProject extends Project {
             if(name.endsWith("/")) { //Don't add folders, our hierarchy algorithm will take care of folders
                 continue;
             }
-            super.files.add(FileType.create(name));
+            super.files.put(name, FileType.create(name));
         }
         if(super.isLoaded()){
             System.out.println("[ZipProject] Project loaded successfully (" + this.name + ")");

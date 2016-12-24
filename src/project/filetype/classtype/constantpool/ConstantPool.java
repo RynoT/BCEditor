@@ -20,13 +20,59 @@ public class ConstantPool {
         this.entries = new ArrayList<>(count);
     }
 
-    public int getCount(){
+    public int getCount() {
         return this.count;
     }
 
-    public PoolTag getEntry(final int index){
+    public void clearEntries(){
+        this.entries.clear();
+    }
+
+    public PoolTag getEntry(final int index) {
         assert (index >= 0 && index < this.entries.size());
         return this.entries.get(index);
+    }
+
+    public void index(final DataInputStream dis) throws IOException {
+        this.entries.add(new TagEmpty());
+        for(int i = 0; i < this.count - 1; i++) {
+            final int id = dis.readUnsignedByte();
+            switch(id) {
+                // We only need to read TagUTF8 and TagClass when indexing
+                case PoolTag.TAG_UTF8:
+                    this.entries.add(new TagUTF8(dis));
+                    break;
+                case PoolTag.TAG_CLASS:
+                    this.entries.add(new TagClass(dis));
+                    break;
+
+                case PoolTag.TAG_INTEGER:
+                case PoolTag.TAG_FLOAT:
+                case PoolTag.TAG_FIELD_REF:
+                case PoolTag.TAG_METHOD_REF:
+                case PoolTag.TAG_IM_REF:
+                case PoolTag.TAG_NAME_AND_TYPE:
+                case PoolTag.TAG_METHOD_HANDLE:
+                case PoolTag.TAG_INVOKE_DYNAMIC:
+                    this.entries.add(new TagEmpty());
+                    dis.skipBytes(4);
+                    break;
+                case PoolTag.TAG_LONG:
+                case PoolTag.TAG_DOUBLE:
+                    i++;
+                    this.entries.add(new TagEmpty());
+                    this.entries.add(new TagEmpty());
+                    dis.skipBytes(8);
+                    break;
+                case PoolTag.TAG_STRING:
+                case PoolTag.TAG_METHOD_TYPE:
+                    this.entries.add(new TagEmpty());
+                    dis.skipBytes(2);
+                    break;
+                default:
+                    System.err.println("[ConstantPool][Indexing] Found tag with unknown id: " + id + " (index: " + i + ")");
+            }
+        }
     }
 
     public void load(final DataInputStream dis) throws IOException {

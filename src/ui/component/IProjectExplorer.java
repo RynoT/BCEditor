@@ -6,10 +6,13 @@ import project.filetype.FileType;
 import ui.component.explorer.IFileNode;
 import ui.component.explorer.IFolderNode;
 import ui.component.explorer.ITileNode;
+import util.async.Async;
+import util.async.AsyncType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -110,6 +113,10 @@ public class IProjectExplorer extends IComponent {
         return this.project;
     }
 
+    public Component[] getVisibleTiles(){
+        return this.projectPanel.getComponents();
+    }
+
     public void setProject(final Project project) {
         if(this.project != null) {
             this.project.unload();
@@ -130,7 +137,7 @@ public class IProjectExplorer extends IComponent {
         this.titlePanel.setBackground(IProjectExplorer.TITLE_BACKGROUND_COLOR_PROJECT);
         // Populate the explorer
         synchronized(Project.class) {
-            final Set<FileType> files = project.getFiles();
+            final Collection<FileType> files = project.getFiles().values();
 
             // Populate files into a hierarchy
             final IRootNode root = new IRootNode();
@@ -161,6 +168,8 @@ public class IProjectExplorer extends IComponent {
 
         this.projectPanel.revalidate();
         this.projectPanel.repaint();
+
+        Async.submit(project::index, AsyncType.SINGLE);
     }
 
     private class IRootNode extends IFolderNode {
