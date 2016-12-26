@@ -57,6 +57,13 @@ public class ILabel extends IComponent {
         //super.addMouseListener(new IForwardMouseEvent()); //we only need this if we make labels clickable, which right now we're not
     }
 
+    @Override
+    protected void setDimensions() {
+        super.setPreferredSize(new Dimension(this.textRender.getWidth(), this.textRender.getHeight()));
+        super.setMaximumSize(super.getPreferredSize());
+        super.setMinimumSize(super.getPreferredSize());
+    }
+
     public String getText() {
         return this.text;
     }
@@ -98,12 +105,18 @@ public class ILabel extends IComponent {
     }
 
     public void setText(final String text) {
+        if(this.text.equals(text)){
+            return;
+        }
         this.text = text;
         this.updateText = true;
         super.repaint();
     }
 
     public void setColor(final Color color) {
+        if(this.color == color){
+            return;
+        }
         this.color = color;
         this.updateText = true;
         super.repaint();

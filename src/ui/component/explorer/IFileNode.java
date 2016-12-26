@@ -7,6 +7,8 @@ import project.filetype.TextType;
 import project.filetype.classtype.index.Index;
 import ui.Canvas;
 import ui.component.IImagePanel;
+import ui.component.ILabel;
+import ui.component.ITextAlign;
 import util.AssetManager;
 import util.async.Async;
 import util.async.AsyncEvent;
@@ -25,10 +27,16 @@ public class IFileNode extends ITileNode {
 
     public static final int TILE_IMAGE_SIZE = ITileNode.TILE_SIZE - 4;
 
+    public static final int TILE_COMMENT_PADDING = 6;
+    public static final Color TILE_COMMENT_COLOR = new Color(160, 160, 160);
+    public static final Color TILE_COMMENT_FOCUS_COLOR = new Color(167, 244, 6);
+
     private final FileType file;
 
     private IImagePanel iconPanel;
     private final Object iconSyncLock = new Object();
+
+    private ILabel comment = null;
 
     public IFileNode(final FileType file, final String name, final IFolderNode parent) {
         super(name, parent, ITileNode.TILE_FILE_INSET);
@@ -52,8 +60,63 @@ public class IFileNode extends ITileNode {
     }
 
     @Override
-    public void action() {
+    public void onFocus() {
+        for(final ITileNode next : Canvas.getProjectExplorer().getRootNode()) {
+            if(next == null) {
+                continue;
+            }
+            assert (next instanceof IFileNode);
+            final IFileNode node = (IFileNode) next;
+            if(node.comment == null) {
+                continue;
+            }
+            if(this.comment == null) {
+                node.comment.setColor(IFileNode.TILE_COMMENT_COLOR);
+            } else if(this.comment.getText().equals(node.comment.getText())) {
+                node.comment.setColor(IFileNode.TILE_COMMENT_FOCUS_COLOR);
+            } else {
+                node.comment.setColor(IFileNode.TILE_COMMENT_COLOR);
+            }
+        }
+    }
+
+    @Override
+    public void onAction() {
         Canvas.getCanvas().open(this.file);
+    }
+
+    public void update() {
+        synchronized(this.iconSyncLock) {
+            this.iconPanel.setImageCount(0);
+        }
+        this.updateIcon();
+        this.updateComment();
+    }
+
+    public void setComment(String comment) {
+        if(comment == null || comment.trim().equals("")) {
+            if(this.comment != null) {
+                super.remove(this.comment);
+                super.repaint();
+                this.comment = null;
+            }
+            return;
+        }
+        comment = "[" + comment + "]";
+        if(this.comment == null) {
+            final ILabel label = new ILabel(comment);
+            {
+                label.setAlignment(ITextAlign.LEFT);
+                label.setColor(IFileNode.TILE_COMMENT_COLOR);
+                label.setPadding(0, 0, 0, IFileNode.TILE_COMMENT_PADDING);
+            }
+            this.comment = label;
+            super.add(label);
+            super.revalidate();
+        } else {
+            this.comment.setText(comment);
+        }
+        this.comment.repaint();
     }
 
     private void setImageIcon() {
@@ -114,12 +177,6 @@ public class IFileNode extends ITileNode {
         }
     }
 
-    public void resetIcon() {
-        synchronized(this.iconSyncLock) {
-            this.iconPanel.setImageCount(0);
-        }
-    }
-
     private void setIcon(final String path) {
         AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
             @Override
@@ -132,7 +189,7 @@ public class IFileNode extends ITileNode {
         });
     }
 
-    private void setIconImage(final String path, final int index){
+    private void setIconImage(final String path, final int index) {
         AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
             @Override
             public void onComplete(final BufferedImage image) {
@@ -141,6 +198,20 @@ public class IFileNode extends ITileNode {
                 }
             }
         });
+    }
+
+    public void updateComment() {
+        if(this.file instanceof ClassType) {
+            final ClassType clazz = (ClassType) this.file;
+            if(clazz.isIndexed()) {
+                final String superclass = clazz.getIndex().getSuperClass();
+                if(superclass.equals("java.lang.Object") || (this.comment != null
+                        && this.comment.getText().equals("[" + superclass + "]"))) {
+                    return;
+                }
+                this.setComment(superclass);
+            }
+        }
     }
 
     public void updateIcon() {

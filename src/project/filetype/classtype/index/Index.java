@@ -2,6 +2,7 @@ package project.filetype.classtype.index;
 
 import project.filetype.classtype.AccessFlags;
 import project.filetype.classtype.constantpool.ConstantPool;
+import project.filetype.classtype.constantpool.tag.TagClass;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;
 
@@ -11,11 +12,13 @@ import project.filetype.classtype.member.MethodInfo;
 public class Index {
 
     private final int accessFlags;
+    private final String superClass;
     private final MemberIndex[] fields, methods;
     private final InterfaceIndex[] interfaces;
 
-    public Index(final ConstantPool pool, final int accessFlags, final FieldInfo[] fields, final MethodInfo[] methods, final int[] interfaces){
+    public Index(final ConstantPool pool, final int accessFlags, final int superClassIndex, final FieldInfo[] fields, final MethodInfo[] methods, final int[] interfaces){
         this.accessFlags = accessFlags;
+        this.superClass = pool.getEntry(superClassIndex).getContentString(pool);
         this.fields = new MemberIndex[fields.length];
         for(int i = 0; i < fields.length; i++){
             this.fields[i] = new MemberIndex(fields[i], pool);
@@ -29,6 +32,10 @@ public class Index {
 
     public int getAccessFlags(){
         return this.accessFlags;
+    }
+
+    public String getSuperClass(){
+        return this.superClass;
     }
 
     public MemberIndex[] getFields(){

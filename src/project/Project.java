@@ -61,26 +61,30 @@ public abstract class Project {
     }
 
     public final void index() {
-        System.out.println("[Project][Indexing] Indexing project...");
+        System.out.println("[Project] Indexing project...");
         for(final FileType file : this.files.values()) {
             if(!(file instanceof ClassType)) {
                 continue;
             }
             if(((ClassType) file).index()) {
-                System.out.println("[Project]{Indexing]     Indexed class: " + file.getFullPath());
+                System.out.println("[Project]     Indexed class: " + file.getFullPath());
             } else {
-                System.err.println("[Project][Indexing]     An error occurred when indexing file: " + file.getFullPath());
+                System.err.println("[Project]     An error occurred when indexing file: " + file.getFullPath());
             }
         }
-        SwingUtilities.invokeLater(() -> {
-            for(final Component comp : Canvas.getProjectExplorer().getVisibleTiles()) {
-                if(!(comp instanceof IFileNode)){
-                    continue;
-                }
-                ((IFileNode) comp).resetIcon();
-                ((IFileNode) comp).updateIcon();
+        System.out.println("[Project]     Updating explorer tiles...");
+        for(final ITileNode node : Canvas.getProjectExplorer().getRootNode()){
+            if(node == null){
+                continue;
             }
-        });
-        System.out.println("[Project][Indexing] Indexing complete");
+            assert (node instanceof IFileNode);
+            if(node.isVisible()){
+                // We only have to update the icons which are visible in the explorer
+                ((IFileNode) node).updateIcon();
+            }
+            // We need to update the comment of every tile
+            ((IFileNode) node).updateComment();
+        }
+        System.out.println("[Project] Indexing complete");
     }
 }

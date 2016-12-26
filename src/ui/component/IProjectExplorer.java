@@ -13,7 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Collection;
-import java.util.Set;
+import java.util.Iterator;
 
 /**
  * Created by Ryan Thomson on 15/12/2016.
@@ -70,21 +70,23 @@ public class IProjectExplorer extends IComponent {
                         assert(e.getComponent() instanceof ITileNode); //this adapter should only be added to ITileNode's
 
                         final ITileNode node = (ITileNode) e.getComponent();
-                        if(IProjectExplorer.this.focused != null){
-                            // Let this node no longer be focused
-                            IProjectExplorer.this.focused.setOpaque(false);
-                            IProjectExplorer.this.focused.repaint();
+                        if(IProjectExplorer.this.focused != node) {
+                            if(IProjectExplorer.this.focused != null) {
+                                // Let this node no longer be focused
+                                IProjectExplorer.this.focused.setOpaque(false);
+                                IProjectExplorer.this.focused.repaint();
+                            }
+                            IProjectExplorer.this.focused = node;
+
+                            // Set the background color for our focused node
+                            node.setOpaque(true);
+                            node.setBackground(IProjectExplorer.TILE_FOCUSED_BACKGROUND_COLOR);
+                            node.repaint();
+                            node.onFocus(); //let the tile know that it is now focused
                         }
-                        IProjectExplorer.this.focused = node;
-
-                        // Set the background color for our focused node
-                        node.setOpaque(true);
-                        node.setBackground(IProjectExplorer.TILE_FOCUSED_BACKGROUND_COLOR);
-                        node.repaint();
-
                         // Check to see if we need to 'open' this node (happens on double click, as standard)
                         if(e.getClickCount() == 2){
-                            node.action();
+                            node.onAction();
                         }
                     }
                 };
@@ -111,6 +113,10 @@ public class IProjectExplorer extends IComponent {
 
     public Project getProject() {
         return this.project;
+    }
+
+    public IFolderNode getRootNode(){
+        return this.root;
     }
 
     public Component[] getVisibleTiles(){
@@ -197,7 +203,7 @@ public class IProjectExplorer extends IComponent {
             for(final ITileNode node : super.getChildren()) {
                 parent.add(node);
                 if(node instanceof IFileNode) {
-                    ((IFileNode) node).updateIcon();
+                    ((IFileNode) node).update();
                 }
             }
             parent.revalidate();

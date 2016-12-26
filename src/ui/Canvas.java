@@ -96,7 +96,7 @@ public class Canvas extends JFrame {
                             {
                                 open.setMnemonic(KeyEvent.VK_O);
                                 open.getInternalButton().addEvent(() -> {
-                                    final Project project = new ZipProject("E:\\Files and Documents\\RSBot-7037.jar");
+                                    final Project project = new ZipProject("../Test.jar");
                                     Async.submit(() -> {
                                         try {
                                             if(project.load()){
@@ -127,8 +127,6 @@ public class Canvas extends JFrame {
                 menuBar.add(edit);
             }
             content.add(menuBar, BorderLayout.NORTH);
-            //button.getInternalLabel().setOrientation(IOrientation.SOUTH);
-            //button.getInternalLabel().setIcon(new File("E:\\OneDrive\\Personal\\Programming\\JetBrains\\IntelliJ Projects\\BCEditor\\Icons\\INTERFACE_ICON.png"));
 
             final JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
             {

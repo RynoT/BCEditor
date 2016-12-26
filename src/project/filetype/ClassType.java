@@ -179,11 +179,14 @@ public class ClassType extends FileType {
                         return false;
                     }
                     dis.skipBytes(4);
+
                     this.constantPool = new ConstantPool(dis.readUnsignedShort());
                     this.constantPool.index(dis);
 
                     this.accessFlags = dis.readUnsignedShort();
-                    dis.skipBytes(4);
+
+                    dis.skipBytes(2);
+                    this.superClassIndex = dis.readUnsignedShort();
 
                     this.interfaces = new int[dis.readUnsignedShort()];
                     for(int i = 0; i < this.interfaces.length; i++){
@@ -205,7 +208,8 @@ public class ClassType extends FileType {
                 }
             }
             if(success){
-                this.index = new Index(this.constantPool, this.accessFlags, this.fields, this.methods, this.interfaces);
+                this.index = new Index(this.constantPool, this.accessFlags, this
+                        .superClassIndex, this.fields, this.methods, this.interfaces);
             } else {
                 this.index = null;
             }
