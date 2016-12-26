@@ -57,6 +57,10 @@ public abstract class ITileNode extends IComponent {
 
     public abstract void onAction();
 
+    public ILabel getLabel(){
+        return this.label;
+    }
+
     public boolean isRootNode() {
         return this.parent == null;
     }

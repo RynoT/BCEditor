@@ -24,8 +24,6 @@ public class IProjectExplorer extends IComponent {
     public static final Color TITLE_BACKGROUND_COLOR_PROJECT = new Color(80, 80, 90);
     public static final Color TITLE_BACKGROUND_COLOR_NO_PROJECT = new Color(75, 65, 65);
 
-    public static final Color TILE_FOCUSED_BACKGROUND_COLOR = new Color(107, 55, 33);
-
     public static final int TITLE_BAR_HEIGHT = 24;
 
     public static final String DEFAULT_TITLE_NO_PROJECT = "No Project";
@@ -80,7 +78,7 @@ public class IProjectExplorer extends IComponent {
 
                             // Set the background color for our focused node
                             node.setOpaque(true);
-                            node.setBackground(IProjectExplorer.TILE_FOCUSED_BACKGROUND_COLOR);
+                            node.setBackground(IComponent.DEFAULT_BACKGROUND_HIGHLIGHT);
                             node.repaint();
                             node.onFocus(); //let the tile know that it is now focused
                         }

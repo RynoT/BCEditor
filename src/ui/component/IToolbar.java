@@ -72,7 +72,7 @@ public class IToolbar extends IComponent {
         super.setMaximumSize(super.getPreferredSize());
     }
 
-    public void addTab(final ITab tab, final boolean top) {
+    public void addTab(final ITab tab, final boolean first) {
         final IButton button = tab.getButton();
         {
             // Add an event to the button which will show the tab when pressed
@@ -84,7 +84,7 @@ public class IToolbar extends IComponent {
                 button.setOrientation(IOrientation.getOpposite(this.orientation), false);
             }
         }
-        this.buttonPanel.add(button, top ? this.buttonPanel.getComponentZOrder(this.buttonSeparator) : this.buttonPanel.getComponentCount());
+        this.buttonPanel.add(button, first ? this.buttonPanel.getComponentZOrder(this.buttonSeparator) : this.buttonPanel.getComponentCount());
     }
 
     private class IToolbarContent extends IComponent {

@@ -16,26 +16,18 @@ public class IImagePanel extends IComponent {
         super.setOpaque(false);
     }
 
+    public IImagePanel(final IImagePanel panel){
+        this.images = panel.images;
+        super.setOpaque(panel.isOpaque());
+    }
+
     public int getImageCount(){
         return this.images.length;
     }
 
-//    public BufferedImage[] getImages(){
-//        return this.images;
-//    }
-
-//    public void removeImages(){
-//        this.setImages();
-//    }
-//
-//    public void setImage(final BufferedImage image){
-//        this.setImages(image);
-//    }
-//
-//    public void setImages(final BufferedImage... images){
-//        this.images = images == null ? new BufferedImage[0] : images;
-//        super.repaint();
-//    }
+    public BufferedImage[] getImages(){
+        return this.images;
+    }
 
     public void setImageCount(final int count){
         if(this.images.length == count){

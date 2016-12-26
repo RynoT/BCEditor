@@ -16,6 +16,8 @@ public abstract class IComponent extends JPanel {
     public static final Color DEFAULT_HIGHLIGHT_DARK = new Color(45, 46, 47, 235);
     public static final Color DEFAULT_HIGHLIGHT_LIGHT = new Color(85, 86, 87, 250);
 
+    public static final Color DEFAULT_BACKGROUND_HIGHLIGHT = new Color(202, 84, 0);
+
 //    public static final Color DEFAULT_HOVERED = new Color(10, 97, 116);
 //    public static final Color DEFAULT_PRESSED = new Color(4, 59, 70);
 

@@ -33,10 +33,10 @@ public class IFileNode extends ITileNode {
 
     private final FileType file;
 
-    private IImagePanel iconPanel;
-    private final Object iconSyncLock = new Object();
-
     private ILabel comment = null;
+    private IImagePanel iconPanel;
+
+    private final Object iconSyncLock = new Object();
 
     public IFileNode(final FileType file, final String name, final IFolderNode parent) {
         super(name, parent, ITileNode.TILE_FILE_INSET);
@@ -45,6 +45,18 @@ public class IFileNode extends ITileNode {
 
         assert (file != null);
         this.file = file;
+    }
+
+    public ILabel getComment(){
+        return this.comment;
+    }
+
+    public FileType getFileType(){
+        return this.file;
+    }
+
+    public IImagePanel getIconPanel(){
+        return this.iconPanel;
     }
 
     @Override
@@ -57,6 +69,11 @@ public class IFileNode extends ITileNode {
         }
         this.iconPanel = iconPanel;
         super.add(this.iconPanel);
+    }
+
+    @Override
+    public void onAction() {
+        Canvas.getCanvas().open(this);
     }
 
     @Override
@@ -80,17 +97,27 @@ public class IFileNode extends ITileNode {
         }
     }
 
-    @Override
-    public void onAction() {
-        Canvas.getCanvas().open(this.file);
+    private void setIcon(final String path) {
+        AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
+            @Override
+            public void onComplete(final BufferedImage image) {
+                synchronized(IFileNode.this.iconSyncLock) {
+                    IFileNode.this.iconPanel.setImageCount(1);
+                    IFileNode.this.iconPanel.setImage(0, image);
+                }
+            }
+        });
     }
 
-    public void update() {
-        synchronized(this.iconSyncLock) {
-            this.iconPanel.setImageCount(0);
-        }
-        this.updateIcon();
-        this.updateComment();
+    private void setIconImage(final String path, final int index) {
+        AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
+            @Override
+            public void onComplete(final BufferedImage image) {
+                synchronized(IFileNode.this.iconSyncLock) {
+                    IFileNode.this.iconPanel.setImage(index, image);
+                }
+            }
+        });
     }
 
     public void setComment(String comment) {
@@ -177,27 +204,12 @@ public class IFileNode extends ITileNode {
         }
     }
 
-    private void setIcon(final String path) {
-        AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
-            @Override
-            public void onComplete(final BufferedImage image) {
-                synchronized(IFileNode.this.iconSyncLock) {
-                    IFileNode.this.iconPanel.setImageCount(1);
-                    IFileNode.this.iconPanel.setImage(0, image);
-                }
-            }
-        });
-    }
-
-    private void setIconImage(final String path, final int index) {
-        AssetManager.loadImage(path, new AsyncEvent<BufferedImage>() {
-            @Override
-            public void onComplete(final BufferedImage image) {
-                synchronized(IFileNode.this.iconSyncLock) {
-                    IFileNode.this.iconPanel.setImage(index, image);
-                }
-            }
-        });
+    public void update() {
+        synchronized(this.iconSyncLock) {
+            this.iconPanel.setImageCount(0);
+        }
+        this.updateIcon();
+        this.updateComment();
     }
 
     public void updateComment() {

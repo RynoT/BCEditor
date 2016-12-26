@@ -11,6 +11,10 @@ public class ITab {
 
     private boolean displayed = false;
 
+    public ITab(final IButton button, final IComponent content) {
+        this(button, content, true);
+    }
+
     public ITab(final IButton button, final IComponent content, final boolean main) {
         assert (button != null);
         this.button = button;

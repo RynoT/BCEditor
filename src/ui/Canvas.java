@@ -4,6 +4,7 @@ import project.Project;
 import project.ZipProject;
 import project.filetype.FileType;
 import ui.component.*;
+import ui.component.explorer.IFileNode;
 import util.AssetManager;
 import util.async.Async;
 import util.async.AsyncType;
@@ -14,7 +15,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Created by Ryan Thomson on 13/10/2016.
@@ -29,9 +29,11 @@ public class Canvas extends JFrame {
 
     public static final int MAX_ACTIVE_MENUS = 3;
 
+    private static final IFileViewer viewer = new IFileViewer();
+    private static final IProjectExplorer explorer = new IProjectExplorer();
+
     // Canvas is a singleton. Accessed using Canvas.getCanvas()
     private static final Canvas canvas = new Canvas();
-    private static IProjectExplorer explorer;
 
     private int activeMenuCount = 0;
     private IMenu[] activeMenu = new IMenu[Canvas.MAX_ACTIVE_MENUS];
@@ -46,9 +48,6 @@ public class Canvas extends JFrame {
     }
 
     public static IProjectExplorer getProjectExplorer(){
-        if(Canvas.explorer == null){
-            Canvas.explorer = new IProjectExplorer();
-        }
         return Canvas.explorer;
     }
 
@@ -71,9 +70,14 @@ public class Canvas extends JFrame {
         this.activeMenu[this.activeMenuCount++] = menu;
     }
 
-    public void open(final FileType file){
-        assert(file != null);
-        file.load();
+    public void open(final IFileNode node){
+        assert(node != null && node.getFileType() != null);
+        final FileType file = node.getFileType();
+        if(file.load()){
+            Canvas.viewer.display(node);
+        } else {
+            System.err.println("[Canvas] Unable to open file due to load failure");
+        }
     }
 
     private void init() {
@@ -156,6 +160,8 @@ public class Canvas extends JFrame {
                 {
                 }
                 mainPanel.add(bottomBar, bottomBar.getOrientation().getBorder());
+
+                mainPanel.add(Canvas.viewer, BorderLayout.CENTER);
             }
             content.add(mainPanel, BorderLayout.CENTER);
         }

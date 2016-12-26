@@ -31,6 +31,9 @@ public class AssetManager {
     public static final String FINAL_MOD_ICON = AssetManager.RESOURCE_FOLDER + "mod_final.png";
     public static final String MAIN_MOD_ICON = AssetManager.RESOURCE_FOLDER + "mod_main.png";
 
+    public static final String CLOSE_NORMAL_ICON = AssetManager.RESOURCE_FOLDER + "icon_close_normal.png";
+    public static final String CLOSE_HOVER_ICON = AssetManager.RESOURCE_FOLDER + "icon_close_hover.png";
+
     private static final AssetManager instance = new AssetManager();
 
     private final Map<String, BufferedImage> assets = new WeakHashMap<>();
