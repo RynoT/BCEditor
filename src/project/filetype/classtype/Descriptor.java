@@ -41,6 +41,9 @@ public class Descriptor {
 
         //Map<String, java.util.List<HashMap<HashSet<Integer>, Long>>>
         System.out.println(decode("Ljava/util/Map<Ljava/lang/String;Ljava/util/List<Ljava/util/HashMap<Ljava/util/HashSet<Ljava/lang/Integer;>;Ljava/lang/Long;>;>;>;"));
+
+        //<T extends org.script.Context>org.script.TestScript<T>
+        System.out.println(decode("<T:Lorg/script/Context;>Lorg/script/TestScript<TT;>;"));
     }*/
 
     public static String hideObjectClass(final String descriptor){
@@ -73,7 +76,14 @@ public class Descriptor {
                 case '<': {
                     int index = descriptor.indexOf('(');
                     if(index == -1){
-                        index = descriptor.lastIndexOf('>') + 1;
+                        for(int j = i; j < descriptor.length(); j++){
+                            if(descriptor.charAt(j) == '>'){
+                                index = j + 1;
+                                break;
+                            }
+                        }
+                        assert(index != -1);
+                        //index = descriptor.lastIndexOf('>') + 1;
                     }
                     i = index - 1;
                     sb.append(Descriptor.decodeGenerics(descriptor.substring(0, index)));
@@ -129,7 +139,7 @@ public class Descriptor {
             final char next = chars[i];
             if(next == '<' || next == '>') {
                 sb.append(next);
-            } else if(next == 'L') {
+            } else if(next == 'L' || next == 'T') {
                 String signature = "";
                 for(int inner = 1; i < chars.length; i++) {
                     signature += chars[i];
@@ -143,6 +153,9 @@ public class Descriptor {
                 }
                 sb.append(Descriptor.decode(signature));
 
+                if(i == chars.length){
+                    break;
+                }
                 if(chars[i + 1] == '>') {
                     continue;
                 }
