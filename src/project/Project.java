@@ -61,11 +61,6 @@ public abstract class Project {
     }
 
     public final void index() {
-        try {
-            Thread.sleep(2000);
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
         System.out.println("[Project] Indexing project...");
         for(final FileType file : this.files.values()) {
             if(!(file instanceof ClassType)) {
