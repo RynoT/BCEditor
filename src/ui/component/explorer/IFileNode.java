@@ -6,6 +6,7 @@ import project.filetype.ImageType;
 import project.filetype.TextType;
 import project.filetype.classtype.index.Index;
 import ui.Canvas;
+import ui.component.IFileViewer;
 import ui.component.IImagePanel;
 import ui.component.ILabel;
 import ui.component.ITextAlign;
@@ -60,6 +61,11 @@ public class IFileNode extends ITileNode {
     }
 
     @Override
+    public void onAction() {
+        Canvas.getFileViewer().open(this);
+    }
+
+    @Override
     public void init() {
         final IImagePanel iconPanel = new IImagePanel();
         {
@@ -69,11 +75,6 @@ public class IFileNode extends ITileNode {
         }
         this.iconPanel = iconPanel;
         super.add(this.iconPanel);
-    }
-
-    @Override
-    public void onAction() {
-        Canvas.getCanvas().open(this);
     }
 
     @Override
@@ -104,6 +105,7 @@ public class IFileNode extends ITileNode {
                 synchronized(IFileNode.this.iconSyncLock) {
                     IFileNode.this.iconPanel.setImageCount(1);
                     IFileNode.this.iconPanel.setImage(0, image);
+                    IFileNode.this.updateTabIcon();
                 }
             }
         });
@@ -115,6 +117,7 @@ public class IFileNode extends ITileNode {
             public void onComplete(final BufferedImage image) {
                 synchronized(IFileNode.this.iconSyncLock) {
                     IFileNode.this.iconPanel.setImage(index, image);
+                    IFileNode.this.updateTabIcon();
                 }
             }
         });
@@ -172,6 +175,7 @@ public class IFileNode extends ITileNode {
         g2d.dispose();
         synchronized(this.iconSyncLock) {
             this.iconPanel.addImage(out);
+            this.updateTabIcon();
         }
     }
 
@@ -210,6 +214,15 @@ public class IFileNode extends ITileNode {
         }
         this.updateIcon();
         this.updateComment();
+    }
+
+    private void updateTabIcon(){
+        for(final IFileViewer.ViewerTab tab : Canvas.getFileViewer().getTabs()){
+            if(tab.getNode() == this){
+                tab.updateButton();
+                break;
+            }
+        }
     }
 
     public void updateComment() {

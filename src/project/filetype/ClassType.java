@@ -206,6 +206,8 @@ public class ClassType extends FileType {
                 } catch(final IOException e) {
                     e.printStackTrace(System.err);
                 }
+            } else {
+                success = true;
             }
             if(success){
                 this.index = new Index(this.constantPool, this.accessFlags, this
@@ -225,6 +227,9 @@ public class ClassType extends FileType {
 
     @Override
     public boolean load() {
+        if(this.isLoaded()){
+            return true;
+        }
         synchronized(this.loadSyncLock) {
             final String prefix = "[ClassType]     ";
             System.out.println("[ClassType] Loading " + super.getFullName() + "...");

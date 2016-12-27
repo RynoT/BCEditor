@@ -18,7 +18,7 @@ public class Base {
     }
 
     public static void main(final String[] args) {
-        // safely setup the look and feel and show main display
+        // safely setup the look and feel and show main open
         SwingUtilities.invokeLater(() -> {
             try {
                 // we use the default system look and feel for our application

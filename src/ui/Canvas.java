@@ -47,7 +47,11 @@ public class Canvas extends JFrame {
         return Canvas.canvas;
     }
 
-    public static IProjectExplorer getProjectExplorer(){
+    public static IFileViewer getFileViewer() {
+        return Canvas.viewer;
+    }
+
+    public static IProjectExplorer getProjectExplorer() {
         return Canvas.explorer;
     }
 
@@ -70,14 +74,20 @@ public class Canvas extends JFrame {
         this.activeMenu[this.activeMenuCount++] = menu;
     }
 
-    public void open(final IFileNode node){
-        assert(node != null && node.getFileType() != null);
-        final FileType file = node.getFileType();
-        if(file.load()){
-            Canvas.viewer.display(node);
-        } else {
-            System.err.println("[Canvas] Unable to open file due to load failure");
+    public static void setProject(final Project project){
+        assert (project.isLoaded());
+        assert (SwingUtilities.isEventDispatchThread());
+
+        final IProjectExplorer explorer = Canvas.getProjectExplorer();
+        if(explorer.getProject() != null){
+            explorer.clearProject();
+
+            Canvas.getFileViewer().clearTabs();
         }
+        explorer.setProject(project);
+
+        // Index the project
+        Async.submit(project::index, AsyncType.SINGLE);
     }
 
     private void init() {
@@ -103,8 +113,8 @@ public class Canvas extends JFrame {
                                     final Project project = new ZipProject("../Test.jar");
                                     Async.submit(() -> {
                                         try {
-                                            if(project.load()){
-                                                SwingUtilities.invokeLater(() -> Canvas.getProjectExplorer().setProject(project));
+                                            if(project.load()) {
+                                                SwingUtilities.invokeLater(() -> Canvas.setProject(project));
                                             } else {
                                                 System.err.println("[Project] An error occurred whilst loading the project");
                                             }

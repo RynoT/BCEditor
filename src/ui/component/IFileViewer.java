@@ -1,16 +1,19 @@
 package ui.component;
 
+import project.filetype.FileType;
+import ui.*;
+import ui.Canvas;
 import ui.component.explorer.IFileNode;
 import util.AssetManager;
 import util.async.AsyncEvent;
 
 import javax.swing.*;
-import javax.swing.text.View;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -58,28 +61,52 @@ public class IFileViewer extends IComponent {
         super.add(top, BorderLayout.NORTH);
     }
 
-    public void setActiveTab(final ViewerTab tab){
-        assert(tab != null && this.tabs.contains(tab));
-        if(this.active == tab){
+    public List<ViewerTab> getTabs(){
+        return this.tabs;
+    }
+
+    public void clearTabs(){
+        this.tabs.clear();
+        this.tabBar.removeAll();
+        this.tabBar.revalidate();
+        this.tabBar.repaint();
+    }
+
+    public void setActiveTab(final ViewerTab tab) {
+        assert (tab != null && this.tabs.contains(tab));
+        if(this.active == tab) {
             return;
         }
-        if(this.active != null){
+        if(this.active != null) {
             this.active.setActive(false);
         }
         this.active = tab;
         tab.setActive(true);
     }
 
-    public void display(final IFileNode node) {
-        final ViewerTab tab = new ViewerTab(node, this.tabs.size());
-        this.tabs.add(tab);
+    public void open(final IFileNode node) {
+        assert (node != null && node.getFileType() != null);
 
-        // Automatically activate the new tab
-        this.setActiveTab(tab);
-        this.tabBar.add(tab.button);
+        // Check to see if this file is already opened or not
+        for(final ViewerTab tab : this.tabs) {
+            if(tab.node == node) {
+                this.setActiveTab(tab);
+                return;
+            }
+        }
+        if(node.getFileType().load()){
+            final ViewerTab tab = new ViewerTab(node, this.tabs.size());
+            this.tabs.add(tab);
 
-        super.revalidate();
-        super.repaint();
+            // Automatically activate the new tab
+            this.setActiveTab(tab);
+            this.tabBar.add(tab.button);
+
+            super.revalidate();
+            super.repaint();
+        } else {
+            System.err.println("[Canvas] Unable to open file due to load failure");
+        }
     }
 
     public class ViewerTab {
@@ -95,7 +122,7 @@ public class IFileViewer extends IComponent {
             this.node = node;
             this.index = index;
 
-            this.button = new JPanel(){
+            this.button = new JPanel() {
                 @Override
                 protected void paintComponent(final Graphics g) {
                     super.paintComponent(g);
@@ -108,17 +135,17 @@ public class IFileViewer extends IComponent {
                     g.drawLine(0, 0, super.getWidth() - 1, 0);
 
                     //Draw east
-                    if(index == tabCount - 1){
+                    if(index == tabCount - 1) {
                         g.drawLine(super.getWidth() - 1, 0, super.getWidth() - 1, super.getHeight() - 1);
                     }
 
                     //Draw south
-                    if(!ViewerTab.this.active){
+                    if(!ViewerTab.this.active) {
                         g.drawLine(0, super.getHeight() - 1, super.getWidth() - 1, super.getHeight() - 1);
                     }
 
                     //Draw west
-                    if(index > 0){
+                    if(index > 0) {
                         g.drawLine(0, 0, 0, super.getHeight() - 1);
                     }
                 }
@@ -128,8 +155,58 @@ public class IFileViewer extends IComponent {
             this.button.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(final MouseEvent e) {
-                    if(!ViewerTab.this.active){
+                    if(!ViewerTab.this.active) {
                         IFileViewer.this.setActiveTab(ViewerTab.this);
+                    }
+                }
+            });
+            this.button.addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseDragged(final MouseEvent e) {
+                    final Point loc = e.getLocationOnScreen();
+                    final int lastIndex = IFileViewer.this.tabs.size() - 1;
+                    int newIndex = ViewerTab.this.index;
+                    // Check to see if the mouse is left of the tab bar
+                    if(loc.getX() < IFileViewer.this.tabBar.getLocationOnScreen().x) {
+                        newIndex = 0;
+                    } else {
+                        // Check to see if the mouse is right of the right-most tab
+                        final Component end = IFileViewer.this.tabs.get(lastIndex).button;
+                        if(loc.getX() > end.getLocationOnScreen().x + end.getWidth()) {
+                            newIndex = lastIndex;
+                        } else {
+                            // Check to see where the mouse is within the tabs
+                            for(final ViewerTab tab : IFileViewer.this.tabs) {
+                                final Rectangle bounds = new Rectangle(tab.button.getLocationOnScreen(),
+                                        new Dimension(tab.button.getWidth(), tab.button.getHeight()));
+                                // We only need to check to see if the x value is within range of the button
+                                if(loc.getX() >= bounds.getX() && loc.getX() <= bounds.getX() + bounds.getWidth()) {
+                                    // Decide whether to put the index before or after the tab
+                                    final boolean left = loc.getX() < bounds.getX() + bounds.getWidth();
+                                    newIndex = left ? tab.index : tab.index + 1;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // Ensure the new index is a valid index
+                    newIndex = Math.max(Math.min(newIndex, lastIndex), 0);
+                    // Check to see if the index has changed
+                    if(newIndex != ViewerTab.this.index){
+                        // Swap the elements on the tabs list and bar
+                        IFileViewer.this.tabs.remove(ViewerTab.this.index);
+                        IFileViewer.this.tabs.add(newIndex, ViewerTab.this);
+                        IFileViewer.this.tabBar.remove(ViewerTab.this.index);
+                        IFileViewer.this.tabBar.add(ViewerTab.this.button, newIndex);
+
+                        // Adjust indices to match the new order
+                        for(int i = 0; i < IFileViewer.this.tabs.size(); i++){
+                            IFileViewer.this.tabs.get(i).index = i;
+                        }
+
+                        // Update the tab bar
+                        IFileViewer.this.tabBar.revalidate();
+                        IFileViewer.this.tabBar.repaint();
                     }
                 }
             });
@@ -137,19 +214,33 @@ public class IFileViewer extends IComponent {
             this.updateButton();
         }
 
-        public void setIndex(final int index){
+        public IFileNode getNode(){
+            return this.node;
+        }
+
+        public void setIndex(final int index) {
             this.index = index;
         }
 
-        public void setActive(final boolean active){
+        private void setActive(final boolean active) {
             this.active = active;
             this.button.setBackground(active ? IProjectExplorer.DEFAULT_BACKGROUND_HIGHLIGHT
                     : IFileViewer.TAB_BUTTON_UNFOCUSED_COLOR);
             this.button.repaint();
         }
 
-        public void close(){
-            System.out.println("closing tab");
+        public void close() {
+            assert (this.node != null);
+            IFileViewer.this.tabs.remove(this.index);
+            for(int i = this.index; i < IFileViewer.this.tabs.size(); i++) {
+                IFileViewer.this.tabs.get(i).index--;
+            }
+            IFileViewer.this.tabBar.remove(this.index);
+            IFileViewer.this.tabBar.revalidate();
+            IFileViewer.this.tabBar.repaint();
+
+            // Unload the file since we no longer need it in memory
+            this.node.getFileType().unload();
         }
 
         public void updateButton() {
@@ -161,6 +252,7 @@ public class IFileViewer extends IComponent {
             {
                 icon.setPreferredSize(new Dimension(IFileViewer.TAB_BAR_HEIGHT, IFileViewer.TAB_BAR_HEIGHT));
                 icon.setMaximumSize(icon.getPreferredSize());
+                icon.setMinimumSize(icon.getPreferredSize());
             }
             this.button.add(icon);
 
@@ -170,6 +262,7 @@ public class IFileViewer extends IComponent {
             {
                 label.setPreferredSize(new Dimension(label.getLabelWidth(), Integer.MAX_VALUE));
                 label.setMaximumSize(label.getPreferredSize());
+                label.setMinimumSize(label.getPreferredSize());
 
                 label.setPadding(0, 0, 2, 0);
             }
@@ -199,6 +292,7 @@ public class IFileViewer extends IComponent {
             super.setOpaque(false);
             super.setPreferredSize(new Dimension(IFileViewer.TAB_BUTTON_CLOSE_SIZE, IFileViewer.TAB_BUTTON_CLOSE_SIZE));
             super.setMaximumSize(super.getPreferredSize());
+            super.setMinimumSize(super.getPreferredSize());
 
             AssetManager.loadImage(AssetManager.CLOSE_NORMAL_ICON, new AsyncEvent<BufferedImage>() {
                 @Override

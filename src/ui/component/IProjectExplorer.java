@@ -121,21 +121,25 @@ public class IProjectExplorer extends IComponent {
         return this.projectPanel.getComponents();
     }
 
-    public void setProject(final Project project) {
-        if(this.project != null) {
-            this.project.unload();
-        }
-        this.project = project;
-        assert (SwingUtilities.isEventDispatchThread());
-        this.projectPanel.removeAll();
-        if(project == null) {
-            this.root = null;
-            this.title.setText(IProjectExplorer.DEFAULT_TITLE_NO_PROJECT);
-            this.titlePanel.setBackground(IProjectExplorer.TITLE_BACKGROUND_COLOR_NO_PROJECT);
+    public void clearProject(){
+        if(this.project == null){
             return;
         }
+        this.project.unload();
+        assert (SwingUtilities.isEventDispatchThread());
+        this.projectPanel.removeAll();
+
+        this.root = null;
+        this.project = null;
+        this.title.setText(IProjectExplorer.DEFAULT_TITLE_NO_PROJECT);
+        this.titlePanel.setBackground(IProjectExplorer.TITLE_BACKGROUND_COLOR_NO_PROJECT);
+    }
+
+    public void setProject(final Project project) {
+        assert (this.project == null); //we should never have an active project (call clearProject first)
         assert (project.isLoaded()); //project should always be loaded before setting
 
+        this.project = project;
         // Set title of explorer
         this.title.setText(project.getName());
         this.titlePanel.setBackground(IProjectExplorer.TITLE_BACKGROUND_COLOR_PROJECT);
@@ -172,8 +176,6 @@ public class IProjectExplorer extends IComponent {
 
         this.projectPanel.revalidate();
         this.projectPanel.repaint();
-
-        Async.submit(project::index, AsyncType.SINGLE);
     }
 
     private class IRootNode extends IFolderNode {
