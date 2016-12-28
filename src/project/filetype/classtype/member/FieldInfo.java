@@ -11,6 +11,8 @@ import java.io.IOException;
  */
 public class FieldInfo extends MemberInfo {
 
+    // Possible attributes: ConstantValue, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations
+
     public FieldInfo(final DataInputStream dis, final ConstantPool pool) throws IOException {
         super(dis, pool);
     }

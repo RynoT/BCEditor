@@ -11,6 +11,9 @@ import java.io.IOException;
  */
 public class MethodInfo extends MemberInfo {
 
+    // Possible attributes: Code, Exceptions, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations,
+    // RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
+
     public MethodInfo(final DataInputStream dis, final ConstantPool pool) throws IOException {
         super(dis, pool);
     }

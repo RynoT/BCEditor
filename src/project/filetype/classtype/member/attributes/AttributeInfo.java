@@ -50,6 +50,15 @@ public abstract class AttributeInfo {
         return !(this instanceof _Default);
     }
 
+    public static AttributeInfo findFirst(final String name, final AttributeInfo[] attributes, final ConstantPool pool){
+        for(final AttributeInfo attribute : attributes){
+            if(attribute.getTagName(pool).getValue().equals(name)){
+                return attribute;
+            }
+        }
+        return null;
+    }
+
     public static AttributeInfo create(final DataInputStream dis, final ConstantPool pool) throws IOException {
         final int nameIndex = dis.readUnsignedShort();
         final int length = dis.readInt();

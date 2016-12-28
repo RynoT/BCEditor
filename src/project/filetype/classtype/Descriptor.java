@@ -44,6 +44,12 @@ public class Descriptor {
 
         //<T extends org.script.Context>org.script.TestScript<T>
         System.out.println(decode("<T:Lorg/script/Context;>Lorg/script/TestScript<TT;>;"));
+
+        //<A extends java.lang.Object, T extends A, F extends T>ABC<F>, iface<A>
+        System.out.println(decode("<A:Ljava/lang/Object;T:TA;F:TT;>LABC<TF;>;Liface<TA;>;"));
+
+        //<T extends org.script.AbstractQuery<T, K, C>, K extends java.lang.Object, C extends org.script.ClientContext>org.script.ClientAccessor<C>, java.lang.Iterable<K>, org.script.Nillable<K>
+        System.out.println(decode("<T:Lorg/script/AbstractQuery<TT;TK;TC;>;K:Ljava/lang/Object;C:Lorg/script/ClientContext;>Lorg/script/ClientAccessor<TC;>;Ljava/lang/Iterable<TK;>;Lorg/script/Nillable<TK;>;"));
     }*/
 
     public static String hideObjectClass(final String descriptor){
@@ -76,10 +82,18 @@ public class Descriptor {
                 case '<': {
                     int index = descriptor.indexOf('(');
                     if(index == -1){
-                        for(int j = i; j < descriptor.length(); j++){
-                            if(descriptor.charAt(j) == '>'){
-                                index = j + 1;
-                                break;
+                        int inner = 0;
+                        for(int j = i + 1; j < descriptor.length(); j++){
+                            final char c = descriptor.charAt(j);
+                            if(c == '<'){
+                                inner++;
+                            } else if(c == '>'){
+                                if(inner == 0) {
+                                    index = j + 1;
+                                    break;
+                                } else {
+                                    inner--;
+                                }
                             }
                         }
                         assert(index != -1);
@@ -139,16 +153,18 @@ public class Descriptor {
             final char next = chars[i];
             if(next == '<' || next == '>') {
                 sb.append(next);
-            } else if(next == 'L' || next == 'T') {
+            } else if(next == 'L') {
                 String signature = "";
-                for(int inner = 1; i < chars.length; i++) {
+                for(int inner = 0; i < chars.length; i++) {
                     signature += chars[i];
                     if(chars[i] == ';') {
-                        if(--inner == 0) {
+                        if(inner == 0) {
                             break;
                         }
                     } else if(chars[i] == '<') {
                         inner++;
+                    } else if(chars[i] == '>') {
+                        inner--;
                     }
                 }
                 sb.append(Descriptor.decode(signature));
@@ -175,6 +191,20 @@ public class Descriptor {
                 if(next == ':') {
                     if(chars[i + 1] != ':') {
                         sb.append(" extends ");
+                    }
+                } else if(next == 'T' && chars[i + 1] != ':'){
+                    String var = "";
+                    for(i += 1; i < chars.length; i++){
+                        if(chars[i] == ';'){
+                            break;
+                        } else {
+                            var += chars[i];
+                        }
+                    }
+                    sb.append(var);
+
+                    if(i < chars.length - 1 && chars[i + 1] != '>') {
+                        sb.append(", ");
                     }
                 } else {
                     sb.append(next);

@@ -49,6 +49,26 @@ public class ClassType extends FileType {
         return this.major;
     }
 
+    public int getAccessFlags(){
+        return this.accessFlags;
+    }
+
+    public String getAccessFlagsString(){
+        return AccessFlags.decode(this.accessFlags, AccessFlags.Type.CLASS);
+    }
+
+    public FieldInfo[] getFields(){
+        return this.fields;
+    }
+
+    public MethodInfo[] getMethods(){
+        return this.methods;
+    }
+
+    public AttributeInfo[] getAttributes(){
+        return this.attributes;
+    }
+
     public ConstantPool getConstantPool(){
         return this.constantPool;
     }

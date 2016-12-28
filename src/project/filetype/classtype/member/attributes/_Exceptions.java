@@ -23,6 +23,10 @@ public class _Exceptions extends AttributeInfo {
         }
     }
 
+    public int getExceptionCount(){
+        return this.exceptionIndices.length;
+    }
+
     public int[] getExceptionIndices(){
         return this.exceptionIndices;
     }
