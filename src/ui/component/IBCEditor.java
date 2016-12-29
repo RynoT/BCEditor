@@ -6,8 +6,10 @@ import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
+import project.filetype.classtype.opcode.Instruction;
 
 import java.awt.*;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 27/12/2016.
@@ -32,6 +34,17 @@ public class IBCEditor extends IEditor {
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), classType.getConstantPool());
             if(code != null){
+                final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
+                for(final Instruction next : instructions){
+                    System.out.print("    " + next.getPc() + ": " + next.getOpcode().getMnemonic() + " ");
+                    for(int i = 0; i < next.getOperandCount(); i++){
+                        System.out.print(next.getOperands().get(i).getValue());
+                        if(i < next.getOperandCount() - 1){
+                            System.out.print(", ");
+                        }
+                    }
+                    System.out.println();
+                }
                 System.out.println("}");
             }
         }
