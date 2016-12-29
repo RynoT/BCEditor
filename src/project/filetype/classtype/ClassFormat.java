@@ -219,7 +219,6 @@ public class ClassFormat {
                                 break;
                             default: assert(false);
                         }
-                        System.out.println("UNDEFINED " + instruction.getPc() + ": " + opcode.getMnemonic());
                         break;
 
                 }

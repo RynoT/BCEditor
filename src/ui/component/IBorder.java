@@ -9,6 +9,8 @@ import java.awt.*;
 public class IBorder extends AbstractBorder {
 
     private final int north, east, south, west;
+
+    private boolean enableInset = true;
     private Color primary = IComponent.DEFAULT_HIGHLIGHT_DARK, secondary = IComponent.DEFAULT_HIGHLIGHT_LIGHT;
 
     public IBorder(final int north, final int east, final int south, final int west) {
@@ -18,6 +20,10 @@ public class IBorder extends AbstractBorder {
         this.east = east;
         this.south = south;
         this.west = west;
+    }
+
+    public void setEnableInset(final boolean enable){
+        this.enableInset = enable;
     }
 
     public void setPrimaryHighlight(final Color color){
@@ -68,7 +74,11 @@ public class IBorder extends AbstractBorder {
 
     @Override
     public Insets getBorderInsets(final Component component, final Insets insets) {
-        insets.set(this.north, this.west, this.south, this.east);
+        if(this.enableInset) {
+            insets.set(this.north, this.west, this.south, this.east);
+        } else {
+            insets.set(0, 0, 0, 0);
+        }
         return insets;
     }
 }

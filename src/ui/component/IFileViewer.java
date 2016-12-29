@@ -44,9 +44,15 @@ public class IFileViewer extends IComponent {
         final JPanel top = new JPanel();
         {
             top.setLayout(new BorderLayout(0, 0));
+            top.setBorder(new IBorder(0, 0, 1, 0));
 
             final JPanel tabBar = new JPanel();
             {
+                final IBorder border = new IBorder(0, 0, 1, 0);
+                {
+                    border.setEnableInset(false);
+                }
+                tabBar.setBorder(border);
                 tabBar.setBackground(IComponent.DEFAULT_BACKGROUND);
                 tabBar.setLayout(new BoxLayout(tabBar, BoxLayout.X_AXIS));
                 tabBar.setPreferredSize(new Dimension(Integer.MAX_VALUE, IFileViewer.TAB_BAR_HEIGHT));
@@ -81,6 +87,9 @@ public class IFileViewer extends IComponent {
         this.tabBar.removeAll();
         this.tabBar.revalidate();
         this.tabBar.repaint();
+        this.contentPanel.removeAll();
+        this.contentPanel.revalidate();
+        this.contentPanel.repaint();
     }
 
     public void setActiveTab(final ViewerTab tab) {
@@ -98,6 +107,7 @@ public class IFileViewer extends IComponent {
         if(tab.editor != null){
             this.contentPanel.add(tab.editor, BorderLayout.CENTER);
         }
+        this.contentPanel.revalidate();
         this.contentPanel.repaint();
     }
 
@@ -181,6 +191,18 @@ public class IFileViewer extends IComponent {
             IFileViewer.this.tabBar.revalidate();
             IFileViewer.this.tabBar.repaint();
 
+            if(IFileViewer.this.active == this){
+                if(IFileViewer.this.tabs.size() == 0){
+                    IFileViewer.this.clearTabs();
+                } else {
+                    int index = this.index;
+                    if(index >= IFileViewer.this.tabs.size()){
+                        index = IFileViewer.this.tabs.size() - 1;
+                    }
+                    IFileViewer.this.setActiveTab(IFileViewer.this.tabs.get(index));
+                }
+            }
+
             // Unload the file since we no longer need it in memory
             this.node.getFileType().unload();
         }
@@ -260,9 +282,14 @@ public class IFileViewer extends IComponent {
         }
 
         private class TabButtonMouseListener extends MouseAdapter {
+
             @Override
             public void mousePressed(final MouseEvent e) {
-                IFileViewer.this.setActiveTab(ITabButton.this.tab);
+                if(e.getButton() == MouseEvent.BUTTON1){
+                    IFileViewer.this.setActiveTab(ITabButton.this.tab);
+                } else if(e.getButton() == MouseEvent.BUTTON2){
+                    ITabButton.this.tab.close();
+                }
             }
 
             @Override

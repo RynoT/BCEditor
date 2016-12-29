@@ -22,7 +22,7 @@ public class IScrollPanel extends IComponent {
     private final IScroller horizontal, vertical;
 
     public IScrollPanel(final Container content, final boolean horizontal, final boolean vertical) {
-        assert (content != null);
+        assert (content != null && content != this);
         this.content = content;
         this.viewport = new JViewport();
         this.viewport.setOpaque(false);
@@ -103,6 +103,7 @@ public class IScrollPanel extends IComponent {
             this.horizontal = horizontal;
 
             super.setOpaque(false);
+            super.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             super.setPreferredSize(new Dimension(horizontal ? 0 : size, horizontal ? size : 0));
             super.setMinimumSize(super.getPreferredSize());
 
