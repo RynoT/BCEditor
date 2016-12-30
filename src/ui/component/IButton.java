@@ -71,9 +71,10 @@ public class IButton extends IActionComponent {
         return this.label;
     }
 
-    public void setToggle(final boolean toggle) {
+    public IButton setToggle(final boolean toggle) {
         this.selected = false;
         this.toggleButton = toggle;
+        return this;
     }
 
     public void setRestrictHeight(final boolean restrict){

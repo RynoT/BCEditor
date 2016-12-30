@@ -7,4 +7,6 @@ public abstract class IEditor extends IComponent {
 
     protected IEditor(){
     }
+
+    // TODO abstract methods like undo
 }

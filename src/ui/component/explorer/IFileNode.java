@@ -138,7 +138,7 @@ public class IFileNode extends ITileNode {
             {
                 label.setAlignment(ITextAlign.LEFT);
                 label.setColor(IFileNode.TILE_COMMENT_COLOR);
-                label.setPadding(0, 0, 0, IFileNode.TILE_COMMENT_PADDING);
+                label.setPadding(0, 0, 3, IFileNode.TILE_COMMENT_PADDING);
             }
             this.comment = label;
             super.add(label);

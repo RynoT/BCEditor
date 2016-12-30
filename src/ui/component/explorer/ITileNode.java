@@ -30,7 +30,7 @@ public abstract class ITileNode extends IComponent {
         this.parent = parent;
         this.label = new ILabel(name);
         this.label.setAlignment(ITextAlign.LEFT);
-        this.label.setPadding(0, 0, 0, ITileNode.TILE_DEFAULT_TEXT_PADDING);
+        this.label.setPadding(0, 0, 3, ITileNode.TILE_DEFAULT_TEXT_PADDING);
 
         super.setOpaque(false);
         super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));

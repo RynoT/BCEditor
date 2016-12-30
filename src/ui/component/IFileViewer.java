@@ -2,10 +2,12 @@ package ui.component;
 
 import project.filetype.ClassType;
 import project.filetype.FileType;
+import project.filetype.classtype.constantpool.ConstantPool;
 import ui.*;
 import ui.Canvas;
 import ui.component.explorer.IFileNode;
 import util.AssetManager;
+import util.async.Async;
 import util.async.AsyncEvent;
 
 import javax.swing.*;
@@ -27,8 +29,8 @@ public class IFileViewer extends IComponent {
 
     public static final int TAB_BAR_HIGHLIGHT_HEIGHT = 4;
 
-    public static final int TAB_BUTTON_PADDING_A = 4, TAB_BUTTON_PADDING_B = 0, TAB_BUTTON_PADDING_C = 8, TAB_BUTTON_PADDING_D = 8;
-    public static final int TAB_BUTTON_CLOSE_SIZE = 7;
+    public static final int TAB_BUTTON_PADDING_A = 4, TAB_BUTTON_PADDING_B = 0, TAB_BUTTON_PADDING_C = 1, TAB_BUTTON_PADDING_D = 6;
+    public static final int TAB_BUTTON_CLOSE_SIZE = 14;
     public static final Color TAB_BUTTON_UNFOCUSED_COLOR = new Color(65, 66, 67);
 
     private final JPanel tabBar;
@@ -69,13 +71,7 @@ public class IFileViewer extends IComponent {
         }
         super.add(top, BorderLayout.NORTH);
 
-        final JPanel content = new JPanel();
-        {
-            content.setBackground(Color.CYAN);
-            content.setLayout(new BorderLayout(0, 0));
-        }
-        this.contentPanel = content;
-        super.add(content, BorderLayout.CENTER);
+        super.add(this.contentPanel = new ContentPanel(), BorderLayout.CENTER);
     }
 
     public List<ViewerTab> getTabs(){
@@ -133,6 +129,34 @@ public class IFileViewer extends IComponent {
             super.repaint();
         } else {
             System.err.println("[Canvas] Unable to open file due to load failure");
+        }
+    }
+
+    private class ContentPanel extends JPanel {
+
+        private BufferedImage logo = null;
+
+        private ContentPanel(){
+            super.setBackground(IComponent.DEFAULT_BACKGROUND_DARK);
+            super.setLayout(new BorderLayout(0, 0));
+
+            Async.loadImage(AssetManager.LOGO, new AsyncEvent<BufferedImage>() {
+                @Override
+                public void onComplete(final BufferedImage item) {
+                    ContentPanel.this.logo = item;
+                    ContentPanel.this.repaint();
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(final Graphics g) {
+            super.paintComponent(g);
+
+            if(this.logo != null){
+                g.drawImage(this.logo, super.getWidth() - this.logo.getWidth() - 1,
+                        super.getHeight() - this.logo.getHeight() - 1, null);
+            }
         }
     }
 

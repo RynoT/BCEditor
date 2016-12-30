@@ -29,6 +29,8 @@ public class Canvas extends JFrame {
 
     public static final int MAX_ACTIVE_MENUS = 3;
 
+    public static final String CANVAS_TITLE = "BCEditor";
+
     private static final IFileViewer viewer = new IFileViewer();
     private static final IProjectExplorer explorer = new IProjectExplorer();
 
@@ -75,7 +77,7 @@ public class Canvas extends JFrame {
     }
 
     public static void setProject(final Project project){
-        assert (project.isLoaded());
+        assert (project == null || project.isLoaded());
         assert (SwingUtilities.isEventDispatchThread());
 
         final IProjectExplorer explorer = Canvas.getProjectExplorer();
@@ -84,14 +86,22 @@ public class Canvas extends JFrame {
 
             Canvas.getFileViewer().clearTabs();
         }
-        explorer.setProject(project);
+        assert (explorer.getProject() == null);
+        if(project == null) {
+            Canvas.getCanvas().setTitle(Canvas.CANVAS_TITLE);
+        } else {
+            explorer.setProject(project);
 
-        // Index the project
-        Async.submit(project::index, AsyncType.SINGLE);
+            // Index the project
+            Async.submit(project::index, AsyncType.SINGLE);
+
+            Canvas.getCanvas().setTitle(Canvas.CANVAS_TITLE + " - " + project.getName() + " ~ [" + project.getPath() + "]");
+        }
     }
 
     private void init() {
         super.setResizable(true);
+        super.setTitle(Canvas.CANVAS_TITLE);
         super.setSize(Canvas.DEFAULT_WIDTH, Canvas.DEFAULT_HEIGHT);
         super.setMinimumSize(new Dimension(Canvas.DEFAULT_MIN_WIDTH, Canvas.DEFAULT_MIN_HEIGHT));
         super.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE); // we control closing through a window event
@@ -139,6 +149,18 @@ public class Canvas extends JFrame {
                     });
                 }
                 menuBar.add(edit);
+
+                final IButton help = new IButton("Help", KeyEvent.VK_H);
+                {
+                    // bytecode mnemonic guide
+                    // attribute guide
+                    // constant pool entry types guide
+                    // view source on github
+                    // about (credits)
+
+                    help.addEvent(() -> System.out.println("help"));
+                }
+                menuBar.add(help);
             }
             content.add(menuBar, BorderLayout.NORTH);
 
@@ -148,18 +170,12 @@ public class Canvas extends JFrame {
 
                 final IToolbar toolbar = new IToolbar(IOrientation.WEST);
                 {
-                    final IButton project = new IButton("1: Project", KeyEvent.VK_1);
-                    {
-                        project.setToggle(true);
-                    }
+                    final IButton project = new IButton("1: Project", KeyEvent.VK_1).setToggle(true);
                     toolbar.addTab(new ITab(project, Canvas.getProjectExplorer(), true), true);
 
                     project.click();
 
-                    final IButton breakdown = new IButton("2: Breakdown", KeyEvent.VK_2);
-                    {
-                        breakdown.setToggle(true);
-                    }
+                    final IButton breakdown = new IButton("2: Breakdown", KeyEvent.VK_2).setToggle(true);
                     toolbar.addTab(new ITab(breakdown, new IBreakdown(), false), false);
 
                     breakdown.click();

@@ -15,6 +15,8 @@ public class AssetManager {
 
     public static final String RESOURCE_FOLDER = "/resource/";
 
+    public static final String LOGO = AssetManager.RESOURCE_FOLDER + "logo.png";
+
     public static final String EXPANDED_ICON = AssetManager.RESOURCE_FOLDER + "expanded.png";
     public static final String COLLAPSED_ICON = AssetManager.RESOURCE_FOLDER + "collapsed.png";
     public static final String MENU_EXPAND_ICON = AssetManager.RESOURCE_FOLDER + "menu_expand.png";

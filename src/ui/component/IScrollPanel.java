@@ -1,6 +1,8 @@
 package ui.component;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -28,6 +30,12 @@ public class IScrollPanel extends IComponent {
         this.viewport.setOpaque(false);
         this.viewport.setView(content);
         this.viewport.setScrollMode(JViewport.BLIT_SCROLL_MODE);
+        this.viewport.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                content.repaint();
+            }
+        });
 
         super.setLayout(new BorderLayout(0, 0));
         super.add(this.viewport, BorderLayout.CENTER);

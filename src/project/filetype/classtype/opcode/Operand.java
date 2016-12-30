@@ -38,6 +38,10 @@ public class Operand {
         this.type = type;
     }
 
+    public OperandType getType(){
+        return this.type;
+    }
+
     public int getValue(){
         return this.value;
     }
