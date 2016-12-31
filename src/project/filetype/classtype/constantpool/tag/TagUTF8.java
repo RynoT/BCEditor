@@ -24,8 +24,18 @@ public class TagUTF8 extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_UTF8;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return this.value.getBytes().length * Byte.SIZE;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "UTF-8";
     }
 
     @Override

@@ -23,8 +23,18 @@ public class TagInteger extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_INTEGER;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Integer";
     }
 
     @Override

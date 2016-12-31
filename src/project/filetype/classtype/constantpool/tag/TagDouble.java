@@ -22,8 +22,18 @@ public class TagDouble extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_DOUBLE;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 64;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Double";
     }
 
     @Override

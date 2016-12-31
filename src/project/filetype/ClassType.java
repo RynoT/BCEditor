@@ -268,7 +268,7 @@ public class ClassType extends FileType {
                 // Load constant pool
                 this.constantPool = new ConstantPool(dis.readUnsignedShort());
                 this.constantPool.load(dis);
-                System.out.println(prefix + "ConstantPool loaded with " + this.constantPool.getCount() + " entries");
+                System.out.println(prefix + "ConstantPool loaded with " + this.constantPool.getEntryCount() + " entries");
 
                 // Load access flags
                 this.accessFlags = dis.readUnsignedShort();

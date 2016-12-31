@@ -36,8 +36,18 @@ public class TagNameAndType extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_NAME_AND_TYPE;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Name and Type";
     }
 
     @Override

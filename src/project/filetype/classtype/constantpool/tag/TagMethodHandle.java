@@ -33,8 +33,18 @@ public class TagMethodHandle extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_METHOD_HANDLE;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Method Handle";
     }
 
     @Override

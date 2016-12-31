@@ -22,8 +22,18 @@ public class TagLong extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_LONG;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 64;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Long";
     }
 
     @Override

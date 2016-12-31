@@ -1,4 +1,6 @@
-package ui.component;
+package ui.component.editor;
+
+import ui.component.IComponent;
 
 /**
  * Created by Ryan Thomson on 27/12/2016.

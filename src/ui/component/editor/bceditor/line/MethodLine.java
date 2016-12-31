@@ -1,4 +1,4 @@
-package ui.component.bceditor.text;
+package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.ClassFormat;
 import project.filetype.classtype.constantpool.ConstantPool;

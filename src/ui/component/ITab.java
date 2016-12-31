@@ -42,12 +42,15 @@ public class ITab {
     // Let the tab know that the content is being shown
     void display() {
         this.displayed = true;
+        this.content.setVisible(true);
     }
 
     // Let the tab know that it is no longer showing its content
     // If the button is a toggle and is selected, it will automatically deselect it
     void hide() {
         this.displayed = false;
+        this.content.setVisible(false);
+
         if(this.button.isToggleButton() && this.button.isSelected()) {
             this.button.click();
         }

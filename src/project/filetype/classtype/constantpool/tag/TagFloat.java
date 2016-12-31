@@ -22,8 +22,18 @@ public class TagFloat extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_FLOAT;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Float";
     }
 
     @Override

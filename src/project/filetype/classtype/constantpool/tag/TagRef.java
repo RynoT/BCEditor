@@ -42,7 +42,7 @@ public class TagRef extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         switch(this.type){
             case FIELD:
                 return PoolTag.TAG_FIELD_REF;
@@ -51,7 +51,27 @@ public class TagRef extends PoolTag {
             case INTERFACE_METHOD:
                 return PoolTag.TAG_IM_REF;
         }
+        assert (false);
         return -1;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        switch(this.type){
+            case FIELD:
+                return "Field ref";
+            case METHOD:
+                return "Method ref";
+            case INTERFACE_METHOD:
+                return "Interface ref";
+        }
+        assert (false);
+        return null;
     }
 
     @Override

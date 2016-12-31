@@ -23,7 +23,11 @@ public abstract class PoolTag {
     protected PoolTag(){
     }
 
-    public abstract int getTagId();
+    public abstract int getPoolTagId();
+
+    public abstract int getPoolTagBitCount();
+
+    public abstract String getPoolTagName();
 
     public abstract String getContentString(final ConstantPool pool);
 }

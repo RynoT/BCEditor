@@ -27,8 +27,18 @@ public class TagMethodType extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_METHOD_TYPE;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 16;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Method Type";
     }
 
     @Override

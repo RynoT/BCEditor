@@ -20,7 +20,7 @@ public class ConstantPool {
         this.entries = new ArrayList<>(count);
     }
 
-    public int getCount() {
+    public int getEntryCount() {
         return this.count;
     }
 

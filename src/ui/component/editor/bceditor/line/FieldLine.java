@@ -1,4 +1,4 @@
-package ui.component.bceditor.text;
+package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.ClassFormat;
 import project.filetype.classtype.constantpool.ConstantPool;
@@ -27,9 +27,9 @@ public class FieldLine extends Line {
 
     @Override
     public void stylize() {
-        final String string = super.getString();
+        String string = super.getString();
         Line.stylize(string, super.attributes);
-
+        
         final int index = string.lastIndexOf(' ') + 1;
         super.attributes.addAttribute(TextAttribute.FOREGROUND, FieldLine.NAME_COLOR, index, string.length() - 1);
     }

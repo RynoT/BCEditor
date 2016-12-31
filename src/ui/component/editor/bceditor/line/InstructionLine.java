@@ -1,11 +1,10 @@
-package ui.component.bceditor.text;
+package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.opcode.Instruction;
 import project.filetype.classtype.opcode.Operand;
 import project.filetype.classtype.opcode.OperandType;
 
-import java.awt.*;
 import java.awt.font.TextAttribute;
 
 /**
@@ -32,7 +31,7 @@ public class InstructionLine extends Line {
                 if(operand.getType() == OperandType.INDEX_POOL) {
                     sb.append("<").append(operand.getValue()).append(">");
                 } else if(operand.getType() == OperandType.BRANCH_OFFSET) {
-                    sb.append("#").append(operand.getValue());
+                    sb.append("#").append(instruction.getPc() + operand.getValue());
                 } else {
                     sb.append(operand.getValue());
                 }

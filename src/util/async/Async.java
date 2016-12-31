@@ -47,12 +47,12 @@ public class Async {
     }
 
     public static void loadImage(final String path, final AsyncEvent<BufferedImage> event, final AsyncType type) {
-        assert (event != null);
+        assert event != null;
         Async.async.launch(() -> {
             BufferedImage image;
             try {
                 final URL url = Async.class.getResource(path);
-                assert (url != null);
+                assert url != null : "Path: " + path;
 
                 System.out.println("[Async] Loading image from: " + path);
                 image = ImageIO.read(url);
@@ -72,7 +72,7 @@ public class Async {
             case MULTI:
                 return this.multi.submit(callable);
             default:
-                assert (false);
+                assert false;
         }
         return null;
     }
@@ -87,7 +87,7 @@ public class Async {
                 this.multi.execute(runnable);
                 break;
             default:
-                assert (false);
+                assert false;
         }
     }
 }

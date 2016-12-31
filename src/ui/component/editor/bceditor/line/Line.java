@@ -1,6 +1,6 @@
-package ui.component.bceditor.text;
+package ui.component.editor.bceditor.line;
 
-import ui.component.IBCEditor;
+import ui.component.editor.bceditor.IBCEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;

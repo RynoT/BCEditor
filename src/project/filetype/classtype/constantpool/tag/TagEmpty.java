@@ -9,12 +9,22 @@ import project.filetype.classtype.constantpool.PoolTag;
 public class TagEmpty extends PoolTag {
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return -1;
     }
 
     @Override
+    public int getPoolTagBitCount() {
+        return 0;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "empty";
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
-        return "";
+        return "empty";
     }
 }

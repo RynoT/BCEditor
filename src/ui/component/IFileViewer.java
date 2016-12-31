@@ -1,23 +1,20 @@
 package ui.component;
 
 import project.filetype.ClassType;
-import project.filetype.FileType;
-import project.filetype.classtype.constantpool.ConstantPool;
-import ui.*;
-import ui.Canvas;
+import ui.component.editor.bceditor.IBCEditor;
+import ui.component.editor.IEditor;
 import ui.component.explorer.IFileNode;
 import util.AssetManager;
 import util.async.Async;
 import util.async.AsyncEvent;
 
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -46,7 +43,36 @@ public class IFileViewer extends IComponent {
         final JPanel top = new JPanel();
         {
             top.setLayout(new BorderLayout(0, 0));
-            top.setBorder(new IBorder(0, 0, 1, 0));
+            top.setBorder(new AbstractBorder() {
+                @Override
+                public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int width, final int height) {
+                    final int bottomY = y + height - 1;
+
+                    Component content = null;
+                    if(IFileViewer.this.active != null && IFileViewer.this.active.editor instanceof IBCEditor) {
+                        final IBCEditor editor = (IBCEditor) IFileViewer.this.active.editor;
+                        content = editor.getToolbar().getUpperContent();
+                    }
+                    g.setColor(IComponent.DEFAULT_HIGHLIGHT_DARK);
+                    if(content == null || !content.isShowing()) {
+                        g.drawLine(x, bottomY, x + width - 1, bottomY);
+                    } else {
+                        final int cScreenX = c.getLocationOnScreen().x, titleScreenX = content.getLocationOnScreen().x;
+                        final int titleX = titleScreenX - cScreenX - 1, titleWidth = content.getWidth();
+                        g.drawLine(x, bottomY, titleX, bottomY);
+                        g.drawLine(titleX + titleWidth, bottomY, x + width - 1, bottomY);
+
+                        g.setColor(IComponent.DEFAULT_BACKGROUND_HIGHLIGHT);
+                        g.drawLine(titleX + 1, bottomY, titleX + titleWidth - 1, bottomY);
+                    }
+                }
+
+                @Override
+                public Insets getBorderInsets(final Component c, final Insets insets) {
+                    insets.set(0, 0, 1, 0);
+                    return insets;
+                }
+            });
 
             final JPanel tabBar = new JPanel();
             {
@@ -74,11 +100,11 @@ public class IFileViewer extends IComponent {
         super.add(this.contentPanel = new ContentPanel(), BorderLayout.CENTER);
     }
 
-    public List<ViewerTab> getTabs(){
+    public List<ViewerTab> getTabs() {
         return this.tabs;
     }
 
-    public void clearTabs(){
+    public void clearTabs() {
         this.tabs.clear();
         this.tabBar.removeAll();
         this.tabBar.revalidate();
@@ -100,11 +126,13 @@ public class IFileViewer extends IComponent {
         this.active = tab;
         tab.setActive(true);
 
-        if(tab.editor != null){
+        if(tab.editor != null) {
             this.contentPanel.add(tab.editor, BorderLayout.CENTER);
         }
         this.contentPanel.revalidate();
         this.contentPanel.repaint();
+
+        super.repaint();
     }
 
     public void open(final IFileNode node) {
@@ -117,7 +145,7 @@ public class IFileViewer extends IComponent {
                 return;
             }
         }
-        if(node.getFileType().load()){
+        if(node.getFileType().load()) {
             final ViewerTab tab = new ViewerTab(node, this.tabs.size());
             this.tabs.add(tab);
 
@@ -136,7 +164,7 @@ public class IFileViewer extends IComponent {
 
         private BufferedImage logo = null;
 
-        private ContentPanel(){
+        private ContentPanel() {
             super.setBackground(IComponent.DEFAULT_BACKGROUND_DARK);
             super.setLayout(new BorderLayout(0, 0));
 
@@ -153,7 +181,7 @@ public class IFileViewer extends IComponent {
         protected void paintComponent(final Graphics g) {
             super.paintComponent(g);
 
-            if(this.logo != null){
+            if(this.logo != null) {
                 g.drawImage(this.logo, super.getWidth() - this.logo.getWidth() - 1,
                         super.getHeight() - this.logo.getHeight() - 1, null);
             }
@@ -176,7 +204,7 @@ public class IFileViewer extends IComponent {
             this.button = new ITabButton(this);
 
             assert (node.getFileType() != null);
-            if(node.getFileType() instanceof ClassType){
+            if(node.getFileType() instanceof ClassType) {
                 this.editor = new IBCEditor((ClassType) node.getFileType());
             } else {
                 //We need support for other file types!
@@ -186,7 +214,7 @@ public class IFileViewer extends IComponent {
             this.updateButton();
         }
 
-        public IFileNode getNode(){
+        public IFileNode getNode() {
             return this.node;
         }
 
@@ -215,12 +243,12 @@ public class IFileViewer extends IComponent {
             IFileViewer.this.tabBar.revalidate();
             IFileViewer.this.tabBar.repaint();
 
-            if(IFileViewer.this.active == this){
-                if(IFileViewer.this.tabs.size() == 0){
+            if(IFileViewer.this.active == this) {
+                if(IFileViewer.this.tabs.size() == 0) {
                     IFileViewer.this.clearTabs();
                 } else {
                     int index = this.index;
-                    if(index >= IFileViewer.this.tabs.size()){
+                    if(index >= IFileViewer.this.tabs.size()) {
                         index = IFileViewer.this.tabs.size() - 1;
                     }
                     IFileViewer.this.setActiveTab(IFileViewer.this.tabs.get(index));
@@ -236,7 +264,7 @@ public class IFileViewer extends IComponent {
 
         private final ViewerTab tab;
 
-        private ITabButton(final ViewerTab tab){
+        private ITabButton(final ViewerTab tab) {
             this.tab = tab;
 
             super.setBackground(IFileViewer.TAB_BUTTON_UNFOCUSED_COLOR);
@@ -274,7 +302,7 @@ public class IFileViewer extends IComponent {
             }
         }
 
-        private void updateButton(){
+        private void updateButton() {
             super.removeAll();
 
             super.add(Box.createHorizontalStrut(IFileViewer.TAB_BUTTON_PADDING_A));
@@ -309,9 +337,9 @@ public class IFileViewer extends IComponent {
 
             @Override
             public void mousePressed(final MouseEvent e) {
-                if(e.getButton() == MouseEvent.BUTTON1){
+                if(e.getButton() == MouseEvent.BUTTON1) {
                     IFileViewer.this.setActiveTab(ITabButton.this.tab);
-                } else if(e.getButton() == MouseEvent.BUTTON2){
+                } else if(e.getButton() == MouseEvent.BUTTON2) {
                     ITabButton.this.tab.close();
                 }
             }
@@ -347,7 +375,7 @@ public class IFileViewer extends IComponent {
                 // Ensure the new index is a valid index
                 newIndex = Math.max(Math.min(newIndex, lastIndex), 0);
                 // Check to see if the index has changed
-                if(newIndex != ITabButton.this.tab.index){
+                if(newIndex != ITabButton.this.tab.index) {
                     // Swap the elements on the tabs list and bar
                     IFileViewer.this.tabs.remove(ITabButton.this.tab.index);
                     IFileViewer.this.tabs.add(newIndex, ITabButton.this.tab);
@@ -355,7 +383,7 @@ public class IFileViewer extends IComponent {
                     IFileViewer.this.tabBar.add(ITabButton.this.tab.button, newIndex);
 
                     // Adjust indices to match the new order
-                    for(int i = 0; i < IFileViewer.this.tabs.size(); i++){
+                    for(int i = 0; i < IFileViewer.this.tabs.size(); i++) {
                         IFileViewer.this.tabs.get(i).index = i;
                     }
 

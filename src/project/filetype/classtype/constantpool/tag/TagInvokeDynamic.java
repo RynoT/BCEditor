@@ -36,8 +36,18 @@ public class TagInvokeDynamic extends PoolTag {
     }
 
     @Override
-    public int getTagId() {
+    public int getPoolTagId() {
         return PoolTag.TAG_INVOKE_DYNAMIC;
+    }
+
+    @Override
+    public int getPoolTagBitCount() {
+        return 32;
+    }
+
+    @Override
+    public String getPoolTagName() {
+        return "Invoke Dynamic";
     }
 
     @Override

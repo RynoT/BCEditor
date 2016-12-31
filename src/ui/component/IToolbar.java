@@ -54,8 +54,36 @@ public class IToolbar extends IComponent {
         this.setDimensions();
     }
 
+    public JPanel getButtonPanel(){
+        return this.buttonPanel;
+    }
+
     public IOrientation getOrientation() {
         return this.orientation;
+    }
+
+    public IComponent getUpperContent(){
+        if(this.contentPanel.tabs[IToolbarContent.UPPER_INDEX] != null) {
+            return this.contentPanel.tabs[IToolbarContent.UPPER_INDEX].getContent();
+        }
+        return null;
+    }
+
+    public IComponent getLowerContent(){
+        if(this.contentPanel.tabs[IToolbarContent.LOWER_INDEX] != null) {
+            return this.contentPanel.tabs[IToolbarContent.LOWER_INDEX].getContent();
+        }
+        return null;
+    }
+
+    public void setContentSize(final int size){
+        if(this.orientation.isHorizontal()) {
+            this.contentPanel.setPreferredSize(new Dimension(size, Integer.MAX_VALUE));
+        } else {
+            this.contentPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, size));
+        }
+        this.contentPanel.revalidate();
+        this.contentPanel.repaint();
     }
 
     @Override
