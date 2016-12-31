@@ -25,7 +25,14 @@ public class IBCTextEditor extends IEditor {
     public static final int LINE_HEIGHT = 16;
     public static final int LINE_DEFAULT_INSET = 5;
 
-    private final LineRenderer renderer;
+    public static final int SIDE_BAR_WIDTH = 32;
+
+    public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
+    public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
+            .CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{1f, 2f}, 0.0f);
+
+    private final SideBar sideBar;
+    private final LineRenderer lineRenderer;
     private final IScrollPanel scrollPanel;
 
     private final List<Line> lines = new ArrayList<>();
@@ -36,10 +43,13 @@ public class IBCTextEditor extends IEditor {
 
         super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
-        this.renderer = new LineRenderer();
-        final IScrollPanel scrollPanel = new IScrollPanel(this.renderer, true, true);
+        super.add(this.sideBar = new SideBar(), BorderLayout.WEST);
+
+        this.lineRenderer = new LineRenderer();
+        final IScrollPanel scrollPanel = new IScrollPanel(this.lineRenderer, true, true);
         {
             scrollPanel.setOpaque(false);
+            scrollPanel.getViewport().addChangeListener(e -> IBCTextEditor.this.sideBar.repaint());
         }
         this.scrollPanel = scrollPanel;
         super.add(scrollPanel, BorderLayout.CENTER);
@@ -77,8 +87,41 @@ public class IBCTextEditor extends IEditor {
         for(final Line line : this.lines) {
             line.stylize();
         }
-        this.renderer.updateDimensions();
-        this.renderer.repaint();
+        this.lineRenderer.updateDimensions();
+        this.lineRenderer.repaint();
+    }
+
+    private class SideBar extends JPanel {
+
+        private SideBar(){
+            super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
+            super.setPreferredSize(new Dimension(IBCTextEditor.SIDE_BAR_WIDTH, Integer.MAX_VALUE));
+        }
+
+        @Override
+        protected void paintComponent(final Graphics g) {
+            super.paintComponent(g);
+
+            final Graphics2D g2d = (Graphics2D) g;
+            g2d.setStroke(IBCTextEditor.SIDE_BAR_STROKE);
+            g2d.setColor(IComponent.DEFAULT_HIGHLIGHT_LIGHT);
+            g2d.drawLine(super.getWidth() - 1, 0, super.getWidth() - 1, super.getHeight() - 1);
+
+            final FontMetrics metrics = g2d.getFontMetrics();
+            final JViewport viewport = IBCTextEditor.this.scrollPanel.getViewport();
+            final Point viewPosition = viewport.getViewPosition();
+            final List<Line> lines = IBCTextEditor.this.lines;
+
+            g2d.setColor(IBCTextEditor.SIDE_BAR_FOREGROUND);
+            for(int i = 0; i < lines.size(); i++){
+                if(!(lines.get(i) instanceof InstructionLine)){
+                    continue;
+                }
+                final int pc = ((InstructionLine) lines.get(i)).getInstruction().getPc();
+                final int y = IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - metrics.getHeight()) / 2;
+                g2d.drawString(String.valueOf(pc), super.getWidth() / 2 - metrics.stringWidth(String.valueOf(pc)) / 2, y - viewPosition.y);
+            }
+        }
     }
 
     private class LineRenderer extends JPanel {

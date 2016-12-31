@@ -1,6 +1,7 @@
 package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.constantpool.ConstantPool;
+import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.opcode.Instruction;
 import project.filetype.classtype.opcode.Operand;
 import project.filetype.classtype.opcode.OperandType;
@@ -41,6 +42,14 @@ public class InstructionLine extends Line {
             }
         }
         super.setString(sb.toString());
+    }
+
+    public Instruction getInstruction(){
+        return this.instruction;
+    }
+
+    public MethodLine getMethodLine(){
+        return this.methodLine;
     }
 
     @Override

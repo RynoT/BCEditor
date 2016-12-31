@@ -24,7 +24,6 @@ public class IBCPoolSubEditor extends IBCSubEditor {
     public static final int NAME_WIDTH = 100;
 
     public static final Color LINE_COLOR = new Color(63, 64, 65);
-    public static final Color BACKGROUND_COLOR = new Color(53, 54, 55);
 
     public static final Color TABLE_FOCUSED_COLOR = IComponent.DEFAULT_BACKGROUND_HIGHLIGHT;
     public static final Color TABLE_SUCCESSOR_COLOR = new Color(57, 115, 47);
@@ -38,7 +37,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
     public IBCPoolSubEditor() {
         super.setFont(IComponent.DEFAULT_FONT);
         super.setLayout(new BorderLayout(0, 0));
-        super.setBackground(IBCPoolSubEditor.BACKGROUND_COLOR);
+        super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
 
         final JPanel titlePanel = new JPanel();
         {
@@ -79,9 +78,9 @@ public class IBCPoolSubEditor extends IBCSubEditor {
             final PoolRow next = (PoolRow) component;
             next.pressed = next.index == index;
             if(next.pressed) {
-                next.setBackground(IComponent.DEFAULT_BACKGROUND_HIGHLIGHT);
+                next.setBackground(IBCPoolSubEditor.TABLE_FOCUSED_COLOR);
             } else {
-                next.setBackground(IBCPoolSubEditor.BACKGROUND_COLOR);
+                next.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
             }
 
             // Check to see if row is a successor or predecessor
@@ -131,7 +130,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
             this.index = index;
             this.name = tag.getPoolTagName();
 
-            super.setBackground(IBCPoolSubEditor.BACKGROUND_COLOR);
+            super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
             super.setPreferredSize(new Dimension(Integer.MAX_VALUE, IBCPoolSubEditor.ROW_HEIGHT));
             super.setMaximumSize(super.getPreferredSize());
             super.setMinimumSize(super.getPreferredSize());

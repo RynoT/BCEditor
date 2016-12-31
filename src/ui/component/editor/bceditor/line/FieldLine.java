@@ -25,6 +25,10 @@ public class FieldLine extends Line {
         super.setString(ClassFormat.format(field, pool));
     }
 
+    public FieldInfo getField(){
+        return this.field;
+    }
+
     @Override
     public void stylize() {
         final String string = super.getString();
