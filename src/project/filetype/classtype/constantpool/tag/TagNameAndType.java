@@ -51,6 +51,11 @@ public class TagNameAndType extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagName(pool), this.getTagDescriptor(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         final String name = this.getTagName(pool).getValue();
         final String descriptor = Descriptor.decode(this.getTagDescriptor(pool).getValue());

@@ -42,6 +42,11 @@ public class TagMethodType extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagDescriptor(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         return Descriptor.decode(this.getTagDescriptor(pool).getValue());
     }

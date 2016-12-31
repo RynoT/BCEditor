@@ -29,9 +29,8 @@ public class IBCEditor extends IEditor {
     public IBCEditor(final ClassType classType) {
         this.classType = classType;
 
-        super.setBackground(IComponent.DEFAULT_BACKGROUND_DARK);
-
         super.setLayout(new BorderLayout(0, 0));
+        super.setBackground(IComponent.DEFAULT_BACKGROUND_DARK);
 
         this.textEditor = new IBCTextEditor();
         {

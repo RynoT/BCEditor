@@ -51,6 +51,11 @@ public class TagInvokeDynamic extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagNameAndType(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         // We don't have access to the class attributes here so we can't get the bootstrap method.
         // All we can do is tell the user what index the bootstrap method is.

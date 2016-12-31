@@ -5,7 +5,9 @@ import project.filetype.classtype.constantpool.tag.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 22/12/2016.
@@ -31,6 +33,26 @@ public class ConstantPool {
     public PoolTag getEntry(final int index) {
         assert (index >= 0 && index < this.entries.size());
         return this.entries.get(index);
+    }
+
+    public PoolTag[] getPredecessors(final PoolTag tag){
+        return tag.getLinkedTags(this);
+    }
+
+    public PoolTag[] getSuccessors(final PoolTag tag){
+        final Set<PoolTag> successors = new HashSet<>();
+        for(final PoolTag entry : this.entries){
+            if(entry == tag){
+                continue;
+            }
+            for(final PoolTag predecessor : this.getPredecessors(entry)) {
+                if(predecessor == tag) {
+                    successors.add(entry);
+                    break;
+                }
+            }
+        }
+        return successors.toArray(new PoolTag[successors.size()]);
     }
 
     public void index(final DataInputStream dis) throws IOException {

@@ -75,6 +75,11 @@ public class TagRef extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagClass(pool), this.getTagNameAndType(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         final String nameType = this.getTagNameAndType(pool).getContentString(pool);
         final int index = nameType.indexOf(' ');

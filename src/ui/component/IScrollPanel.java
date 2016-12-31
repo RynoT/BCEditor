@@ -72,6 +72,10 @@ public class IScrollPanel extends IComponent {
         });
     }
 
+    public JViewport getViewport(){
+        return this.viewport;
+    }
+
     private void updateScale() {
         final Dimension target = this.content.getPreferredSize();
         if(this.vertical != null) {

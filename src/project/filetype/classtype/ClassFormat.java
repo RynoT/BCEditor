@@ -1,6 +1,8 @@
 package project.filetype.classtype;
 
 import project.filetype.ClassType;
+import project.filetype.classtype.AccessFlags;
+import project.filetype.classtype.Descriptor;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;

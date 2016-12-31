@@ -24,6 +24,11 @@ public class TagEmpty extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[0];
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         return "empty";
     }

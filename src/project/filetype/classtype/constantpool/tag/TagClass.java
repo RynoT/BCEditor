@@ -42,6 +42,11 @@ public class TagClass extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagName(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         String text = this.getTagName(pool).getValue();
         if(text.length() > 0 && text.charAt(0) == '['){

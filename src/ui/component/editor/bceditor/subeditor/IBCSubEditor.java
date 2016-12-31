@@ -13,5 +13,4 @@ public abstract class IBCSubEditor extends IEditor {
     public static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 24);
     public static final Color TITLE_TEXT_COLOR = new Color(130, 50, 0);
 
-    public abstract Component getTitlePanel();
 }

@@ -1,5 +1,8 @@
 package project.filetype.classtype.constantpool;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by Ryan Thomson on 23/12/2016.
  */
@@ -28,6 +31,8 @@ public abstract class PoolTag {
     public abstract int getPoolTagBitCount();
 
     public abstract String getPoolTagName();
+
+    public abstract PoolTag[] getLinkedTags(final ConstantPool pool);
 
     public abstract String getContentString(final ConstantPool pool);
 }

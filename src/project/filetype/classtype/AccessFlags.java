@@ -1,5 +1,7 @@
 package project.filetype.classtype;
 
+import java.util.Arrays;
+
 /**
  * Created by Ryan Thomson on 23/12/2016.
  */
@@ -69,6 +71,15 @@ public enum AccessFlags {
 
         Type(final AccessFlags[] flags) {
             this.flags = flags;
+        }
+
+        public boolean contains(final AccessFlags flag){
+            for(final AccessFlags next : this.flags){
+                if(next == flag){
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

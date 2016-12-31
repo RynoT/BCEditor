@@ -48,6 +48,11 @@ public class TagMethodHandle extends PoolTag {
     }
 
     @Override
+    public PoolTag[] getLinkedTags(final ConstantPool pool) {
+        return new PoolTag[]{ this.getTagReference(pool) };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         return this.kind + " (" + this.getTagReference(pool).getContentString(pool) + ")";
     }

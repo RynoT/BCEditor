@@ -27,9 +27,9 @@ public class FieldLine extends Line {
 
     @Override
     public void stylize() {
-        String string = super.getString();
+        final String string = super.getString();
         Line.stylize(string, super.attributes);
-        
+
         final int index = string.lastIndexOf(' ') + 1;
         super.attributes.addAttribute(TextAttribute.FOREGROUND, FieldLine.NAME_COLOR, index, string.length() - 1);
     }

@@ -67,12 +67,12 @@ public class Canvas extends JFrame {
     }
 
     public void popActiveMenu() {
-        assert (this.activeMenuCount > 0);
+        assert this.activeMenuCount > 0 : "No menus to pop";
         this.activeMenu[this.activeMenuCount--] = null;
     }
 
     public void pushActiveMenu(final IMenu menu) {
-        assert (this.activeMenuCount + 1 < this.activeMenu.length);
+        assert this.activeMenuCount + 1 < this.activeMenu.length : "Too many menus";
         this.activeMenu[this.activeMenuCount++] = menu;
     }
 
@@ -86,7 +86,7 @@ public class Canvas extends JFrame {
 
             Canvas.getFileViewer().clearTabs();
         }
-        assert (explorer.getProject() == null);
+        assert explorer.getProject() == null : "Project must be unloaded";
         if(project == null) {
             Canvas.getCanvas().setTitle(Canvas.CANVAS_TITLE);
         } else {
