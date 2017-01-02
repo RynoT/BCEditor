@@ -101,7 +101,7 @@ public class MethodLine extends Line {
 
         super.attributes.addAttribute(TextAttribute.FOREGROUND, MethodLine.NAME_COLOR, idxType, idxName); //name
 
-        Line.colorSymbols(str, super.attributes, idxName, idxParameters);
+        Line.colorParameters(str, super.attributes, genericNames, idxName, idxParameters); //parameters
 
         if(idxThrows != -1){
             super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxParameters, idxThrows); //throws

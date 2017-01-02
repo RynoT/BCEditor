@@ -4,10 +4,12 @@ import ui.component.editor.bceditor.IBCEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.io.File;
 import java.text.AttributedString;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -71,15 +73,72 @@ public abstract class Line {
         int lastIndex = begin;
         for(int i = begin; i < end; i++){
             final char c = string.charAt(i);
-            final boolean isEnd = i == string.length() - 1;
-            if(!isEnd && (c != ' ')){
+            final boolean isEnd = i == end - 1;
+            if(!isEnd && (c != ' ' && c != '[')){
                 continue;
             }
-            final String substr = string.substring(lastIndex, isEnd ? i + 1 : i);
+            int index = i;
+            String substr = string.substring(lastIndex, index);
+            if(substr.endsWith(".")){ //accommodate for varargs
+                for(int k = substr.length() - 1; k >= 0; k--){
+                    if(substr.charAt(k) == '.'){
+                        continue;
+                    }
+                    index -= substr.length() - k - 1;
+                    substr = substr.substring(0, k + 1);
+                    break;
+                }
+            }
             if(Line.KEYWORD_COLOR_MAP.containsKey(substr)){
-                attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP.get(substr), lastIndex, i + 1);
+                attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP.get(substr), lastIndex, index);
             }
             lastIndex = i + 1;
+        }
+    }
+
+    static void colorParameters(final String string, final AttributedString attributes, final Set<String> genericNames, final int begin, final int end){
+        int idx = -1;
+        for(int i = begin; i < end; i++){
+            final char c = string.charAt(i);
+            if(c == '('){
+                continue;
+            }
+            if(c == ',' || c == ')'){
+                if(idx != -1){
+                    if(genericNames != null) {
+                        final String substr = string.substring(idx, i);
+                        if(genericNames.contains(substr)) {
+                            attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, idx, i);
+                        }
+                    }
+                    Line.colorDefault(string, attributes, idx, i + 1);
+                    idx = -1;
+                }
+                if(c == ',') {
+                    attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, i, i + 1);
+                }
+            } else if(idx == -1) {
+                if(c == ' '){
+                    continue;
+                }
+                idx = i;
+            } else if(c == '<'){
+                final int start = i++;
+                for(int depth = 1; i < end; i++){
+                    final char c2 = string.charAt(i);
+                    if(c2 == '<'){
+                        depth++;
+                    } else if(c2 == '>'){
+                        if(--depth == 0){
+                            break;
+                        }
+                    }
+                }
+                if(genericNames != null){
+                    Line.colorGenerics(string, attributes, genericNames, start, i + 1);
+                }
+                idx = -1;
+            }
         }
     }
 

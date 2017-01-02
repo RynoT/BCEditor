@@ -11,7 +11,7 @@ public abstract class Test<E> {
 
     public abstract void something();
 
-    public void euphoria(List<?> var, int i, float[]... kk) throws Exception {
+    public void euphoria(List<?> var, int i, float... kk) throws Exception {
         switch(i) {
             case 5:
                 System.out.println(5);
