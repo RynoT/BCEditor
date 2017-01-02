@@ -55,10 +55,7 @@ public class IBCEditor extends IEditor {
             toolbar.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(final ComponentEvent e) {
-                    final IComponent content = toolbar.getUpperContent();
-                    if(content != null){
-                        Canvas.getFileViewer().repaint();
-                    }
+                    Canvas.getFileViewer().repaint();
                 }
             });
         }
