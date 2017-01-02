@@ -8,6 +8,8 @@ import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Signature;
 
 import java.awt.font.TextAttribute;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 02/01/2017.
@@ -15,11 +17,20 @@ import java.awt.font.TextAttribute;
 public class ClassLine extends Line {
 
     private final ClassType type;
+    private Set<String> genericNames = null;
 
     public ClassLine(final ClassType type, final int indent) {
         super(indent);
 
         this.type = type;
+    }
+
+    public ClassType getType() {
+        return this.type;
+    }
+
+    public Set<String> getGenericNames() {
+        return this.genericNames;
     }
 
     @Override
@@ -42,7 +53,6 @@ public class ClassLine extends Line {
         final _Signature signatureAttribute = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.type.getAttributes(), pool);
         if(signatureAttribute != null) {
             final String signature = signatureAttribute.getTagSignature(pool).getValue();
-            System.out.println(signature);
             int offset = 0;
             if(signature.charAt(0) == '<') {
                 assert signature.indexOf('>') != -1;
@@ -87,14 +97,21 @@ public class ClassLine extends Line {
         final String str = sb.toString();
         super.setString(str);
 
-        if(idxAccess != 0){
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, 0, idxAccess);
+        if(idxAccess != 0) {
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, 0, idxAccess); //access
         }
+        Line.decodeGenericNames(str, this.genericNames = new HashSet<>(), idxAccess, idxName);
+        Line.colorGenerics(str, super.attributes, this.genericNames, idxAccess, idxName); //generics
         if(idxExtend != idxName) {
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxName, str.indexOf(' ', idxName + 1)); //color 'extends'
+            final int idxExtendText = str.indexOf(' ', idxName + 1);
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxName, idxExtendText); //extends text
+
+            Line.colorGenerics(str, super.attributes, this.genericNames, idxExtendText, idxImplement); //extends
         }
-        if(idxImplement != -1 && idxImplement != idxExtend){
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxExtend, idxImplement);
+        if(idxImplement != -1 && idxImplement != idxExtend) {
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxExtend, idxImplement); //implements text
+
+            Line.colorGenerics(str, super.attributes, this.genericNames, idxImplement, str.length());
         }
     }
 }

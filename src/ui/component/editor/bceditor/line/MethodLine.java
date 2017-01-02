@@ -91,19 +91,25 @@ public class MethodLine extends Line {
         final String str = sb.toString();
         super.setString(str);
 
-        if(idxAccess != 0){
+        if(idxAccess != 0) {
             super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, 0, idxAccess); //access flags
         }
-        if(idxGeneric != -1){
+        if(idxGeneric != -1) {
             Line.colorGenerics(str, super.attributes, genericNames, idxAccess, idxGeneric); //generics
         }
-        Line.colorDefault(str, super.attributes, idxGeneric == -1 ? idxAccess : idxGeneric, idxType); //type
+        final int typeBeginIndex = idxGeneric == -1 ? idxAccess : idxGeneric;
+        final String type = str.substring(typeBeginIndex, idxType - 1);
+        if(genericNames != null && genericNames.contains(type)) {
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, typeBeginIndex, idxType - 1);
+        } else {
+            Line.colorDefault(str, super.attributes, typeBeginIndex, idxType); //type
+        }
 
         super.attributes.addAttribute(TextAttribute.FOREGROUND, MethodLine.NAME_COLOR, idxType, idxName); //name
 
         Line.colorParameters(str, super.attributes, genericNames, idxName, idxParameters); //parameters
 
-        if(idxThrows != -1){
+        if(idxThrows != -1) {
             super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idxParameters, idxThrows); //throws
 
             Line.colorSymbols(str, super.attributes, idxThrows, str.length());
