@@ -2,14 +2,13 @@ package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.Descriptor;
 import project.filetype.classtype.constantpool.ConstantPool;
-import project.filetype.classtype.format.FieldFormat;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._ConstantValue;
+import project.filetype.classtype.member.attributes._Signature;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.text.AttributedString;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -40,7 +39,13 @@ public class FieldLine extends Line {
         final StringBuilder sb = new StringBuilder();
         sb.append(this.field.getAccessFlagsString()).append(" ");
         idxAccess = sb.length();
-        sb.append(Descriptor.decode(this.field.getTagDescriptor(this.pool).getValue())).append(" ");
+
+        final _Signature signature = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.field.getAttributes(), this.pool);
+        if(signature != null) {
+            sb.append(Descriptor.decode(signature.getTagSignature(this.pool).getValue())).append(" ");
+        } else {
+            sb.append(Descriptor.decode(this.field.getTagDescriptor(this.pool).getValue())).append(" ");
+        }
         idxType = sb.length();
         sb.append(this.field.getTagName(this.pool).getValue());
         idxName = sb.length();
