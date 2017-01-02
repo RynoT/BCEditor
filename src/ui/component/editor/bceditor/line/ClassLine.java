@@ -22,6 +22,7 @@ public class ClassLine extends Line {
     public ClassLine(final ClassType type, final int indent) {
         super(indent);
 
+        assert type != null;
         this.type = type;
     }
 

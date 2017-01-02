@@ -24,6 +24,7 @@ public class FieldLine extends Line {
     public FieldLine(final FieldInfo field, final ConstantPool pool, final int indent) {
         super(indent);
 
+        assert field != null && pool != null;
         this.field = field;
         this.pool = pool;
     }

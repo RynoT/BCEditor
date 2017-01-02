@@ -20,6 +20,7 @@ public class InstructionLine extends Line {
     public InstructionLine(final Instruction instruction, final MethodLine methodLine, final ConstantPool pool, final int indent) {
         super(indent);
 
+        assert instruction != null && methodLine != null && pool != null;
         this.instruction = instruction;
         this.methodLine = methodLine;
         this.pool = pool;

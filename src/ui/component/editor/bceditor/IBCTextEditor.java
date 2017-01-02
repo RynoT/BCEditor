@@ -56,8 +56,8 @@ public class IBCTextEditor extends IEditor {
     public void populate(final ClassType type){
         this.lines.clear();
 
-        //this.lines.add(new DefaultLine(ClassFormat.format(type)));
-        this.lines.add(new ClassLine(type, 0));
+        final ClassLine classLine = new ClassLine(type, 0);
+        this.lines.add(classLine);
         this.lines.add(new EmptyLine());
 
         for(final FieldInfo field : type.getFields()){
@@ -68,7 +68,7 @@ public class IBCTextEditor extends IEditor {
         }
         int maxPc = 0;
         for(final MethodInfo method : type.getMethods()){
-            final MethodLine methodLine = new MethodLine(method, type.getConstantPool(), 1);
+            final MethodLine methodLine = new MethodLine(method, classLine, type.getConstantPool(), 1);
             this.lines.add(methodLine);
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), type.getConstantPool());

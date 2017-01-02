@@ -10,6 +10,8 @@ import project.filetype.classtype.member.attributes._Signature;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,19 +23,34 @@ public class MethodLine extends Line {
     public static final Color NAME_COLOR = new Color(255, 200, 100);
 
     private final MethodInfo method;
+    private final ClassLine classLine;
     private final ConstantPool pool;
 
-    public MethodLine(final MethodInfo method, final ConstantPool pool, final int indent) {
+    private Set<String> genericNames = null;
+
+    public MethodLine(final MethodInfo method, final ClassLine classLine, final ConstantPool pool, final int indent) {
         super(indent);
 
+        assert method != null && classLine != null && pool != null;
         this.method = method;
+        this.classLine = classLine;
         this.pool = pool;
+    }
+
+    public Set<String> getGenericNames(){
+        return this.genericNames;
     }
 
     @Override
     public void update() {
         int idxAccess, idxGeneric = -1, idxType, idxName, idxParameters, idxThrows = -1;
-        Set<String> genericNames = null;
+
+        assert this.classLine != null && this.classLine.getGenericNames() != null;
+        this.genericNames = new HashSet<>();
+        if(this.classLine.getGenericNames().size() > 0){
+            //inherit all generic types from class
+            this.genericNames.addAll(this.classLine.getGenericNames());
+        }
 
         final StringBuilder sb = new StringBuilder();
         if(this.method.getAccessFlags() != 0) {
@@ -57,8 +74,7 @@ public class MethodLine extends Line {
             sb.append(descSubstring).append(" ");
             idxGeneric = sb.length();
 
-            genericNames = new HashSet<>();
-            Line.decodeGenericNames(descSubstring, genericNames, 0, descSubstring.length());
+            Line.decodeGenericNames(descSubstring, this.genericNames, 0, descSubstring.length());
         }
         sb.append(descriptor.substring(descriptor.indexOf(')') + 1)).append(" ");
         idxType = sb.length();
@@ -98,12 +114,16 @@ public class MethodLine extends Line {
             Line.colorGenerics(str, super.attributes, genericNames, idxAccess, idxGeneric); //generics
         }
         final int typeBeginIndex = idxGeneric == -1 ? idxAccess : idxGeneric;
-        final String type = str.substring(typeBeginIndex, idxType - 1);
-        if(genericNames != null && genericNames.contains(type)) {
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, typeBeginIndex, idxType - 1);
-        } else {
-            Line.colorDefault(str, super.attributes, typeBeginIndex, idxType); //type
+        //final String type = str.substring(typeBeginIndex, idxType - 1);
+
+        //if((this.genericNames != null && this.genericNames.contains(type))) {
+        //    super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, typeBeginIndex, idxType - 1); //generic return type
+        //} else {
+            Line.colorDefault(str, super.attributes, typeBeginIndex, idxType); //return type
+        if(this.genericNames != null) {
+            Line.colorGenerics(str, super.attributes, this.genericNames, typeBeginIndex, idxType);
         }
+        //}
 
         super.attributes.addAttribute(TextAttribute.FOREGROUND, MethodLine.NAME_COLOR, idxType, idxName); //name
 
