@@ -56,6 +56,22 @@ public class Descriptor {
         return descriptor.replace(" extends java.lang.Object", "");
     }
 
+    public static int getOffset(final String str, final char c, final int begin, final int end){
+        assert end <= str.length();
+        for(int i = begin, inner = 0; i < end; i++){
+            final char next = str.charAt(i);
+            if(next == '<'){
+                inner++;
+            } else if(next == '>'){
+                inner--;
+            }
+            if(next == c && inner == 0){
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public static String decode(final String descriptor) {
         final StringBuilder sb = new StringBuilder();
         final char[] chars = descriptor.toCharArray();
@@ -82,22 +98,8 @@ public class Descriptor {
                 case '<': {
                     int index = descriptor.indexOf('(');
                     if(index == -1){
-                        int inner = 0;
-                        for(int j = i + 1; j < descriptor.length(); j++){
-                            final char c = descriptor.charAt(j);
-                            if(c == '<'){
-                                inner++;
-                            } else if(c == '>'){
-                                if(inner == 0) {
-                                    index = j + 1;
-                                    break;
-                                } else {
-                                    inner--;
-                                }
-                            }
-                        }
-                        assert(index != -1);
-                        //index = descriptor.lastIndexOf('>') + 1;
+                        index = Descriptor.getOffset(descriptor, '>', i, descriptor.length()) + 1;
+                        assert index != -1;
                     }
                     i = index - 1;
                     sb.append(Descriptor.decodeGenerics(descriptor.substring(0, index)));
@@ -154,20 +156,9 @@ public class Descriptor {
             if(next == '<' || next == '>') {
                 sb.append(next);
             } else if(next == 'L') {
-                String signature = "";
-                for(int inner = 0; i < chars.length; i++) {
-                    signature += chars[i];
-                    if(chars[i] == ';') {
-                        if(inner == 0) {
-                            break;
-                        }
-                    } else if(chars[i] == '<') {
-                        inner++;
-                    } else if(chars[i] == '>') {
-                        inner--;
-                    }
-                }
-                sb.append(Descriptor.decode(signature));
+                final int start = i;
+                i = Descriptor.getOffset(descriptor, ';', i, descriptor.length());
+                sb.append(Descriptor.decode(descriptor.substring(start, i)));
 
                 if(i == chars.length){
                     break;

@@ -56,7 +56,8 @@ public class IBCTextEditor extends IEditor {
     public void populate(final ClassType type){
         this.lines.clear();
 
-        this.lines.add(new DefaultLine(ClassFormat.format(type)));
+        //this.lines.add(new DefaultLine(ClassFormat.format(type)));
+        this.lines.add(new ClassLine(type, 0));
         this.lines.add(new EmptyLine());
 
         for(final FieldInfo field : type.getFields()){

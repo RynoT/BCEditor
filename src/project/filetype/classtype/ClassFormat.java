@@ -96,60 +96,60 @@ public class ClassFormat {
     public static String format(final ClassType type) {
         final ConstantPool pool = type.getConstantPool();
         final StringBuilder sb = new StringBuilder();
-        if(type.getAccessFlags() != 0 && (type.getAccessFlags() | AccessFlags.ACC_SUPER.mask()) != AccessFlags.ACC_SUPER.mask()) {
-            sb.append(type.getAccessFlagsString()).append(" ");
-        }
-        if(!type.isEnum() && !type.isInterface()) {
-            sb.append("class ");
-        }
-        sb.append(type.getName());
-        final _Signature signatureAttribute = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, type.getAttributes(), pool);
-        if(signatureAttribute != null) {
-            final String signature = signatureAttribute.getTagSignature(pool).getValue();
-            int offset = 0;
-            if(signature.charAt(0) == '<') {
-                assert (signature.indexOf('>') != -1);
-                int end = -1;
-                for(int i = 1, inner = 0; i < signature.length(); i++) {
-                    final char c = signature.charAt(i);
-                    if(c == '<') {
-                        inner++;
-                    } else if(c == '>') {
-                        if(inner > 0) {
-                            inner--;
-                        } else {
-                            end = i;
-                            break;
-                        }
-                    }
-                }
-                sb.append(Descriptor.hideObjectClass(Descriptor.decode(signature.substring(0, offset = end + 1))));
-            }
-            final String inherit = Descriptor.decode(signature.substring(offset));
-            if((offset = inherit.indexOf(',')) != -1) {
-                sb.append(Descriptor.hideObjectClass(" extends " + inherit.substring(0, offset)));
-
-                sb.append(" implements").append(inherit.substring(offset + 1));
-            } else {
-                sb.append(Descriptor.hideObjectClass(" extends " + inherit));
-            }
-        } else {
-            final String superclass = type.getTagSuperClass().getContentString(pool);
-            if(!superclass.equals("java.lang.Object")) {
-                sb.append(" extends ").append(superclass);
-            }
-            final int[] interfaces = type.getInterfaceIndices();
-            if(interfaces.length > 0) {
-                sb.append(" implements ");
-                for(int i = 0; i < interfaces.length; i++) {
-                    sb.append(type.getTagInterface(i).getContentString(pool));
-                    if(i < interfaces.length - 1) {
-                        sb.append(", ");
-                    }
-                }
-            }
-        }
-        sb.append(" {");
+//        if(type.getAccessFlags() != 0 && (type.getAccessFlags() | AccessFlags.ACC_SUPER.mask()) != AccessFlags.ACC_SUPER.mask()) {
+//            sb.append(type.getAccessFlagsString()).append(" ");
+//        }
+//        if(!type.isEnum() && !type.isInterface()) {
+//            sb.append("class ");
+//        }
+//        sb.append(type.getName());
+//        final _Signature signatureAttribute = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, type.getAttributes(), pool);
+//        if(signatureAttribute != null) {
+//            final String signature = signatureAttribute.getTagSignature(pool).getValue();
+//            int offset = 0;
+//            if(signature.charAt(0) == '<') {
+//                assert (signature.indexOf('>') != -1);
+//                int end = -1;
+//                for(int i = 1, inner = 0; i < signature.length(); i++) {
+//                    final char c = signature.charAt(i);
+//                    if(c == '<') {
+//                        inner++;
+//                    } else if(c == '>') {
+//                        if(inner > 0) {
+//                            inner--;
+//                        } else {
+//                            end = i;
+//                            break;
+//                        }
+//                    }
+//                }
+//                sb.append(Descriptor.hideObjectClass(Descriptor.decode(signature.substring(0, offset = end + 1))));
+//            }
+//            final String inherit = Descriptor.decode(signature.substring(offset));
+//            if((offset = inherit.indexOf(',')) != -1) {
+//                sb.append(Descriptor.hideObjectClass(" extends " + inherit.substring(0, offset)));
+//
+//                sb.append(" implements").append(inherit.substring(offset + 1));
+//            } else {
+//                sb.append(Descriptor.hideObjectClass(" extends " + inherit));
+//            }
+//        } else {
+//            final String superclass = type.getTagSuperClass().getContentString(pool);
+//            if(!superclass.equals("java.lang.Object")) {
+//                sb.append(" extends ").append(superclass);
+//            }
+//            final int[] interfaces = type.getInterfaceIndices();
+//            if(interfaces.length > 0) {
+//                sb.append(" implements ");
+//                for(int i = 0; i < interfaces.length; i++) {
+//                    sb.append(type.getTagInterface(i).getContentString(pool));
+//                    if(i < interfaces.length - 1) {
+//                        sb.append(", ");
+//                    }
+//                }
+//            }
+//        }
+//        sb.append(" {");
         return sb.toString();
     }
 

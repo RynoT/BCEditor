@@ -15,7 +15,7 @@ public class DefaultLine extends Line {
 
     @Override
     public void update() {
-
+        Line.colorDefault(super.getString(), super.attributes, 0, super.getString().length());
     }
 
 //    @Override

@@ -1,5 +1,6 @@
 package ui.component.editor.bceditor.line;
 
+import project.filetype.classtype.Descriptor;
 import ui.component.editor.bceditor.IBCEditor;
 
 import java.awt.*;
@@ -123,17 +124,8 @@ public abstract class Line {
                 }
                 idx = i;
             } else if(c == '<'){
-                final int start = i++;
-                for(int depth = 1; i < end; i++){
-                    final char c2 = string.charAt(i);
-                    if(c2 == '<'){
-                        depth++;
-                    } else if(c2 == '>'){
-                        if(--depth == 0){
-                            break;
-                        }
-                    }
-                }
+                final int start = i;
+                i = Descriptor.getOffset(string, '>', i, end);
                 if(genericNames != null){
                     Line.colorGenerics(string, attributes, genericNames, start, i + 1);
                 }

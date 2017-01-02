@@ -1,13 +1,15 @@
+import java.awt.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 28/12/2016.
  */
-public abstract class Test<E> {
+public abstract class Test extends HashMap<Image, Void> implements Runnable, Closeable {
 
     public abstract void something();
 
