@@ -7,6 +7,7 @@ import java.awt.font.TextAttribute;
 import java.text.AttributedString;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -14,6 +15,9 @@ import java.util.Map;
 public abstract class Line {
 
     public static final int INDENT_PIXEL_OFFSET = 28;
+
+    public static final Color ORANGE_COLOR = new Color(204, 120, 50);
+    public static final Color GENERIC_COLOR = new Color(80, 120, 120);
 
     static final Map<String, Color> KEYWORD_COLOR_MAP = new HashMap<>(40);
     static final Map<String, Color> SYMBOL_COLOR_MAP = new HashMap<>(2);
@@ -33,7 +37,7 @@ public abstract class Line {
         this.indent = indent;
     }
 
-    public abstract void stylize();
+    public abstract void update();
 
     public String getString(){
         assert(this.string != null);
@@ -54,18 +58,24 @@ public abstract class Line {
         g2d.drawString(this.attributes.getIterator(), x + this.indent * Line.INDENT_PIXEL_OFFSET, y);
     }
 
-    static void stylize(final String string, final AttributedString attributes){
-        int lastIndex = 0;
-        for(int i = 0; i < string.length(); i++){
-            final char c = string.charAt(i);
-            final boolean end = i == string.length() - 1;
-            if(Line.SYMBOL_COLOR_MAP.containsKey(String.valueOf(c))){
-                attributes.addAttribute(TextAttribute.FOREGROUND, Line.SYMBOL_COLOR_MAP.get(String.valueOf(c)), i, i + 1);
+    static void colorSymbols(final String string, final AttributedString attributes, final int begin, final int end){
+        for(int i = begin; i < end; i++){
+            final String c = String.valueOf(string.charAt(i));
+            if(Line.SYMBOL_COLOR_MAP.containsKey(c)){
+                attributes.addAttribute(TextAttribute.FOREGROUND, Line.SYMBOL_COLOR_MAP.get(c), i, i + 1);
             }
-            if(!end && (c != ' ')){
+        }
+    }
+
+    static void colorDefault(final String string, final AttributedString attributes, final int begin, final int end){
+        int lastIndex = begin;
+        for(int i = begin; i < end; i++){
+            final char c = string.charAt(i);
+            final boolean isEnd = i == string.length() - 1;
+            if(!isEnd && (c != ' ')){
                 continue;
             }
-            final String substr = string.substring(lastIndex, end ? i + 1 : i);
+            final String substr = string.substring(lastIndex, isEnd ? i + 1 : i);
             if(Line.KEYWORD_COLOR_MAP.containsKey(substr)){
                 attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP.get(substr), lastIndex, i + 1);
             }
@@ -73,8 +83,57 @@ public abstract class Line {
         }
     }
 
+    static void decodeGenericNames(final String string, final Set<String> names, final int begin, final int end){
+        int idx = -1;
+        boolean complete = false;
+        for(int i = begin; i < end; i++){
+            final char c = string.charAt(i);
+            if(c == '<'){
+                continue;
+            }
+            if(idx != -1 && (c == ' ' || c == '>')){
+                names.add(string.substring(idx, i));
+
+                idx = -1;
+                complete = true;
+            } else if(!complete && idx == -1 && c != ' '){
+                idx = i;
+            } else if(c == ','){
+                complete = false;
+            }
+        }
+    }
+
+    static void colorGenerics(final String string, final AttributedString attributes, final Set<String> names, final int begin, final int end){
+        assert names != null;
+        int idx = -1;
+        for(int i = begin; i < end; i++){
+            final char c = string.charAt(i);
+            if(c == '<'){
+                idx = -1;
+                continue;
+            }
+            if(idx == -1) {
+                if(c == ' ') {
+                    continue;
+                }
+                idx = i;
+            } else if(c == ','){
+                idx = -1;
+                attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, i, i + 1);
+            } else if(c == ' ' || c == '>'){
+                final String substr = string.substring(idx, i);
+                if(names.contains(substr)){
+                    attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, idx, i);
+                } else if(substr.equals("extends") || substr.equals("super")){
+                    attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, idx, i);
+                }
+                idx = -1;
+            }
+        }
+    }
+
     static {
-        final Color orange = new Color(204, 120, 50);
         for(final String next : new String[]{
                 "public", "private", "protected",
                 "final", "static", "volatile", "transient", "synchronized",
@@ -82,9 +141,9 @@ public abstract class Line {
                 "void", "synthetic", "new", "this", "super", "throws", "extends", "implements",
                 "boolean", "byte", "char", "short", "int", "float", "long", "double", "return"
         }){
-            Line.KEYWORD_COLOR_MAP.put(next, orange);
+            Line.KEYWORD_COLOR_MAP.put(next, Line.ORANGE_COLOR);
         }
-        Line.SYMBOL_COLOR_MAP.put(",", orange);
-        Line.SYMBOL_COLOR_MAP.put(";", orange);
+        Line.SYMBOL_COLOR_MAP.put(",", Line.ORANGE_COLOR);
+        Line.SYMBOL_COLOR_MAP.put(";", Line.ORANGE_COLOR);
     }
 }

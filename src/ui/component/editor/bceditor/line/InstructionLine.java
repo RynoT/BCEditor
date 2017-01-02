@@ -52,11 +52,17 @@ public class InstructionLine extends Line {
         return this.methodLine;
     }
 
+//    @Override
+//    public void stylize() {
+//        final String mnemonic = this.instruction.getOpcode().getMnemonic();
+//        if(mnemonic.contains("return")) {
+//            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP
+//                    .get("return"), 0, mnemonic.length());
+//        }
+//    }
+
     @Override
-    public void stylize() {
-        final String mnemonic = this.instruction.getOpcode().getMnemonic();
-        if(mnemonic.contains("return")) {
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP.get("return"), 0, mnemonic.length());
-        }
+    public void update() {
+
     }
 }

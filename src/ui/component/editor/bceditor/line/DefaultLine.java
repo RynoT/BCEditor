@@ -14,7 +14,12 @@ public class DefaultLine extends Line {
     }
 
     @Override
-    public void stylize() {
-        Line.stylize(super.getString(), super.attributes);
+    public void update() {
+
     }
+
+//    @Override
+//    public void stylize() {
+//        Line.stylize(super.getString(), super.attributes);
+//    }
 }

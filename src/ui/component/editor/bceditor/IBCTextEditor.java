@@ -25,7 +25,7 @@ public class IBCTextEditor extends IEditor {
     public static final int LINE_HEIGHT = 16;
     public static final int LINE_DEFAULT_INSET = 5;
 
-    public static final int SIDE_BAR_WIDTH = 32;
+    public static final int SIDE_BAR_TEXT_PADDING = 6;
 
     public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
     public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
@@ -40,8 +40,6 @@ public class IBCTextEditor extends IEditor {
     public IBCTextEditor(){
         super.setOpaque(false);
         super.setLayout(new BorderLayout(0, 0));
-
-        super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 
         super.add(this.sideBar = new SideBar(), BorderLayout.WEST);
 
@@ -67,25 +65,36 @@ public class IBCTextEditor extends IEditor {
         if(type.getFields().length > 0) {
             this.lines.add(new EmptyLine());
         }
+        int maxPc = 0;
         for(final MethodInfo method : type.getMethods()){
             final MethodLine methodLine = new MethodLine(method, type.getConstantPool(), 1);
             this.lines.add(methodLine);
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), type.getConstantPool());
             if(code != null) {
-                for(final Instruction instruction : ClassFormat.format(code.getRawCode())){
+                final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
+                for(final Instruction instruction : instructions){
                     this.lines.add(new InstructionLine(instruction, methodLine, type.getConstantPool(), 2));
                 }
                 this.lines.add(new DefaultLine("}", 1));
+
+                maxPc = Math.max(maxPc, instructions.get(instructions.size() - 1).getPc());
             }
             this.lines.add(new EmptyLine());
+        }
+        if(maxPc > this.sideBar.maxPc){
+            this.sideBar.maxPc = maxPc;
+
+            final int width = this.sideBar.getFontMetrics(this.sideBar.getFont()).stringWidth(
+                    String.valueOf(maxPc)) + IBCTextEditor.SIDE_BAR_TEXT_PADDING * 2;
+            this.sideBar.setPreferredSize(new Dimension(width, Integer.MAX_VALUE));
         }
 
         this.lines.add(new DefaultLine("}"));
         this.lines.add(new EmptyLine());
 
         for(final Line line : this.lines) {
-            line.stylize();
+            line.update();
         }
         this.lineRenderer.updateDimensions();
         this.lineRenderer.repaint();
@@ -93,9 +102,12 @@ public class IBCTextEditor extends IEditor {
 
     private class SideBar extends JPanel {
 
+        private int maxPc = 0;
+
         private SideBar(){
+            super.setFont(IComponent.DEFAULT_FONT);
             super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
-            super.setPreferredSize(new Dimension(IBCTextEditor.SIDE_BAR_WIDTH, Integer.MAX_VALUE));
+            super.setPreferredSize(new Dimension(30, Integer.MAX_VALUE));
         }
 
         @Override
@@ -108,12 +120,15 @@ public class IBCTextEditor extends IEditor {
             g2d.drawLine(super.getWidth() - 1, 0, super.getWidth() - 1, super.getHeight() - 1);
 
             final FontMetrics metrics = g2d.getFontMetrics();
-            final JViewport viewport = IBCTextEditor.this.scrollPanel.getViewport();
-            final Point viewPosition = viewport.getViewPosition();
+            final Point viewPosition = IBCTextEditor.this.scrollPanel.getViewport().getViewPosition();
             final List<Line> lines = IBCTextEditor.this.lines;
 
+            final int min = viewPosition.y / IBCTextEditor.LINE_HEIGHT;
+            final int max = (viewPosition.y + super.getHeight()) / IBCTextEditor.LINE_HEIGHT;
+
+            g2d.setFont(super.getFont());
             g2d.setColor(IBCTextEditor.SIDE_BAR_FOREGROUND);
-            for(int i = 0; i < lines.size(); i++){
+            for(int i = min; i < Math.min(lines.size(), max); i++){
                 if(!(lines.get(i) instanceof InstructionLine)){
                     continue;
                 }
@@ -128,6 +143,7 @@ public class IBCTextEditor extends IEditor {
 
         private LineRenderer(){
             super.setOpaque(false);
+            super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         }
 
         private void updateDimensions(){
@@ -147,9 +163,13 @@ public class IBCTextEditor extends IEditor {
             g2d.setColor(IComponent.DEFAULT_FOREGROUND);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+            final Point viewPosition = IBCTextEditor.this.scrollPanel.getViewport().getViewPosition();
+            final int min = viewPosition.y / IBCTextEditor.LINE_HEIGHT;
+            final int max = (viewPosition.y + super.getHeight()) / IBCTextEditor.LINE_HEIGHT;
+
             final int textHeight = g.getFontMetrics().getHeight() / 2;
             final List<Line> lines = IBCTextEditor.this.lines;
-            for(int i = 0; i < lines.size(); i++){
+            for(int i = min; i < Math.min(lines.size(), max); i++){
                 lines.get(i).render(g2d, IBCTextEditor.LINE_DEFAULT_INSET,
                         IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2);
                 //g2d.fillRect(0, IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2, 100, 2);
