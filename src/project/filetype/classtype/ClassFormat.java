@@ -201,7 +201,7 @@ public class ClassFormat {
                             case _lookupswitch:
                                 dis.skipBytes((4 - ((pc + 1) % 4)) % 4); //padding
                                 final int defaultOffset = dis.readInt();
-                                operands.add(new Operand(defaultOffset, 4, OperandType.CONSTANT));
+                                operands.add(new Operand(defaultOffset, 4, OperandType.BRANCH_OFFSET));
                                 if(opcode == Opcode._tableswitch){
                                     final int low = dis.readInt(), high = dis.readInt();
                                     operands.add(new Operand(low, 4, OperandType.CONSTANT));

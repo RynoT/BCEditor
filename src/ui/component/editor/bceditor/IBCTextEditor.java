@@ -11,9 +11,12 @@ import ui.component.IComponent;
 import ui.component.editor.IEditor;
 import ui.component.IScrollPanel;
 import ui.component.editor.bceditor.line.*;
+import util.async.Async;
+import util.async.AsyncType;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +27,9 @@ public class IBCTextEditor extends IEditor {
 
     public static final int LINE_HEIGHT = 16;
     public static final int LINE_DEFAULT_INSET = 5;
+    public static final int CARET_WIDTH = 2;
+
+    public static final Color LINE_ACTIVE_COLOR = new Color(55, 55, 55);
 
     public static final int SIDE_BAR_TEXT_PADDING = 6;
 
@@ -36,6 +42,8 @@ public class IBCTextEditor extends IEditor {
     private final IScrollPanel scrollPanel;
 
     private final List<Line> lines = new ArrayList<>();
+
+    private Line active = null;
 
     public IBCTextEditor(){
         super.setOpaque(false);
@@ -51,6 +59,11 @@ public class IBCTextEditor extends IEditor {
         }
         this.scrollPanel = scrollPanel;
         super.add(scrollPanel, BorderLayout.CENTER);
+    }
+
+    public void setActiveLine(final Line line){
+        this.active = line;
+        this.lineRenderer.repaint();
     }
 
     public void populate(final ClassType type){
@@ -94,11 +107,12 @@ public class IBCTextEditor extends IEditor {
         this.lines.add(new DefaultLine("}"));
         this.lines.add(new EmptyLine());
 
-        for(final Line line : this.lines) {
-            line.update();
-        }
-        this.lineRenderer.updateDimensions();
-        this.lineRenderer.repaint();
+        Async.submit(() -> {
+            for(final Line line : IBCTextEditor.this.lines) {
+                line.update();
+            }
+            IBCTextEditor.this.lineRenderer.updateDimensions();
+        }, AsyncType.MULTI);
     }
 
     private class SideBar extends JPanel {
@@ -142,9 +156,40 @@ public class IBCTextEditor extends IEditor {
 
     private class LineRenderer extends JPanel {
 
+        private final int charWidth;
+
+        private int caretPosition = -1;
+
         private LineRenderer(){
             super.setOpaque(false);
+            super.setFont(IBCEditor.EDITOR_FONT);
             super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+
+            this.charWidth = super.getFontMetrics(super.getFont()).charWidth(' '); //font is monospaced
+
+            super.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(final MouseEvent e) {
+                    final int lineIdx = e.getY() / IBCTextEditor.LINE_HEIGHT;
+                    final Line line = IBCTextEditor.this.lines.get(lineIdx);
+                    IBCTextEditor.this.setActiveLine(line);
+
+                    final String text = line.getString();
+                    final int position = (e.getX() - line.getIndent() * Line.INDENT_PIXEL_OFFSET) / LineRenderer.this.charWidth; //font is monospaced
+                    LineRenderer.this.caretPosition = Math.max(0, Math.min(position, text.length()));
+                }
+            });
+            super.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyTyped(final KeyEvent e) {
+                    final Line line = IBCTextEditor.this.active;
+                    if(line == null){
+                        return;
+                    }
+                    System.out.println(String.valueOf(e.getKeyChar()));
+                    line.setString(line.getString() + String.valueOf(e.getKeyChar()));
+                }
+            });
         }
 
         private void updateDimensions(){
@@ -160,7 +205,7 @@ public class IBCTextEditor extends IEditor {
             super.paintComponent(g);
 
             final Graphics2D g2d = (Graphics2D) g;
-            g2d.setFont(IBCEditor.EDITOR_FONT);
+            g2d.setFont(super.getFont());
             g2d.setColor(IComponent.DEFAULT_FOREGROUND);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -171,8 +216,19 @@ public class IBCTextEditor extends IEditor {
             final int textHeight = g.getFontMetrics().getHeight() / 2;
             final List<Line> lines = IBCTextEditor.this.lines;
             for(int i = min; i < Math.min(lines.size(), max); i++){
-                lines.get(i).render(g2d, IBCTextEditor.LINE_DEFAULT_INSET,
-                        IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2);
+                final Line line = lines.get(i);
+                if(IBCTextEditor.this.active == line){
+                    g2d.setColor(IBCTextEditor.LINE_ACTIVE_COLOR);
+                    g2d.fillRect(0, i * IBCTextEditor.LINE_HEIGHT, super.getWidth(), IBCTextEditor.LINE_HEIGHT);
+                    g2d.setColor(IComponent.DEFAULT_FOREGROUND);
+                    if(this.caretPosition != -1) {
+                        final int xIndentOffset = line.getIndent() * Line.INDENT_PIXEL_OFFSET;
+                        g.fillRect(xIndentOffset + this.caretPosition * this.charWidth + this.charWidth - IBCTextEditor.CARET_WIDTH / 2,
+                                i * IBCTextEditor.LINE_HEIGHT, IBCTextEditor.CARET_WIDTH, IBCTextEditor.LINE_HEIGHT);
+                    }
+                }
+                line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, IBCTextEditor.LINE_HEIGHT
+                        * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2);
                 //g2d.fillRect(0, IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2, 100, 2);
             }
         }

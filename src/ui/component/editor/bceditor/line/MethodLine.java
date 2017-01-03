@@ -113,17 +113,11 @@ public class MethodLine extends Line {
         if(idxGeneric != -1) {
             Line.colorGenerics(str, super.attributes, genericNames, idxAccess, idxGeneric); //generics
         }
-        final int typeBeginIndex = idxGeneric == -1 ? idxAccess : idxGeneric;
-        //final String type = str.substring(typeBeginIndex, idxType - 1);
 
-        //if((this.genericNames != null && this.genericNames.contains(type))) {
-        //    super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.GENERIC_COLOR, typeBeginIndex, idxType - 1); //generic return type
-        //} else {
-            Line.colorDefault(str, super.attributes, typeBeginIndex, idxType); //return type
+        Line.colorDefault(str, super.attributes, idxGeneric == -1 ? idxAccess : idxGeneric, idxType); //return type
         if(this.genericNames != null) {
-            Line.colorGenerics(str, super.attributes, this.genericNames, typeBeginIndex, idxType);
+            Line.colorGenerics(str, super.attributes, this.genericNames, idxGeneric == -1 ? idxAccess : idxGeneric, idxType); //return type
         }
-        //}
 
         super.attributes.addAttribute(TextAttribute.FOREGROUND, MethodLine.NAME_COLOR, idxType, idxName); //name
 

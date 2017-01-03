@@ -1,17 +1,21 @@
 package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.constantpool.ConstantPool;
-import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.opcode.Instruction;
 import project.filetype.classtype.opcode.Operand;
 import project.filetype.classtype.opcode.OperandType;
 
+import java.awt.*;
 import java.awt.font.TextAttribute;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
  */
 public class InstructionLine extends Line {
+
+    public static final Color BRANCH_COLOR = new Color(83, 130, 154);
+    public static final Color INDEX_POOL_COLOR = new Color(123, 170, 184);
+    public static final Color INDEX_LOCAL_COLOR = new Color(152, 118, 170);
 
     private final Instruction instruction;
     private final MethodLine methodLine;
@@ -24,46 +28,67 @@ public class InstructionLine extends Line {
         this.instruction = instruction;
         this.methodLine = methodLine;
         this.pool = pool;
+    }
 
-        final StringBuilder sb = new StringBuilder(instruction.getOpcode().getMnemonic());
-        if(instruction.getOperands().size() > 0){
+    public Instruction getInstruction() {
+        return this.instruction;
+    }
+
+    public MethodLine getMethodLine() {
+        return this.methodLine;
+    }
+
+    @Override
+    public void update() {
+        final StringBuilder sb = new StringBuilder();
+        final String mnemonic = this.instruction.getOpcode().getMnemonic();
+        sb.append(mnemonic);
+        if(this.instruction.getOperandCount() > 0) {
             sb.append(" ");
-            for(int i = 0; i < instruction.getOperandCount(); i++){
-                final Operand operand = instruction.getOperands().get(i);
+            for(int i = 0; i < this.instruction.getOperandCount(); i++) {
+                final Operand operand = this.instruction.getOperands().get(i);
                 if(operand.getType() == OperandType.INDEX_POOL) {
                     sb.append("<").append(operand.getValue()).append(">");
                 } else if(operand.getType() == OperandType.BRANCH_OFFSET) {
-                    sb.append("#").append(instruction.getPc() + operand.getValue());
+                    sb.append("#").append(this.instruction.getPc() + operand.getValue());
                 } else {
                     sb.append(operand.getValue());
                 }
-                if(i < instruction.getOperandCount() - 1){
+                if(i < this.instruction.getOperandCount() - 1) {
                     sb.append(", ");
                 }
             }
         }
-        super.setString(sb.toString());
-    }
 
-    public Instruction getInstruction(){
-        return this.instruction;
-    }
+        final String str = sb.toString();
+        super.setString(str);
 
-    public MethodLine getMethodLine(){
-        return this.methodLine;
-    }
-
-//    @Override
-//    public void stylize() {
-//        final String mnemonic = this.instruction.getOpcode().getMnemonic();
-//        if(mnemonic.contains("return")) {
-//            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.KEYWORD_COLOR_MAP
-//                    .get("return"), 0, mnemonic.length());
-//        }
-//    }
-
-    @Override
-    public void update() {
-
+        if(mnemonic.contains("return")) {
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, 0, mnemonic.length());
+        }
+        if(this.instruction.getOperandCount() > 0){
+            int offset = mnemonic.length() + 1;
+            final String[] operands = str.substring(offset).split("\\s");
+            assert operands.length == this.instruction.getOperandCount();
+            for(int i = 0; i < operands.length; i++){
+                final OperandType type = this.instruction.getOperands().get(i).getType();
+                int length = operands[i].length();
+                if(i < operands.length - 1){
+                    length -= 1; //accommodate for comma
+                }
+                if(type == OperandType.BRANCH_OFFSET){
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                            .BRANCH_COLOR, offset, offset + length);
+                } else if(type == OperandType.INDEX_POOL){
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                            .INDEX_POOL_COLOR, offset, offset + length);
+                } else if(type == OperandType.INDEX_LOCAL || type == OperandType.CONSTANT){
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                            .INDEX_LOCAL_COLOR, offset, offset + length);
+                }
+                offset += operands[i].length() + 1;
+            }
+            //Line.colorSymbols(str, super.attributes, mnemonic.length(), str.length());
+        }
     }
 }

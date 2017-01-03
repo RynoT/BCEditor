@@ -40,6 +40,10 @@ public abstract class Line {
 
     public abstract void update();
 
+    public int getIndent(){
+        return this.indent;
+    }
+
     public String getString() {
         assert (this.string != null);
         return this.string;

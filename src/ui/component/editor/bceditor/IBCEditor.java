@@ -7,8 +7,7 @@ import ui.component.editor.IEditor;
 import ui.component.editor.bceditor.subeditor.IBCPoolSubEditor;
 
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 
 /**
  * Created by Ryan Thomson on 27/12/2016.

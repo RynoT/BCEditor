@@ -17,9 +17,4 @@ public class DefaultLine extends Line {
     public void update() {
         Line.colorDefault(super.getString(), super.attributes, 0, super.getString().length());
     }
-
-//    @Override
-//    public void stylize() {
-//        Line.stylize(super.getString(), super.attributes);
-//    }
 }
