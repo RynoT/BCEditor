@@ -4,6 +4,8 @@ import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.opcode.Instruction;
 import project.filetype.classtype.opcode.Operand;
 import project.filetype.classtype.opcode.OperandType;
+import ui.component.editor.bceditor.IBCEditor;
+import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -12,10 +14,6 @@ import java.awt.font.TextAttribute;
  * Created by Ryan Thomson on 30/12/2016.
  */
 public class InstructionLine extends Line {
-
-    public static final Color BRANCH_COLOR = new Color(83, 130, 154);
-    public static final Color INDEX_POOL_COLOR = new Color(123, 170, 184);
-    public static final Color INDEX_LOCAL_COLOR = new Color(152, 118, 170);
 
     private final Instruction instruction;
     private final MethodLine methodLine;
@@ -48,9 +46,11 @@ public class InstructionLine extends Line {
             for(int i = 0; i < this.instruction.getOperandCount(); i++) {
                 final Operand operand = this.instruction.getOperands().get(i);
                 if(operand.getType() == OperandType.INDEX_POOL) {
-                    sb.append("<").append(operand.getValue()).append(">");
+                    sb.append(IBCEditor.formatIndexPool(operand.getValue()));
+                } else if(operand.getType() == OperandType.INDEX_LOCAL){
+                    sb.append(IBCEditor.formatIndexLocal(operand.getValue()));
                 } else if(operand.getType() == OperandType.BRANCH_OFFSET) {
-                    sb.append("#").append(this.instruction.getPc() + operand.getValue());
+                    sb.append(IBCEditor.formatBranch(operand.getValue()));
                 } else {
                     sb.append(operand.getValue());
                 }
@@ -77,13 +77,13 @@ public class InstructionLine extends Line {
                     length -= 1; //accommodate for comma
                 }
                 if(type == OperandType.BRANCH_OFFSET){
-                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor
                             .BRANCH_COLOR, offset, offset + length);
                 } else if(type == OperandType.INDEX_POOL){
-                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor
                             .INDEX_POOL_COLOR, offset, offset + length);
                 } else if(type == OperandType.INDEX_LOCAL || type == OperandType.CONSTANT){
-                    super.attributes.addAttribute(TextAttribute.FOREGROUND, InstructionLine
+                    super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor
                             .INDEX_LOCAL_COLOR, offset, offset + length);
                 }
                 offset += operands[i].length() + 1;
