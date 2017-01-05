@@ -24,12 +24,13 @@ public class PAccessFlags extends Property {
     public String getContentString(final ConstantPool pool) {
         final StringBuilder binary = new StringBuilder(Short.SIZE + 4);
         {
+            //format binary string with padding
             final String str = Integer.toBinaryString(this.accessFlags);
             for(int i = Short.SIZE; i > 0; i--){
                 if(i != Short.SIZE && i % 4 == 0){
                     binary.append(' ');
                 }
-                if(i >= str.length() - 1){
+                if(i > str.length()){
                     binary.append('0');
                 } else {
                     binary.append(str.charAt(i - 1));

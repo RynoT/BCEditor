@@ -6,6 +6,7 @@ import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._ConstantValue;
 import project.filetype.classtype.member.attributes._Signature;
+import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -14,9 +15,6 @@ import java.awt.font.TextAttribute;
  * Created by Ryan Thomson on 30/12/2016.
  */
 public class FieldLine extends Line {
-
-    private static final Color NAME_COLOR = new Color(150, 120, 170);
-    private static final Color CONSTANT_COLOR = new Color(92, 160, 173);
 
     private final FieldInfo field;
 
@@ -63,9 +61,9 @@ public class FieldLine extends Line {
         if(idxAccess != 0) {
             super.attributes.addAttribute(TextAttribute.FOREGROUND, Line.ORANGE_COLOR, 0, idxAccess);
         }
-        super.attributes.addAttribute(TextAttribute.FOREGROUND, FieldLine.NAME_COLOR, idxType, idxName);
+        super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor.FIELD_NAME_COLOR, idxType, idxName);
         if(idxValue != -1){
-            super.attributes.addAttribute(TextAttribute.FOREGROUND, FieldLine.CONSTANT_COLOR, idxValue, sb.length() - 1);
+            super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor.CONSTANT_COLOR, idxValue, sb.length() - 1);
         }
         Line.colorDefault(str, super.attributes, idxAccess, idxType);
         Line.colorSymbols(str, super.attributes, str.length() - 1, str.length());

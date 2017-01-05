@@ -40,6 +40,8 @@ public class IBCTextEditor extends IEditor {
     public static final Color INDEX_POOL_COLOR = new Color(123, 170, 184);
     public static final Color INDEX_LOCAL_COLOR = new Color(152, 118, 170);
 
+    public static final Color FIELD_NAME_COLOR = new Color(150, 120, 170);
+    public static final Color CONSTANT_COLOR = new Color(92, 160, 173);
     public static final Color STRING_COLOR = new Color(100, 135, 80);
     public static final Color ATTRIBUTE_COLOR = new Color(180, 188, 55);
 
