@@ -1,4 +1,4 @@
-package project.filetype.classtype.index;
+package project.index;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagClass;

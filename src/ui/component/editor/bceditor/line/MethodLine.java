@@ -24,17 +24,15 @@ public class MethodLine extends Line {
 
     private final MethodInfo method;
     private final ClassLine classLine;
-    private final ConstantPool pool;
 
     private Set<String> genericNames = null;
 
-    public MethodLine(final MethodInfo method, final ClassLine classLine, final ConstantPool pool, final int indent) {
+    public MethodLine(final MethodInfo method, final ClassLine classLine, final int indent) {
         super(indent);
 
-        assert method != null && classLine != null && pool != null;
+        assert method != null && classLine != null;
         this.method = method;
         this.classLine = classLine;
-        this.pool = pool;
     }
 
     public Set<String> getGenericNames(){
@@ -42,7 +40,7 @@ public class MethodLine extends Line {
     }
 
     @Override
-    public void update() {
+    public void update(final ConstantPool pool) {
         int idxAccess, idxGeneric = -1, idxType, idxName, idxParameters, idxThrows = -1;
 
         assert this.classLine != null && this.classLine.getGenericNames() != null;
@@ -60,11 +58,11 @@ public class MethodLine extends Line {
 
         // Decode the descriptor from either the method or signature attribute (if present)
         String descriptor;
-        final _Signature signatureAttribute = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.method.getAttributes(), this.pool);
+        final _Signature signatureAttribute = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.method.getAttributes(), pool);
         if(signatureAttribute != null) {
-            descriptor = Descriptor.decode(signatureAttribute.getTagSignature(this.pool).getValue());
+            descriptor = Descriptor.decode(signatureAttribute.getTagSignature(pool).getValue());
         } else {
-            descriptor = Descriptor.decode(this.method.getTagDescriptor(this.pool).getValue());
+            descriptor = Descriptor.decode(this.method.getTagDescriptor(pool).getValue());
         }
         descriptor = Descriptor.hideObjectClass(descriptor);
 
@@ -78,7 +76,7 @@ public class MethodLine extends Line {
         }
         sb.append(descriptor.substring(descriptor.indexOf(')') + 1)).append(" ");
         idxType = sb.length();
-        sb.append(this.method.getTagName(this.pool).getValue());
+        sb.append(this.method.getTagName(pool).getValue());
         idxName = sb.length();
 
         if(AccessFlags.containsFlag(this.method.getAccessFlags(), AccessFlags.ACC_VARARGS)) {
@@ -87,12 +85,12 @@ public class MethodLine extends Line {
         sb.append(descriptor.substring(descriptor.indexOf('('), descriptor.indexOf(')') + 1));
         idxParameters = sb.length();
 
-        final _Exceptions exceptionsAttribute = (_Exceptions) AttributeInfo.findFirst(AttributeInfo.EXCEPTIONS, this.method.getAttributes(), this.pool);
+        final _Exceptions exceptionsAttribute = (_Exceptions) AttributeInfo.findFirst(AttributeInfo.EXCEPTIONS, this.method.getAttributes(), pool);
         if(exceptionsAttribute != null) {
             sb.append(" throws ");
             idxThrows = sb.length();
             for(int i = 0; i < exceptionsAttribute.getExceptionCount(); i++) {
-                sb.append(exceptionsAttribute.getTagException(this.pool, i).getContentString(pool));
+                sb.append(exceptionsAttribute.getTagException(pool, i).getContentString(pool));
                 if(i < exceptionsAttribute.getExceptionCount() - 1) {
                     sb.append(", ");
                 }

@@ -2,9 +2,11 @@ package project.filetype.classtype.member.attributes;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
+import util.Pair;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.text.AttributedString;
 
 /**
  * Created by Ryan Thomson on 23/12/2016.
@@ -38,21 +40,23 @@ public abstract class AttributeInfo {
         this.nameIndex = nameIndex;
     }
 
-    public final int getNameIndex(){
+    public Pair<String, AttributedString> getContentString(final ConstantPool pool) { return null; }
+
+    public final int getNameIndex() {
         return this.nameIndex;
     }
 
-    public final TagUTF8 getTagName(final ConstantPool pool){
+    public final TagUTF8 getTagName(final ConstantPool pool) {
         return (TagUTF8) pool.getEntry(this.nameIndex);
     }
 
-    public final boolean isSupported(){
+    public final boolean isSupported() {
         return !(this instanceof _Default);
     }
 
-    public static AttributeInfo findFirst(final String name, final AttributeInfo[] attributes, final ConstantPool pool){
-        for(final AttributeInfo attribute : attributes){
-            if(attribute.getTagName(pool).getValue().equals(name)){
+    public static AttributeInfo findFirst(final String name, final AttributeInfo[] attributes, final ConstantPool pool) {
+        for(final AttributeInfo attribute : attributes) {
+            if(attribute.getTagName(pool).getValue().equals(name)) {
                 return attribute;
             }
         }
@@ -62,7 +66,7 @@ public abstract class AttributeInfo {
     public static AttributeInfo create(final DataInputStream dis, final ConstantPool pool) throws IOException {
         final int nameIndex = dis.readUnsignedShort();
         final int length = dis.readInt();
-        switch(((TagUTF8) pool.getEntry(nameIndex)).getValue()){
+        switch(((TagUTF8) pool.getEntry(nameIndex)).getValue()) {
             case AttributeInfo.CONSTANT_VALUE:
                 return new _ConstantValue(dis, nameIndex, length);
             case AttributeInfo.CODE:

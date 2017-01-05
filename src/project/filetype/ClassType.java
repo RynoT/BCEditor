@@ -1,7 +1,7 @@
 package project.filetype;
 
 import project.filetype.classtype.AccessFlags;
-import project.filetype.classtype.index.Index;
+import project.index.Index;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagClass;
 import project.filetype.classtype.member.FieldInfo;
@@ -312,7 +312,7 @@ public class ClassType extends FileType {
                 // Load class attributes
                 this.attributes = new AttributeInfo[dis.readUnsignedShort()];
                 if(this.attributes.length > 0) {
-                    System.out.print(prefix + "Attributes: ");
+                    System.out.print(prefix + "Class Attributes: ");
                 }
                 for(int i = 0; i < this.attributes.length; i++) {
                     this.attributes[i] = AttributeInfo.create(dis, this.constantPool);

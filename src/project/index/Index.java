@@ -1,8 +1,7 @@
-package project.filetype.classtype.index;
+package project.index;
 
 import project.filetype.classtype.AccessFlags;
 import project.filetype.classtype.constantpool.ConstantPool;
-import project.filetype.classtype.constantpool.tag.TagClass;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;
 

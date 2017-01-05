@@ -14,11 +14,6 @@ public class FieldInfo extends MemberInfo {
     // Possible attributes: ConstantValue, Synthetic, Signature, Deprecated, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations
 
     public FieldInfo(final DataInputStream dis, final ConstantPool pool) throws IOException {
-        super(dis, pool);
-    }
-
-    @Override
-    public String getAccessFlagsString() {
-        return AccessFlags.decode(super.getAccessFlags(), AccessFlags.Type.FIELD);
+        super(dis, pool, AccessFlags.Type.FIELD);
     }
 }

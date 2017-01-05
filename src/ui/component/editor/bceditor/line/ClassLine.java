@@ -35,12 +35,11 @@ public class ClassLine extends Line {
     }
 
     @Override
-    public void update() {
+    public void update(final ConstantPool pool) {
         assert this.type != null;
 
         int idxAccess, idxName, idxExtend, idxImplement = -1;
 
-        final ConstantPool pool = this.type.getConstantPool();
         final StringBuilder sb = new StringBuilder();
         if(this.type.getAccessFlags() != 0 && (this.type.getAccessFlags() | AccessFlags.ACC_SUPER.mask()) != AccessFlags.ACC_SUPER.mask()) {
             sb.append(this.type.getAccessFlagsString()).append(" ");

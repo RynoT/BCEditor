@@ -17,15 +17,13 @@ public class InstructionLine extends Line {
 
     private final Instruction instruction;
     private final MethodLine methodLine;
-    private final ConstantPool pool;
 
-    public InstructionLine(final Instruction instruction, final MethodLine methodLine, final ConstantPool pool, final int indent) {
+    public InstructionLine(final Instruction instruction, final MethodLine methodLine, final int indent) {
         super(indent);
 
-        assert instruction != null && methodLine != null && pool != null;
+        assert instruction != null && methodLine != null;
         this.instruction = instruction;
         this.methodLine = methodLine;
-        this.pool = pool;
     }
 
     public Instruction getInstruction() {
@@ -37,7 +35,7 @@ public class InstructionLine extends Line {
     }
 
     @Override
-    public void update() {
+    public void update(final ConstantPool pool) {
         final StringBuilder sb = new StringBuilder();
         final String mnemonic = this.instruction.getOpcode().getMnemonic();
         sb.append(mnemonic);

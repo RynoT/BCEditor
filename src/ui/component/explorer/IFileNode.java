@@ -4,7 +4,7 @@ import project.filetype.ClassType;
 import project.filetype.FileType;
 import project.filetype.ImageType;
 import project.filetype.TextType;
-import project.filetype.classtype.index.Index;
+import project.index.Index;
 import ui.Canvas;
 import ui.component.IFileViewer;
 import ui.component.IImagePanel;

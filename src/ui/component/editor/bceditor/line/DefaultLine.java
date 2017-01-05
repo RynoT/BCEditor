@@ -1,5 +1,7 @@
 package ui.component.editor.bceditor.line;
 
+import project.filetype.classtype.constantpool.ConstantPool;
+
 /**
  * Created by Ryan Thomson on 30/12/2016.
  */
@@ -14,7 +16,7 @@ public class DefaultLine extends Line {
     }
 
     @Override
-    public void update() {
+    public void update(final ConstantPool pool) {
         Line.colorDefault(super.getString(), super.attributes, 0, super.getString().length());
     }
 }

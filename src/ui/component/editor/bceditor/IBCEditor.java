@@ -65,4 +65,16 @@ public class IBCEditor extends IEditor {
     public IToolbar getToolbar(){
         return this.toolbar;
     }
+
+    public static String formatBranch(final int pc){
+        return "#" + pc;
+    }
+
+    public static String formatIndexPool(final int index){
+        return "<" + index + ">";
+    }
+
+    public static String formatIndexLocal(final int index){
+        return String.valueOf(index);
+    }
 }

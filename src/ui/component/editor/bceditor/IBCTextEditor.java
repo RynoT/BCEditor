@@ -8,15 +8,18 @@ import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
 import project.filetype.classtype.opcode.Instruction;
 import ui.component.IComponent;
-import ui.component.editor.IEditor;
 import ui.component.IScrollPanel;
+import ui.component.editor.IEditor;
 import ui.component.editor.bceditor.line.*;
 import util.async.Async;
 import util.async.AsyncType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +31,16 @@ public class IBCTextEditor extends IEditor {
     public static final int LINE_HEIGHT = 16;
     public static final int LINE_DEFAULT_INSET = 5;
     public static final int CARET_WIDTH = 2;
+    public static final int SIDE_BAR_TEXT_PADDING = 6;
 
     public static final Color LINE_ACTIVE_COLOR = new Color(55, 55, 55);
 
-    public static final int SIDE_BAR_TEXT_PADDING = 6;
+    public static final Color BRANCH_COLOR = new Color(83, 130, 154);
+    public static final Color INDEX_POOL_COLOR = new Color(123, 170, 184);
+    public static final Color INDEX_LOCAL_COLOR = new Color(152, 118, 170);
+
+    public static final Color STRING_COLOR = new Color(100, 135, 80);
+    public static final Color ATTRIBUTE_COLOR = new Color(180, 188, 55);
 
     public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
     public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
@@ -45,7 +54,7 @@ public class IBCTextEditor extends IEditor {
 
     private Line active = null;
 
-    public IBCTextEditor(){
+    public IBCTextEditor() {
         super.setOpaque(false);
         super.setLayout(new BorderLayout(0, 0));
 
@@ -61,34 +70,48 @@ public class IBCTextEditor extends IEditor {
         super.add(scrollPanel, BorderLayout.CENTER);
     }
 
-    public void setActiveLine(final Line line){
+    public void setActiveLine(final Line line) {
         this.active = line;
         this.lineRenderer.repaint();
+
+        if(line instanceof InstructionLine) {
+            final InstructionLine instruction = (InstructionLine) line;
+        }
     }
 
-    public void populate(final ClassType type){
+    public void populate(final ClassType type) {
         this.lines.clear();
 
         final ClassLine classLine = new ClassLine(type, 0);
         this.lines.add(classLine);
         this.lines.add(new EmptyLine());
 
-        for(final FieldInfo field : type.getFields()){
-            this.lines.add(new FieldLine(field, type.getConstantPool(), 1));
+        for(int i = 0; i < type.getFields().length; i++){
+            final FieldInfo field = type.getFields()[i];
+            final FieldLine fieldLine = new FieldLine(field, 1);
+            if(field.getAttributeCount() > 0) {
+                if(i != 0) {
+                    this.lines.add(new EmptyLine());
+                }
+                //for(final AttributeInfo attribute : field.getAttributes()) {
+                    //this.lines.add(new PropertyLine(attribute, fieldLine));
+                //}
+            }
+            this.lines.add(fieldLine);
         }
         if(type.getFields().length > 0) {
             this.lines.add(new EmptyLine());
         }
         int maxPc = 0;
-        for(final MethodInfo method : type.getMethods()){
-            final MethodLine methodLine = new MethodLine(method, classLine, type.getConstantPool(), 1);
+        for(final MethodInfo method : type.getMethods()) {
+            final MethodLine methodLine = new MethodLine(method, classLine, 1);
             this.lines.add(methodLine);
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), type.getConstantPool());
             if(code != null) {
                 final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
-                for(final Instruction instruction : instructions){
-                    this.lines.add(new InstructionLine(instruction, methodLine, type.getConstantPool(), 2));
+                for(final Instruction instruction : instructions) {
+                    this.lines.add(new InstructionLine(instruction, methodLine, 2));
                 }
                 this.lines.add(new DefaultLine("}", 1));
 
@@ -96,7 +119,7 @@ public class IBCTextEditor extends IEditor {
             }
             this.lines.add(new EmptyLine());
         }
-        if(maxPc > this.sideBar.maxPc){
+        if(maxPc > this.sideBar.maxPc) {
             this.sideBar.maxPc = maxPc;
 
             final int width = this.sideBar.getFontMetrics(this.sideBar.getFont()).stringWidth(
@@ -109,7 +132,7 @@ public class IBCTextEditor extends IEditor {
 
         Async.submit(() -> {
             for(final Line line : IBCTextEditor.this.lines) {
-                line.update();
+                line.update(type.getConstantPool());
             }
             IBCTextEditor.this.lineRenderer.updateDimensions();
         }, AsyncType.MULTI);
@@ -119,7 +142,7 @@ public class IBCTextEditor extends IEditor {
 
         private int maxPc = 0;
 
-        private SideBar(){
+        private SideBar() {
             super.setFont(IComponent.DEFAULT_FONT);
             super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
             super.setPreferredSize(new Dimension(30, Integer.MAX_VALUE));
@@ -143,8 +166,8 @@ public class IBCTextEditor extends IEditor {
 
             g2d.setFont(super.getFont());
             g2d.setColor(IBCTextEditor.SIDE_BAR_FOREGROUND);
-            for(int i = min; i < Math.min(lines.size(), max); i++){
-                if(!(lines.get(i) instanceof InstructionLine)){
+            for(int i = min; i < Math.min(lines.size(), max); i++) {
+                if(!(lines.get(i) instanceof InstructionLine)) {
                     continue;
                 }
                 final int pc = ((InstructionLine) lines.get(i)).getInstruction().getPc();
@@ -160,7 +183,7 @@ public class IBCTextEditor extends IEditor {
 
         private int caretPosition = -1;
 
-        private LineRenderer(){
+        private LineRenderer() {
             super.setOpaque(false);
             super.setFont(IBCEditor.EDITOR_FONT);
             super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
@@ -183,7 +206,7 @@ public class IBCTextEditor extends IEditor {
                 @Override
                 public void keyTyped(final KeyEvent e) {
                     final Line line = IBCTextEditor.this.active;
-                    if(line == null){
+                    if(line == null) {
                         return;
                     }
                     System.out.println(String.valueOf(e.getKeyChar()));
@@ -192,7 +215,7 @@ public class IBCTextEditor extends IEditor {
             });
         }
 
-        private void updateDimensions(){
+        private void updateDimensions() {
             super.setPreferredSize(new Dimension(2000,
                     IBCTextEditor.this.lines.size() * IBCTextEditor.LINE_HEIGHT));
 
@@ -215,9 +238,9 @@ public class IBCTextEditor extends IEditor {
 
             final int textHeight = g.getFontMetrics().getHeight() / 2;
             final List<Line> lines = IBCTextEditor.this.lines;
-            for(int i = min; i < Math.min(lines.size(), max); i++){
+            for(int i = min; i < Math.min(lines.size(), max); i++) {
                 final Line line = lines.get(i);
-                if(IBCTextEditor.this.active == line){
+                if(IBCTextEditor.this.active == line) {
                     g2d.setColor(IBCTextEditor.LINE_ACTIVE_COLOR);
                     g2d.fillRect(0, i * IBCTextEditor.LINE_HEIGHT, super.getWidth(), IBCTextEditor.LINE_HEIGHT);
                     g2d.setColor(IComponent.DEFAULT_FOREGROUND);

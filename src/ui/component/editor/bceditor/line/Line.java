@@ -1,6 +1,7 @@
 package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.Descriptor;
+import project.filetype.classtype.constantpool.ConstantPool;
 import ui.component.editor.bceditor.IBCEditor;
 
 import java.awt.*;
@@ -38,28 +39,32 @@ public abstract class Line {
         this.indent = indent;
     }
 
-    public abstract void update();
+    public abstract void update(final ConstantPool pool);
 
     public int getIndent(){
         return this.indent;
     }
 
     public String getString() {
-        assert (this.string != null);
+        assert this.string != null;
         return this.string;
     }
 
     public void setString(final String string) {
-        assert (string != null);
+        this.setString(string, new AttributedString(string));
+    }
+
+    protected void setString(final String string, final AttributedString attributes){
+        assert string != null && attributes != null;
         this.string = string;
-        this.attributes = new AttributedString(string);
+        this.attributes = attributes;
         if(string.length() > 0) {
             this.attributes.addAttribute(TextAttribute.FONT, IBCEditor.EDITOR_FONT);
         }
     }
 
     public final void render(final Graphics2D g2d, final int x, final int y) {
-        assert (this.string != null);
+        assert this.string != null;
         g2d.drawString(this.attributes.getIterator(), x + this.indent * Line.INDENT_PIXEL_OFFSET, y);
     }
 

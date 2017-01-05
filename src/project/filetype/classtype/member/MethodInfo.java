@@ -15,11 +15,6 @@ public class MethodInfo extends MemberInfo {
     // RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations, AnnotationDefault
 
     public MethodInfo(final DataInputStream dis, final ConstantPool pool) throws IOException {
-        super(dis, pool);
-    }
-
-    @Override
-    public String getAccessFlagsString() {
-        return AccessFlags.decode(super.getAccessFlags(), AccessFlags.Type.METHOD);
+        super(dis, pool, AccessFlags.Type.METHOD);
     }
 }

@@ -25,7 +25,7 @@ public abstract class Test extends HashMap<Image, Void> implements Runnable, Clo
                 System.out.println(7);
                 break;
         }
-        System.out.println("Ok");
+        System.out.println("Ok\" then");
     }
 
     public <T extends InputStream> void test(List<? super T> list, T set) throws IOException, InterruptedException {

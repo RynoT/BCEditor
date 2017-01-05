@@ -5,6 +5,8 @@ import project.filetype.classtype.constantpool.PoolTag;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Ryan Thomson on 23/12/2016.

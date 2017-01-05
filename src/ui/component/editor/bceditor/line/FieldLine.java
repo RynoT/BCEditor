@@ -19,14 +19,12 @@ public class FieldLine extends Line {
     private static final Color CONSTANT_COLOR = new Color(92, 160, 173);
 
     private final FieldInfo field;
-    private final ConstantPool pool;
 
-    public FieldLine(final FieldInfo field, final ConstantPool pool, final int indent) {
+    public FieldLine(final FieldInfo field, final int indent) {
         super(indent);
 
-        assert field != null && pool != null;
+        assert field != null;
         this.field = field;
-        this.pool = pool;
     }
 
     public FieldInfo getField(){
@@ -34,28 +32,28 @@ public class FieldLine extends Line {
     }
 
     @Override
-    public void update() {
+    public void update(final ConstantPool pool) {
         int idxAccess, idxType, idxName, idxValue = -1;
 
         final StringBuilder sb = new StringBuilder();
         sb.append(this.field.getAccessFlagsString()).append(" ");
         idxAccess = sb.length();
 
-        final _Signature signature = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.field.getAttributes(), this.pool);
+        final _Signature signature = (_Signature) AttributeInfo.findFirst(AttributeInfo.SIGNATURE, this.field.getAttributes(), pool);
         if(signature != null) {
-            sb.append(Descriptor.decode(signature.getTagSignature(this.pool).getValue())).append(" ");
+            sb.append(Descriptor.decode(signature.getTagSignature(pool).getValue())).append(" ");
         } else {
-            sb.append(Descriptor.decode(this.field.getTagDescriptor(this.pool).getValue())).append(" ");
+            sb.append(Descriptor.decode(this.field.getTagDescriptor(pool).getValue())).append(" ");
         }
         idxType = sb.length();
-        sb.append(this.field.getTagName(this.pool).getValue());
+        sb.append(this.field.getTagName(pool).getValue());
         idxName = sb.length();
 
-        final _ConstantValue constantValue = (_ConstantValue) AttributeInfo.findFirst(AttributeInfo.CONSTANT_VALUE, this.field.getAttributes(), this.pool);
+        final _ConstantValue constantValue = (_ConstantValue) AttributeInfo.findFirst(AttributeInfo.CONSTANT_VALUE, this.field.getAttributes(), pool);
         if(constantValue != null) {
             sb.append(" = ");
             idxValue = sb.length();
-            sb.append(constantValue.getTagConstant(this.pool).getContentString(this.pool));
+            sb.append(constantValue.getTagConstant(pool).getContentString(pool));
         }
         sb.append(";");
 
