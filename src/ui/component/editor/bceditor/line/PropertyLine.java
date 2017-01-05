@@ -28,6 +28,10 @@ public class PropertyLine extends Line {
 
     @Override
     public void update(final ConstantPool pool) {
+        super.setString(this.property.getContentString(pool));
+
+
+
 //        final AttributedString attributes;
 //
 //        final StringBuilder sb = new StringBuilder();

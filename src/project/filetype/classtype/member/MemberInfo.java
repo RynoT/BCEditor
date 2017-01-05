@@ -5,6 +5,8 @@ import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.property.PAccessFlags;
+import project.property.PDescriptor;
+import project.property.PName;
 import project.property.Property;
 
 import java.io.DataInputStream;
@@ -71,6 +73,8 @@ public abstract class MemberInfo {
     public List<Property> getProperties(){
         if(this.properties == null){
             this.properties = new ArrayList<>();
+            this.properties.add(new PName(this.nameIndex));
+            this.properties.add(new PDescriptor(this.descriptorIndex));
             this.properties.add(new PAccessFlags(this.accessFlags, this.type));
         }
         return this.properties;
