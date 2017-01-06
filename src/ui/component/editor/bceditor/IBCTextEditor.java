@@ -33,6 +33,7 @@ public class IBCTextEditor extends IEditor {
     public static final int LINE_DEFAULT_INSET = 5;
     public static final int CARET_WIDTH = 2;
     public static final int SIDE_BAR_TEXT_PADDING = 6;
+    public static final int HORIZONTAL_SCROLL_OFFSET = 20;
 
     public static final Color LINE_ACTIVE_COLOR = new Color(55, 55, 55);
 
@@ -136,9 +137,15 @@ public class IBCTextEditor extends IEditor {
         this.lines.add(new EmptyLine());
 
         Async.submit(() -> {
+            int maxWidth = 0;
+            final FontMetrics metrics = IBCTextEditor.this.lineRenderer
+                    .getFontMetrics(IBCTextEditor.this.lineRenderer.getFont());
             for(final Line line : IBCTextEditor.this.lines) {
                 line.update(type.getConstantPool());
+
+                maxWidth = Math.max(line.getWidth(metrics), maxWidth);
             }
+            IBCTextEditor.this.lineRenderer.maxLineWidth = maxWidth + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET;
             IBCTextEditor.this.lineRenderer.updateDimensions();
         }, AsyncType.MULTI);
     }
@@ -185,6 +192,7 @@ public class IBCTextEditor extends IEditor {
     private class LineRenderer extends JPanel {
 
         private final int charWidth;
+        private int maxLineWidth = 0;
 
         private int caretPosition = -1;
 
@@ -221,7 +229,7 @@ public class IBCTextEditor extends IEditor {
         }
 
         private void updateDimensions() {
-            super.setPreferredSize(new Dimension(2000,
+            super.setPreferredSize(new Dimension(this.maxLineWidth,
                     IBCTextEditor.this.lines.size() * IBCTextEditor.LINE_HEIGHT));
 
             super.revalidate();

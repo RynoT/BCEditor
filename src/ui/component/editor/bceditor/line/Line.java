@@ -50,6 +50,10 @@ public abstract class Line {
         return this.string;
     }
 
+    public int getWidth(final FontMetrics metrics){
+        return metrics.stringWidth(this.string) + this.indent * Line.INDENT_PIXEL_OFFSET;
+    }
+
     public void setString(final String string) {
         this.setString(string, new AttributedString(string));
     }

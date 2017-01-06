@@ -228,7 +228,11 @@ public class IScrollPanel extends IComponent {
             final Point viewPosition = viewport.getViewPosition();
             final Dimension target = IScrollPanel.this.content.getPreferredSize();
             if(this.horizontal) {
-                viewport.setViewPosition(new Point((int) ((target.width - super.getWidth()) * this.x / (float) (super.getWidth() - this.width)), viewPosition.y));
+                int width = super.getWidth();
+                if(IScrollPanel.this.vertical != null){
+                    width -= IScrollPanel.this.vertical.getWidth();
+                }
+                viewport.setViewPosition(new Point((int) ((target.width - width) * this.x / (float) (width - this.width)), viewPosition.y));
             } else {
                 viewport.setViewPosition(new Point(viewPosition.x, (int) ((target.height - super.getHeight()) * this.y / (float) (super.getHeight() - this.height))));
             }
