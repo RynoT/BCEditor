@@ -74,31 +74,45 @@ public class IScrollPanel extends IComponent {
         return this.viewport;
     }
 
+    public boolean isVerticalVisible(){
+        return this.vertical != null && this.vertical.isVisible();
+    }
+
+    public boolean isHorizontalVisible(){
+        return this.horizontal != null && this.horizontal.isVisible();
+    }
+
     private void updateScale() {
         final Dimension target = this.content.getPreferredSize();
         if(this.vertical != null) {
             if(target.height == 0 || super.getHeight() >= target.height) {
                 this.vertical.y = 0;
                 this.vertical.height = -1;
+                this.vertical.setVisible(false);
             } else {
                 this.vertical.height = Math.max(IScrollPanel.SCROLLER_MIN_SCALE,
                         super.getHeight() * super.getHeight() / target.height);
                 this.vertical.y = (int) (super.getHeight() * this.viewport.getViewPosition().y / (float) target.height);
+                this.vertical.setVisible(true);
+
+                this.vertical.limitPosition();
+                this.vertical.repaint();
             }
-            this.vertical.limitPosition();
-            this.vertical.repaint();
         }
         if(this.horizontal != null) {
             if(target.width == 0 || super.getWidth() >= target.width) {
                 this.horizontal.x = 0;
                 this.horizontal.width = -1;
+                this.horizontal.setVisible(false);
             } else {
                 this.horizontal.width = Math.max(IScrollPanel.SCROLLER_MIN_SCALE,
                         super.getWidth() * super.getWidth() / target.width);
                 this.horizontal.x = (int) (super.getWidth() * this.viewport.getViewPosition().x / (float) target.width);
+                this.horizontal.setVisible(true);
+
+                this.horizontal.limitPosition();
+                this.horizontal.repaint();
             }
-            this.horizontal.limitPosition();
-            this.horizontal.repaint();
         }
     }
 
@@ -210,13 +224,13 @@ public class IScrollPanel extends IComponent {
         private void limitPosition() {
             if(this.horizontal) {
                 int width = IScrollPanel.super.getWidth();
-                if(IScrollPanel.this.vertical != null) {
+                if(IScrollPanel.this.isVerticalVisible()) {
                     width -= IScrollPanel.this.vertical.getWidth();
                 }
                 this.x = Math.max(0, Math.min(width - this.width, this.x));
             } else {
                 int height = IScrollPanel.super.getHeight();
-                if(IScrollPanel.this.horizontal != null) {
+                if(IScrollPanel.this.isHorizontalVisible()) {
                     height -= IScrollPanel.this.horizontal.getHeight();
                 }
                 this.y = Math.max(0, Math.min(height - this.height, this.y));
@@ -229,7 +243,7 @@ public class IScrollPanel extends IComponent {
             final Dimension target = IScrollPanel.this.content.getPreferredSize();
             if(this.horizontal) {
                 int width = super.getWidth();
-                if(IScrollPanel.this.vertical != null){
+                if(IScrollPanel.this.isVerticalVisible()){
                     width -= IScrollPanel.this.vertical.getWidth();
                 }
                 viewport.setViewPosition(new Point((int) ((target.width - width) * this.x / (float) (width - this.width)), viewPosition.y));
@@ -250,7 +264,7 @@ public class IScrollPanel extends IComponent {
                 g.setColor(IScrollPanel.SCROLLER_HOVER_BACKGROUND);
 
                 int width = super.getWidth() - 1;
-                if(this.horizontal && IScrollPanel.this.vertical != null){
+                if(this.horizontal && IScrollPanel.this.isVerticalVisible()){
                     width -= IScrollPanel.this.vertical.getWidth();
                 }
                 g.fillRect(0, 0, width, super.getHeight() - 1);
