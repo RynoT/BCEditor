@@ -104,14 +104,17 @@ public class IBCPoolSubEditor extends IBCSubEditor {
                 .getEntryCount())) + IBCPoolSubEditor.PADDING * 2;
 
         this.tablePanel.removeAll();
+        int maxRowWidth = 0;
         for(int i = 0; i < pool.getEntryCount(); i++) {
-            final PoolTag tag = pool.getEntry(i);
-            this.tablePanel.add(new PoolRow(i, tag));
+            final PoolRow row = new PoolRow(i, pool.getEntry(i));
+            this.tablePanel.add(row);
 
             this.bitWidth = Math.max(this.bitWidth, metrics.stringWidth(String
-                    .valueOf(tag.getPoolTagBitCount())) + IBCPoolSubEditor.PADDING * 2);
+                    .valueOf(row.bitCount)) + IBCPoolSubEditor.PADDING * 2);
+            maxRowWidth = Math.max(maxRowWidth, metrics.stringWidth(row.content));
         }
-        this.tablePanel.setPreferredSize(new Dimension(100, this.tablePanel.getComponentCount() * IBCPoolSubEditor.ROW_HEIGHT));
+        maxRowWidth += this.indexWidth + IBCPoolSubEditor.NAME_WIDTH + this.bitWidth + IBCPoolSubEditor.PADDING * 2;
+        this.tablePanel.setPreferredSize(new Dimension(maxRowWidth, this.tablePanel.getComponentCount() * IBCPoolSubEditor.ROW_HEIGHT));
 
         this.tablePanel.revalidate();
         this.tablePanel.repaint();
@@ -119,16 +122,16 @@ public class IBCPoolSubEditor extends IBCSubEditor {
 
     private class PoolRow extends JPanel {
 
-        private int index;
-        private final String name;
         private final PoolTag tag;
 
-        private boolean pressed = false, hovered = false;
+        private int index, bitCount;
+        private String name, content;
+
+        private boolean pressed = false;
 
         private PoolRow(final int index, final PoolTag tag) {
             this.tag = tag;
-            this.index = index;
-            this.name = tag.getPoolTagName();
+            this.updateRow(index);
 
             super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
             super.setPreferredSize(new Dimension(Integer.MAX_VALUE, IBCPoolSubEditor.ROW_HEIGHT));
@@ -147,17 +150,22 @@ public class IBCPoolSubEditor extends IBCSubEditor {
                 @Override
                 public void mouseEntered(final MouseEvent e) {
                     this.lastColor = PoolRow.this.getBackground();
-                    PoolRow.this.hovered = true;
                     PoolRow.this.setBackground(this.lastColor.darker());
                 }
 
                 @Override
                 public void mouseExited(final MouseEvent e) {
                     assert this.lastColor != null;
-                    PoolRow.this.hovered = false;
                     PoolRow.this.setBackground(this.lastColor);
                 }
             });
+        }
+
+        public void updateRow(final int newIndex){
+            this.index = newIndex;
+            this.name = this.tag.getPoolTagName();
+            this.bitCount = this.tag.getPoolTagBitCount();
+            this.content = this.tag.getContentString(IBCPoolSubEditor.this.pool);
         }
 
         @Override
@@ -178,7 +186,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
             xOffset += IBCPoolSubEditor.this.indexWidth + 1;
             g.drawLine(xOffset + IBCPoolSubEditor.NAME_WIDTH, 0, xOffset + IBCPoolSubEditor.NAME_WIDTH, super.getHeight() - 1);
             xOffset += IBCPoolSubEditor.NAME_WIDTH + 1;
-            g.drawLine(xOffset + +IBCPoolSubEditor.this.bitWidth, 0, xOffset + +IBCPoolSubEditor.this.bitWidth, super.getHeight() - 1);
+            g.drawLine(xOffset + IBCPoolSubEditor.this.bitWidth, 0, xOffset + +IBCPoolSubEditor.this.bitWidth, super.getHeight() - 1);
 
             g.setColor(IComponent.DEFAULT_FOREGROUND);
             g.setFont(IBCPoolSubEditor.this.getFont());
@@ -186,17 +194,15 @@ public class IBCPoolSubEditor extends IBCSubEditor {
 
             final FontMetrics metrics = g.getFontMetrics();
             final int y = super.getHeight() / 2 + metrics.getHeight() / 2 - 2;
-            final int bitCount = this.tag.getPoolTagBitCount();
-            final String value = this.tag.getContentString(IBCPoolSubEditor.this.pool);
 
             xOffset = 1;
             g.drawString(String.valueOf(this.index), xOffset + IBCPoolSubEditor.this.indexWidth / 2 - metrics.stringWidth(String.valueOf(this.index)) / 2, y);
             xOffset += IBCPoolSubEditor.this.indexWidth + 1;
             g.drawString(this.name, xOffset + IBCPoolSubEditor.PADDING, y);
             xOffset += IBCPoolSubEditor.NAME_WIDTH + 1;
-            g.drawString(String.valueOf(bitCount), xOffset + +IBCPoolSubEditor.this.bitWidth / 2 - metrics.stringWidth(String.valueOf(bitCount)) / 2, y);
+            g.drawString(String.valueOf(this.bitCount), xOffset + +IBCPoolSubEditor.this.bitWidth / 2 - metrics.stringWidth(String.valueOf(this.bitCount)) / 2, y);
             xOffset += IBCPoolSubEditor.this.bitWidth + 1;
-            g.drawString(value, xOffset + IBCPoolSubEditor.PADDING, y);
+            g.drawString(this.content, xOffset + IBCPoolSubEditor.PADDING, y);
         }
     }
 }

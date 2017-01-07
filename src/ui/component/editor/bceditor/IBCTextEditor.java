@@ -33,7 +33,7 @@ public class IBCTextEditor extends IEditor {
     public static final int LINE_DEFAULT_INSET = 5;
     public static final int CARET_WIDTH = 2;
     public static final int SIDE_BAR_TEXT_PADDING = 6;
-    public static final int HORIZONTAL_SCROLL_OFFSET = 20;
+    public static final int HORIZONTAL_SCROLL_OFFSET = 10;
 
     public static final Color LINE_ACTIVE_COLOR = new Color(55, 55, 55);
 
@@ -143,7 +143,7 @@ public class IBCTextEditor extends IEditor {
             for(final Line line : IBCTextEditor.this.lines) {
                 line.update(type.getConstantPool());
 
-                maxWidth = Math.max(line.getWidth(metrics), maxWidth);
+                maxWidth = Math.max(IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics), maxWidth);
             }
             IBCTextEditor.this.lineRenderer.maxLineWidth = maxWidth + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET;
             IBCTextEditor.this.lineRenderer.updateDimensions();

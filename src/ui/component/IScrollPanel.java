@@ -1,5 +1,6 @@
 package ui.component;
 
+import javax.imageio.plugins.jpeg.JPEGHuffmanTable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -40,14 +41,26 @@ public class IScrollPanel extends IComponent {
 
         this.horizontal = horizontal ? new IScroller(true, IScrollPanel.SCROLLER_SIZE) : null;
         this.vertical = vertical ? new IScroller(false, IScrollPanel.SCROLLER_SIZE) : null;
-        if(horizontal) {
-            super.add(this.horizontal, BorderLayout.SOUTH);
-        }
         if(vertical) {
             super.add(this.vertical, BorderLayout.EAST);
 
             content.addMouseWheelListener(e -> IScrollPanel.this.vertical.move((int) (e
                     .getUnitsToScroll() * IScrollPanel.this.vertical.getWheelMultiplier())));
+        }
+        if(horizontal) {
+            if(this.vertical != null){
+                final JPanel bottom = new JPanel();
+                {
+                    bottom.setOpaque(false);
+                    bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+                }
+                bottom.add(this.horizontal);
+                bottom.add(Box.createHorizontalStrut(IScrollPanel.SCROLLER_SIZE));
+
+                super.add(bottom, BorderLayout.SOUTH);
+            } else {
+                super.add(this.horizontal, BorderLayout.SOUTH);
+            }
         }
         this.updateScale();
 
@@ -120,7 +133,7 @@ public class IScrollPanel extends IComponent {
 
         private final boolean horizontal;
 
-        private int x = 0, y = 0, width, height;
+        private int x = 0, y = 0, width, height; //of physical scroll bar
         private boolean backHover = false, barHover = false, scrolling = false;
 
         private IScroller(final boolean horizontal, final int size) {
@@ -223,17 +236,9 @@ public class IScrollPanel extends IComponent {
 
         private void limitPosition() {
             if(this.horizontal) {
-                int width = IScrollPanel.super.getWidth();
-                if(IScrollPanel.this.isVerticalVisible()) {
-                    width -= IScrollPanel.this.vertical.getWidth();
-                }
-                this.x = Math.max(0, Math.min(width - this.width, this.x));
+                this.x = Math.max(0, Math.min(super.getWidth() - this.width, this.x));
             } else {
-                int height = IScrollPanel.super.getHeight();
-                if(IScrollPanel.this.isHorizontalVisible()) {
-                    height -= IScrollPanel.this.horizontal.getHeight();
-                }
-                this.y = Math.max(0, Math.min(height - this.height, this.y));
+                this.y = Math.max(0, Math.min(super.getHeight() - this.height, this.y));
             }
         }
 
@@ -242,11 +247,7 @@ public class IScrollPanel extends IComponent {
             final Point viewPosition = viewport.getViewPosition();
             final Dimension target = IScrollPanel.this.content.getPreferredSize();
             if(this.horizontal) {
-                int width = super.getWidth();
-                if(IScrollPanel.this.isVerticalVisible()){
-                    width -= IScrollPanel.this.vertical.getWidth();
-                }
-                viewport.setViewPosition(new Point((int) ((target.width - width) * this.x / (float) (width - this.width)), viewPosition.y));
+                viewport.setViewPosition(new Point((int) ((target.width - super.getWidth()) * this.x / (float) (super.getWidth() - this.width)), viewPosition.y));
             } else {
                 viewport.setViewPosition(new Point(viewPosition.x, (int) ((target.height - super.getHeight()) * this.y / (float) (super.getHeight() - this.height))));
             }
@@ -263,11 +264,7 @@ public class IScrollPanel extends IComponent {
             if(this.backHover || this.scrolling){
                 g.setColor(IScrollPanel.SCROLLER_HOVER_BACKGROUND);
 
-                int width = super.getWidth() - 1;
-                if(this.horizontal && IScrollPanel.this.isVerticalVisible()){
-                    width -= IScrollPanel.this.vertical.getWidth();
-                }
-                g.fillRect(0, 0, width, super.getHeight() - 1);
+                g.fillRect(0, 0, super.getWidth() - 1, super.getHeight() - 1);
             }
             g.setColor(this.barHover || this.scrolling ? IScrollPanel.SCROLLER_HOVER_COLOR : IScrollPanel.SCROLLER_COLOR);
             g.fillRect(this.x, this.y, this.width, this.height);
