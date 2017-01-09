@@ -7,13 +7,12 @@ import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Exceptions;
 import project.filetype.classtype.member.attributes._Signature;
+import project.property.Property;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -37,6 +36,18 @@ public class MethodLine extends Line {
 
     public Set<String> getGenericNames(){
         return this.genericNames;
+    }
+
+    @Override
+    protected void addChildren(final List<Line> lines, final int index) {
+        assert super.children == null : "Remove children before adding";
+
+        super.children = new ArrayList<>();
+        final List<Property> properties = this.method.getProperties();
+        for(final Property property : properties){
+            super.children.add(new PropertyLine(property, this));
+        }
+        lines.addAll(index, super.children);
     }
 
     @Override

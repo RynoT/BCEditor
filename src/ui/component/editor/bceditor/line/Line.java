@@ -9,6 +9,7 @@ import java.awt.font.TextAttribute;
 import java.text.AttributedString;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,6 +29,8 @@ public abstract class Line {
     protected AttributedString attributes;
     protected int indent = 0;
 
+    protected List<Line> children = null;
+
     Line(final int indent) {
         this("", indent);
     }
@@ -38,6 +41,8 @@ public abstract class Line {
         this.setString(string);
         this.indent = indent;
     }
+
+    protected abstract void addChildren(final List<Line> lines, final int index);
 
     public abstract void update(final ConstantPool pool);
 
@@ -65,6 +70,14 @@ public abstract class Line {
         if(string.length() > 0) {
             this.attributes.addAttribute(TextAttribute.FONT, IBCEditor.EDITOR_FONT);
         }
+    }
+
+    public final void removeChildren(final List<Line> lines){
+        if(this.children == null){
+            return;
+        }
+        lines.removeAll(this.children);
+        this.children = null;
     }
 
     public final void render(final Graphics2D g2d, final int x, final int y) {

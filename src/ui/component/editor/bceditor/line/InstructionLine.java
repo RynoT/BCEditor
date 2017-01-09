@@ -9,6 +9,8 @@ import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -32,6 +34,11 @@ public class InstructionLine extends Line {
 
     public MethodLine getMethodLine() {
         return this.methodLine;
+    }
+
+    @Override
+    protected void addChildren(final List<Line> lines, final int index) {
+        assert false;
     }
 
     @Override

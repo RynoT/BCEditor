@@ -11,7 +11,6 @@ public class PAccessFlags extends Property {
     public static final String NAME = ".AccessFlags";
 
     private final int accessFlags;
-    private String accessFlagsString = null;
 
     private final AccessFlags.Type type;
 
@@ -37,9 +36,6 @@ public class PAccessFlags extends Property {
                 }
             }
         }
-        if(this.accessFlagsString == null) {
-            this.accessFlagsString = AccessFlags.decode(this.accessFlags, this.type);
-        }
-        return PAccessFlags.NAME + "[" + binary + ", " + this.accessFlagsString + "]";
+        return PAccessFlags.NAME + "[" + binary + "]";
     }
 }

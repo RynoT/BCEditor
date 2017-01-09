@@ -6,10 +6,13 @@ import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._ConstantValue;
 import project.filetype.classtype.member.attributes._Signature;
+import project.property.Property;
 import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -27,6 +30,18 @@ public class FieldLine extends Line {
 
     public FieldInfo getField(){
         return this.field;
+    }
+
+    @Override
+    protected void addChildren(final List<Line> lines, final int index) {
+        assert super.children == null : "Remove children before adding";
+
+        super.children = new ArrayList<>();
+        final List<Property> properties = this.field.getProperties();
+        for(final Property property : properties){
+            super.children.add(new PropertyLine(property, this));
+        }
+        lines.addAll(index, super.children);
     }
 
     @Override

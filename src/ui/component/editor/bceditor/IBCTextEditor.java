@@ -7,7 +7,6 @@ import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
 import project.filetype.classtype.opcode.Instruction;
-import project.property.Property;
 import ui.component.IComponent;
 import ui.component.IScrollPanel;
 import ui.component.editor.IEditor;
@@ -90,22 +89,10 @@ public class IBCTextEditor extends IEditor {
         this.lines.add(classLine);
         this.lines.add(new EmptyLine());
 
-        for(int i = 0; i < type.getFields().length; i++){
-            final FieldInfo field = type.getFields()[i];
-            final FieldLine line = new FieldLine(field, 1);
-
-            final List<Property> properties = field.getProperties();
-            if(properties.size() > 0) {
-                if(i != 0) {
-                    this.lines.add(new EmptyLine());
-                }
-                for(final Property property : field.getProperties()){
-                    this.lines.add(new PropertyLine(property, line));
-                }
-            }
-            this.lines.add(line);
+        for(final FieldInfo field : type.getFields()) {
+            this.lines.add(new FieldLine(field, 1));
         }
-        if(type.getFields().length > 0) {
+        if(type.getFieldCount() > 0) {
             this.lines.add(new EmptyLine());
         }
         int maxPc = 0;

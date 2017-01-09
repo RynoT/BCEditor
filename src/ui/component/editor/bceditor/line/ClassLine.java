@@ -9,6 +9,7 @@ import project.filetype.classtype.member.attributes._Signature;
 
 import java.awt.font.TextAttribute;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -32,6 +33,10 @@ public class ClassLine extends Line {
 
     public Set<String> getGenericNames() {
         return this.genericNames;
+    }
+
+    @Override
+    protected void addChildren(final List<Line> lines, final int index) {
     }
 
     @Override

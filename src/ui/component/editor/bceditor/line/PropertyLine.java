@@ -6,20 +6,22 @@ import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 03/01/2017.
  */
 public class PropertyLine extends Line {
 
-    private final Property property;
     private final Line parent;
+    private final Property property;
 
     public PropertyLine(final Property property, final Line parent) {
         super(parent.getIndent());
 
-        this.property = property;
         this.parent = parent;
+        this.property = property;
     }
 
     public Line getParent() {
@@ -28,6 +30,11 @@ public class PropertyLine extends Line {
 
     public Property getProperty() {
         return this.property;
+    }
+
+    @Override
+    protected void addChildren(final List<Line> lines, final int index) {
+        assert false;
     }
 
     @Override
@@ -57,6 +64,7 @@ public class PropertyLine extends Line {
                 case '(':
                     inner++;
                 case ',':
+                case ']':
                     trigger = true;
                     break;
                 case '\'':
@@ -79,8 +87,9 @@ public class PropertyLine extends Line {
                     break;
             }
             if(trigger) {
-                assert start != -1;
-
+                if(start == -1){
+                    continue;
+                }
                 final Color color;
                 switch(id) {
                     case 0: //property name
@@ -110,22 +119,5 @@ public class PropertyLine extends Line {
                 start = i;
             }
         }
-
-
-//        final AttributedString attributes;
-//
-//        final StringBuilder sb = new StringBuilder();
-//        sb.append(".").append(this.attribute.getTagName(this.pool).getValue())
-//                .append(IBCEditor.formatIndexPool(this.attribute.getNameIndex()));
-//
-//        sb.append("[");
-//        {
-//            final Pair<String, AttributedString> content = this.attribute.getContentString(this.pool);
-//            sb.append(content.getLeft());
-//            attributes = content.getRight();
-//        }
-//        sb.append("]");
-//
-//        super.setString(sb.toString(), attributes);
     }
 }

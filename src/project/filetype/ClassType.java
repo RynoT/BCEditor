@@ -1,13 +1,13 @@
 package project.filetype;
 
 import project.filetype.classtype.AccessFlags;
-import project.index.Index;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagClass;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Default;
+import project.index.Index;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -33,100 +33,108 @@ public class ClassType extends FileType {
     private boolean loaded = false;
     private final Object loadSyncLock = new Object();
 
-    public ClassType(final String name, final String extension, final String path){
+    public ClassType(final String name, final String extension, final String path) {
         super(name, extension, path);
     }
 
-    public Index getIndex(){
+    public Index getIndex() {
         return this.index;
     }
 
-    public int getMinor(){
+    public int getMinor() {
         return this.minor;
     }
 
-    public int getMajor(){
+    public int getMajor() {
         return this.major;
     }
 
-    public int getAccessFlags(){
+    public int getAccessFlags() {
         return this.accessFlags;
     }
 
-    public String getAccessFlagsString(){
+    public String getAccessFlagsString() {
         return AccessFlags.decode(this.accessFlags, AccessFlags.Type.CLASS);
     }
 
-    public FieldInfo[] getFields(){
+    public int getFieldCount() {
+        return this.fields.length;
+    }
+
+    public int getMethodCount() {
+        return this.methods.length;
+    }
+
+    public FieldInfo[] getFields() {
         return this.fields;
     }
 
-    public MethodInfo[] getMethods(){
+    public MethodInfo[] getMethods() {
         return this.methods;
     }
 
-    public AttributeInfo[] getAttributes(){
+    public AttributeInfo[] getAttributes() {
         return this.attributes;
     }
 
-    public ConstantPool getConstantPool(){
+    public ConstantPool getConstantPool() {
         return this.constantPool;
     }
 
-    public int getThisClassIndex(){
+    public int getThisClassIndex() {
         return this.thisClassIndex;
     }
 
-    public int getSuperClassIndex(){
+    public int getSuperClassIndex() {
         return this.superClassIndex;
     }
 
-    public int[] getInterfaceIndices(){
+    public int[] getInterfaceIndices() {
         return this.interfaces;
     }
 
-    public boolean isIndexed(){
-        synchronized(this.loadSyncLock){
+    public boolean isIndexed() {
+        synchronized(this.loadSyncLock) {
             return this.index != null;
         }
     }
 
-    public boolean isLoaded(){
+    public boolean isLoaded() {
         synchronized(this.loadSyncLock) {
             return this.loaded;
         }
     }
 
-    public boolean isEnum(){
+    public boolean isEnum() {
         assert (this.isLoaded());
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_ENUM);
     }
 
-    public boolean isFinal(){
+    public boolean isFinal() {
         assert (this.isLoaded());
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_FINAL);
     }
 
-    public boolean isAbstract(){
+    public boolean isAbstract() {
         assert (this.isLoaded());
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_ABSTRACT);
     }
 
-    public boolean isInterface(){
+    public boolean isInterface() {
         assert (this.isLoaded());
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_INTERFACE);
     }
 
-    public boolean isMainClass(){
+    public boolean isMainClass() {
         assert (this.isLoaded());
-        for(final MethodInfo method : this.methods){
-            if(!method.getTagName(this.constantPool).getValue().equals("main")){
+        for(final MethodInfo method : this.methods) {
+            if(!method.getTagName(this.constantPool).getValue().equals("main")) {
                 continue;
             }
-            if(!method.getTagDescriptor(this.constantPool).getValue().equals("([Ljava/lang/String;)V")){
+            if(!method.getTagDescriptor(this.constantPool).getValue().equals("([Ljava/lang/String;)V")) {
                 continue;
             }
-            if(method.getAccessFlags() != (AccessFlags.ACC_PUBLIC.mask() | AccessFlags.ACC_STATIC.mask())){
+            if(method.getAccessFlags() != (AccessFlags.ACC_PUBLIC.mask() | AccessFlags.ACC_STATIC.mask())) {
                 continue;
             }
             return true;
@@ -148,15 +156,15 @@ public class ClassType extends FileType {
         return this.getVersionString(this.major);
     }
 
-    public TagClass getTagThisClass(){
+    public TagClass getTagThisClass() {
         return (TagClass) this.constantPool.getEntry(this.thisClassIndex);
     }
 
-    public TagClass getTagSuperClass(){
+    public TagClass getTagSuperClass() {
         return (TagClass) this.constantPool.getEntry(this.superClassIndex);
     }
 
-    public TagClass getTagInterface(final int index){
+    public TagClass getTagInterface(final int index) {
         assert (index >= 0 && index < this.interfaces.length);
         return (TagClass) this.constantPool.getEntry(this.interfaces[index]);
     }
@@ -172,9 +180,9 @@ public class ClassType extends FileType {
     @Override
     public void unload() {
         // We allow all the memory consumed by this class to be freed
-        synchronized(this.loadSyncLock){
+        synchronized(this.loadSyncLock) {
             this.minor = this.major = 0;
-            if(this.constantPool != null){
+            if(this.constantPool != null) {
                 this.constantPool.clearEntries();
             }
             this.constantPool = null;
@@ -190,10 +198,10 @@ public class ClassType extends FileType {
     }
 
     // Index is basically the same as loading except that it only formats important data and immediately unloads after completed
-    public boolean index(){
-        synchronized(this.loadSyncLock){
+    public boolean index() {
+        synchronized(this.loadSyncLock) {
             boolean success = false;
-            if(!this.isLoaded()){
+            if(!this.isLoaded()) {
                 try(final DataInputStream dis = new DataInputStream(super.getStream())) {
                     if(!String.format("%x", dis.readInt()).equals("cafebabe")) {
                         return false;
@@ -209,7 +217,7 @@ public class ClassType extends FileType {
                     this.superClassIndex = dis.readUnsignedShort();
 
                     this.interfaces = new int[dis.readUnsignedShort()];
-                    for(int i = 0; i < this.interfaces.length; i++){
+                    for(int i = 0; i < this.interfaces.length; i++) {
                         this.interfaces[i] = dis.readUnsignedShort();
                     }
                     this.fields = new FieldInfo[dis.readUnsignedShort()];
@@ -229,16 +237,16 @@ public class ClassType extends FileType {
             } else {
                 success = true;
             }
-            if(success){
+            if(success) {
                 this.index = new Index(this.constantPool, this.accessFlags, this
                         .superClassIndex, this.fields, this.methods, this.interfaces);
             } else {
                 this.index = null;
             }
-            if(!this.isLoaded()){
+            if(!this.isLoaded()) {
                 this.unload();
             }
-            if(success){
+            if(success) {
                 return true;
             }
         }
@@ -247,7 +255,7 @@ public class ClassType extends FileType {
 
     @Override
     public boolean load() {
-        if(this.isLoaded()){
+        if(this.isLoaded()) {
             return true;
         }
         synchronized(this.loadSyncLock) {
