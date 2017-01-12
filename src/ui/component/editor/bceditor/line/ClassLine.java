@@ -36,7 +36,7 @@ public class ClassLine extends Line {
     }
 
     @Override
-    protected void addChildren(final List<Line> lines, final int index) {
+    public void addChildren(final List<Line> lines, final int index) {
     }
 
     @Override

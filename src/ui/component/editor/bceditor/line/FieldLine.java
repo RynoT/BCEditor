@@ -33,7 +33,7 @@ public class FieldLine extends Line {
     }
 
     @Override
-    protected void addChildren(final List<Line> lines, final int index) {
+    public void addChildren(final List<Line> lines, final int index) {
         assert super.children == null : "Remove children before adding";
 
         super.children = new ArrayList<>();

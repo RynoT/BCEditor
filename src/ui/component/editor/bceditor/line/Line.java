@@ -42,7 +42,7 @@ public abstract class Line {
         this.indent = indent;
     }
 
-    protected abstract void addChildren(final List<Line> lines, final int index);
+    public abstract void addChildren(final List<Line> lines, final int index);
 
     public abstract void update(final ConstantPool pool);
 

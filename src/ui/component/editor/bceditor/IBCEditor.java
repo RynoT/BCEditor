@@ -4,6 +4,7 @@ import project.filetype.ClassType;
 import ui.Canvas;
 import ui.component.*;
 import ui.component.editor.IEditor;
+import ui.component.editor.bceditor.subeditor.IBCAttributeEditor;
 import ui.component.editor.bceditor.subeditor.IBCPoolSubEditor;
 
 import java.awt.*;
@@ -22,6 +23,7 @@ public class IBCEditor extends IEditor {
 
     private final IBCTextEditor textEditor;
     private final IBCPoolSubEditor poolEditor;
+    private final IBCAttributeEditor attributeEditor;
 
     private final IToolbar toolbar;
 
@@ -42,14 +44,18 @@ public class IBCEditor extends IEditor {
             toolbar.setContentSize(IBCEditor.SUB_EDITOR_DEFAULT_SIZE);
             toolbar.getButtonPanel().setBorder(new IBorder(2, 0, 1, 2));
 
-            this.poolEditor = new IBCPoolSubEditor();
-            {
-                this.poolEditor.populate(classType.getConstantPool());
-            }
-
             final IButton poolButton = new IButton("Constant Pool").setToggle(true);
+            this.poolEditor = new IBCPoolSubEditor(classType.getConstantPool());
+            poolButton.addEvent(this.poolEditor::populate);
             toolbar.addTab(new ITab(poolButton, this.poolEditor, true), true);
             poolButton.click();
+
+            final IButton attributeButton = new IButton("Attributes").setToggle(true);
+            this.attributeEditor = new IBCAttributeEditor();
+            attributeButton.addEvent(this.attributeEditor::populate);
+            toolbar.addTab(new ITab(attributeButton, this.attributeEditor, false), false);
+            //attributeButton.click();
+
 
             toolbar.addComponentListener(new ComponentAdapter() {
                 @Override

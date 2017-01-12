@@ -9,8 +9,12 @@ import ui.component.IScrollPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.stream.Stream;
 
 /**
@@ -31,27 +35,14 @@ public class IBCPoolSubEditor extends IBCSubEditor {
 
     private final JPanel tablePanel;
 
-    private ConstantPool pool = null;
+    private final ConstantPool pool;
     private int indexWidth = 0, bitWidth = 0;
 
-    public IBCPoolSubEditor() {
-        super.setFont(IComponent.DEFAULT_FONT);
-        super.setLayout(new BorderLayout(0, 0));
-        super.setBackground(IComponent.DEFAULT_BACKGROUND_INTERMEDIATE);
+    public IBCPoolSubEditor(final ConstantPool pool) {
+        super("Constant Pool");
 
-        final JPanel titlePanel = new JPanel();
-        {
-            titlePanel.setLayout(new BorderLayout(0, 0));
-            titlePanel.setBackground(IComponent.DEFAULT_BACKGROUND_HIGHLIGHT);
-            titlePanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, IBCSubEditor.TITLE_HEIGHT));
-            titlePanel.setBorder(new IBorder(0, 1, 1, 0));
-
-            final ILabel label = new ILabel("Constant Pool");
-            label.setFont(IBCSubEditor.TITLE_FONT);
-            label.setColor(IBCSubEditor.TITLE_TEXT_COLOR);
-            titlePanel.add(label, BorderLayout.CENTER);
-        }
-        super.add(titlePanel, BorderLayout.NORTH);
+        assert pool != null;
+        this.pool = pool;
 
         final JPanel tablePanel = new JPanel();
         {
@@ -95,18 +86,20 @@ public class IBCPoolSubEditor extends IBCSubEditor {
         }
     }
 
-    public void populate(final ConstantPool pool) {
-        assert pool != null;
-        this.pool = pool;
-
+    @Override
+    public void populate() {
+        if(this.tablePanel.getComponentCount() > 0){
+            return; //already populated
+        }
         final FontMetrics metrics = super.getFontMetrics(super.getFont());
-        this.indexWidth = metrics.stringWidth(String.valueOf(pool
+        this.indexWidth = metrics.stringWidth(String.valueOf(this.pool
                 .getEntryCount())) + IBCPoolSubEditor.PADDING * 2;
 
+        assert SwingUtilities.isEventDispatchThread();
         this.tablePanel.removeAll();
         int maxRowWidth = 0;
-        for(int i = 0; i < pool.getEntryCount(); i++) {
-            final PoolRow row = new PoolRow(i, pool.getEntry(i));
+        for(int i = 0; i < this.pool.getEntryCount(); i++) {
+            final PoolRow row = new PoolRow(i, this.pool.getEntry(i));
             this.tablePanel.add(row);
 
             this.bitWidth = Math.max(this.bitWidth, metrics.stringWidth(String

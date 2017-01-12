@@ -52,6 +52,9 @@ public class IFileViewer extends IComponent {
                     if(IFileViewer.this.active != null && IFileViewer.this.active.editor instanceof IBCEditor) {
                         final IBCEditor editor = (IBCEditor) IFileViewer.this.active.editor;
                         content = editor.getToolbar().getUpperContent();
+                        if(content == null){ //if we have no upper content, try for lower
+                            content = editor.getToolbar().getLowerContent();
+                        }
                     }
                     g.setColor(IComponent.DEFAULT_HIGHLIGHT_DARK);
                     if(content == null || !content.isShowing()) {
