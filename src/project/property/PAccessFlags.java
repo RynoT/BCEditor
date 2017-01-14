@@ -25,14 +25,14 @@ public class PAccessFlags extends Property {
         {
             //format binary string with padding
             final String str = Integer.toBinaryString(this.accessFlags);
-            for(int i = Short.SIZE; i > 0; i--){
-                if(i != Short.SIZE && i % 4 == 0){
+            for(int i = 0; i < Short.SIZE; i++){
+                if(i != 0 && i % 4 == 0){
                     binary.append(' ');
                 }
-                if(i > str.length()){
-                    binary.append('0');
+                if(Short.SIZE - i <= str.length()){
+                    binary.append(str.charAt(str.length() - (Short.SIZE - i)));
                 } else {
-                    binary.append(str.charAt(i - 1));
+                    binary.append('0');
                 }
             }
         }
