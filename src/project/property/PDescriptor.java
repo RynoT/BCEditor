@@ -16,6 +16,11 @@ public class PDescriptor extends Property {
     }
 
     @Override
+    public Property[] getChildProperties() {
+        return new Property[]{ this.descriptorEntry };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         return PDescriptor.NAME + "[" + this.descriptorEntry.getContentString(pool) + "]";
     }

@@ -56,7 +56,7 @@ public class Descriptor {
         return descriptor.replace(" extends java.lang.Object", "");
     }
 
-    public static int getOffset(final String str, final char c, final int begin, final int end){
+    public static int getBracketOffset(final String str, final char c, final int begin, final int end){
         assert end <= str.length();
         for(int i = begin, inner = 0; i < end; i++){
             final char next = str.charAt(i);
@@ -98,7 +98,7 @@ public class Descriptor {
                 case '<': {
                     int index = descriptor.indexOf('(');
                     if(index == -1){
-                        index = Descriptor.getOffset(descriptor, '>', i, descriptor.length()) + 1;
+                        index = Descriptor.getBracketOffset(descriptor, '>', i, descriptor.length()) + 1;
                         assert index != -1;
                     }
                     i = index - 1;
@@ -157,7 +157,7 @@ public class Descriptor {
                 sb.append(next);
             } else if(next == 'L') {
                 final int start = i;
-                i = Descriptor.getOffset(descriptor, ';', i, descriptor.length());
+                i = Descriptor.getBracketOffset(descriptor, ';', i, descriptor.length());
                 sb.append(Descriptor.decode(descriptor.substring(start, i)));
 
                 if(i == chars.length){

@@ -16,6 +16,11 @@ public class PName extends Property {
     }
 
     @Override
+    public Property[] getChildProperties() {
+        return new Property[]{ this.nameEntry };
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         return PName.NAME + "[" + this.nameEntry.getContentString(pool) + "]";
     }

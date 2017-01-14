@@ -47,7 +47,9 @@ public class IBCTextEditor extends IEditor {
 
     public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
     public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
-            .CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{1f, 2f}, 0.0f);
+            .CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{ 1f, 2f }, 0.0f);
+
+    private final ClassType type;
 
     private final SideBar sideBar;
     private final LineRenderer lineRenderer;
@@ -57,7 +59,10 @@ public class IBCTextEditor extends IEditor {
 
     private Line active = null;
 
-    public IBCTextEditor() {
+    public IBCTextEditor(final ClassType type) {
+        assert type != null;
+        this.type = type;
+
         super.setOpaque(false);
         super.setLayout(new BorderLayout(0, 0));
 
@@ -73,35 +78,44 @@ public class IBCTextEditor extends IEditor {
         super.add(scrollPanel, BorderLayout.CENTER);
     }
 
+    public IBCEditor getEditor() {
+        assert super.getParent() != null && super.getParent() instanceof IBCEditor;
+        return (IBCEditor) super.getParent();
+    }
+
     public void setActiveLine(final Line line) {
         this.active = line;
         this.lineRenderer.repaint();
+
+        assert this.lineRenderer.caretPosition != -1;
+        line.onActivate(this, this.lineRenderer.caretPosition);
 
         if(line instanceof InstructionLine) {
             final InstructionLine instruction = (InstructionLine) line;
         }
     }
 
-    public void populate(final ClassType type) {
+    public void populate() {
         this.lines.clear();
 
-        final ClassLine classLine = new ClassLine(type, 0);
+        final ClassLine classLine = new ClassLine(this.type, 0);
         this.lines.add(classLine);
         this.lines.add(new EmptyLine());
 
-        for(final FieldInfo field : type.getFields()) {
+        for(final FieldInfo field : this.type.getFields()) {
             this.lines.add(new FieldLine(field, 1));
             this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
         }
-        if(type.getFieldCount() > 0) {
+        if(this.type.getFieldCount() > 0) {
             this.lines.add(new EmptyLine());
         }
         int maxPc = 0;
-        for(final MethodInfo method : type.getMethods()) {
+        for(final MethodInfo method : this.type.getMethods()) {
             final MethodLine methodLine = new MethodLine(method, classLine, 1);
             this.lines.add(methodLine);
+            this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
 
-            final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), type.getConstantPool());
+            final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), this.type.getConstantPool());
             if(code != null) {
                 final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
                 for(final Instruction instruction : instructions) {
@@ -129,7 +143,7 @@ public class IBCTextEditor extends IEditor {
             final FontMetrics metrics = IBCTextEditor.this.lineRenderer
                     .getFontMetrics(IBCTextEditor.this.lineRenderer.getFont());
             for(final Line line : IBCTextEditor.this.lines) {
-                line.update(type.getConstantPool());
+                line.update(this.type.getConstantPool());
 
                 maxWidth = Math.max(IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics), maxWidth);
             }
@@ -194,13 +208,10 @@ public class IBCTextEditor extends IEditor {
             super.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(final MouseEvent e) {
-                    final int lineIdx = e.getY() / IBCTextEditor.LINE_HEIGHT;
-                    final Line line = IBCTextEditor.this.lines.get(lineIdx);
-                    IBCTextEditor.this.setActiveLine(line);
-
-                    final String text = line.getString();
+                    final Line line = IBCTextEditor.this.lines.get(e.getY() / IBCTextEditor.LINE_HEIGHT);
                     final int position = (e.getX() - line.getIndent() * Line.INDENT_PIXEL_OFFSET) / LineRenderer.this.charWidth; //font is monospaced
-                    LineRenderer.this.caretPosition = Math.max(0, Math.min(position, text.length()));
+                    LineRenderer.this.caretPosition = Math.max(0, Math.min(position, line.getString().length()));
+                    IBCTextEditor.this.setActiveLine(line);
                 }
             });
             super.addKeyListener(new KeyAdapter() {

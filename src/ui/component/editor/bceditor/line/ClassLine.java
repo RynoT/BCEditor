@@ -62,12 +62,12 @@ public class ClassLine extends Line {
             if(signature.charAt(0) == '<') {
                 assert signature.indexOf('>') != -1;
 
-                offset = Descriptor.getOffset(signature, '>', 0, signature.length()) + 1;
+                offset = Descriptor.getBracketOffset(signature, '>', 0, signature.length()) + 1;
                 sb.append(Descriptor.hideObjectClass(Descriptor.decode(signature.substring(0, offset))));
                 idxName = sb.length();
             }
             final String inherit = Descriptor.decode(signature.substring(offset));
-            offset = Descriptor.getOffset(inherit, ',', 0, inherit.length());
+            offset = Descriptor.getBracketOffset(inherit, ',', 0, inherit.length());
             if(offset != -1) {
                 sb.append(Descriptor.hideObjectClass(" extends " + inherit.substring(0, offset)));
                 idxExtend = sb.length();

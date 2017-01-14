@@ -3,6 +3,10 @@ package project.property;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by Ryan Thomson on 14/01/2017.
  */
@@ -20,6 +24,20 @@ public class PAttribute extends Property {
         this.attribute = attribute;
         this.nameEntry = new PPoolEntry(attribute.getNameIndex());
         this.properties = attribute.getProperties();
+    }
+
+    @Override
+    public Property[] getChildProperties() {
+        if(this.properties == null){
+            return new Property[]{ this.nameEntry };
+        }
+        final List<Property> properties = new ArrayList<>();
+        properties.add(this.nameEntry);
+        for(final Property property : this.properties){
+            properties.add(property);
+            Collections.addAll(properties, property.getChildProperties());
+        }
+        return properties.toArray(new Property[properties.size()]);
     }
 
     @Override

@@ -3,6 +3,7 @@ package ui.component.editor.bceditor.line;
 import project.filetype.classtype.Descriptor;
 import project.filetype.classtype.constantpool.ConstantPool;
 import ui.component.editor.bceditor.IBCEditor;
+import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -44,6 +45,8 @@ public abstract class Line {
 
     public abstract void addChildren(final List<Line> lines, final int index);
 
+    public  void onActivate(final IBCTextEditor textEditor, final int caretIndex) {}
+
     public abstract void update(final ConstantPool pool);
 
     public int getIndent(){
@@ -83,6 +86,23 @@ public abstract class Line {
     public final void render(final Graphics2D g2d, final int x, final int y) {
         assert this.string != null;
         g2d.drawString(this.attributes.getIterator(), x + this.indent * Line.INDENT_PIXEL_OFFSET, y);
+    }
+
+    static int getStringOffset(final String string, final int begin){
+        assert string.charAt(begin) == '\'' : "Begin index must be at the start of string declaration (')";
+        boolean done = false;
+        for(int i = begin + 1; i < string.length(); i++){
+            final char c = string.charAt(i);
+            if(c == '\''){
+                done = true;
+            } else if(done){
+                if(c == ')'){
+                    return i - begin - 1;
+                }
+                done = false;
+            }
+        }
+        return -1;
     }
 
     static void colorSymbols(final String string, final AttributedString attributes, final int begin, final int end) {
@@ -149,7 +169,7 @@ public abstract class Line {
                 idx = i;
             } else if(c == '<') {
                 final int start = i;
-                i = Descriptor.getOffset(string, '>', i, end);
+                i = Descriptor.getBracketOffset(string, '>', i, end);
                 if(genericNames != null) {
                     Line.colorGenerics(string, attributes, genericNames, start, i + 1);
                 }

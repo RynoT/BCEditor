@@ -7,5 +7,7 @@ import project.filetype.classtype.constantpool.ConstantPool;
  */
 public abstract class Property {
 
+    public abstract Property[] getChildProperties();
+
     public abstract String getContentString(final ConstantPool pool);
 }

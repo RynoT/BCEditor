@@ -20,6 +20,11 @@ public class PAccessFlags extends Property {
     }
 
     @Override
+    public Property[] getChildProperties() {
+        return new Property[0];
+    }
+
+    @Override
     public String getContentString(final ConstantPool pool) {
         final StringBuilder binary = new StringBuilder(Short.SIZE + 4);
         {

@@ -8,7 +8,8 @@ import ui.component.editor.bceditor.subeditor.IBCAttributeEditor;
 import ui.component.editor.bceditor.subeditor.IBCPoolSubEditor;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 /**
  * Created by Ryan Thomson on 27/12/2016.
@@ -33,9 +34,9 @@ public class IBCEditor extends IEditor {
         super.setLayout(new BorderLayout(0, 0));
         super.setBackground(IComponent.DEFAULT_BACKGROUND_DARK);
 
-        this.textEditor = new IBCTextEditor();
+        this.textEditor = new IBCTextEditor(classType);
         {
-            this.textEditor.populate(classType);
+            this.textEditor.populate();
         }
         super.add(this.textEditor, BorderLayout.CENTER);
 
@@ -56,7 +57,6 @@ public class IBCEditor extends IEditor {
             toolbar.addTab(new ITab(attributeButton, this.attributeEditor, false), false);
             //attributeButton.click();
 
-
             toolbar.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(final ComponentEvent e) {
@@ -68,19 +68,23 @@ public class IBCEditor extends IEditor {
         super.add(toolbar, toolbar.getOrientation().getBorder());
     }
 
-    public IToolbar getToolbar(){
+    public IToolbar getToolbar() {
         return this.toolbar;
     }
 
-    public static String formatBranch(final int pc){
+    public IBCPoolSubEditor getPoolEditor() {
+        return this.poolEditor;
+    }
+
+    public static String formatBranch(final int pc) {
         return "#" + pc;
     }
 
-    public static String formatIndexPool(final int index){
+    public static String formatIndexPool(final int index) {
         return "<" + index + ">";
     }
 
-    public static String formatIndexLocal(final int index){
+    public static String formatIndexLocal(final int index) {
         return String.valueOf(index);
     }
 }

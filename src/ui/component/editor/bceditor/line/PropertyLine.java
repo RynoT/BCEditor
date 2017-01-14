@@ -1,12 +1,12 @@
 package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.constantpool.ConstantPool;
+import project.property.PPoolEntry;
 import project.property.Property;
 import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.util.*;
 import java.util.List;
 
 /**
@@ -34,7 +34,41 @@ public class PropertyLine extends Line {
 
     @Override
     public void addChildren(final List<Line> lines, final int index) {
-        assert false;
+        assert false; //should never be called on this line
+    }
+
+    @Override
+    public void onActivate(final IBCTextEditor textEditor, final int caretIndex) {
+        final String string = super.getString();
+        assert caretIndex <= string.length();
+
+        if(caretIndex == string.length()){
+            return;
+        }
+        int index = -1;
+        boolean inside = false;
+        for(int i = 0, start = -1; i < caretIndex; i++) {
+            final char c = string.charAt(i);
+            if(c == '[') {
+                inside = true;
+            } else if(inside) {
+                if(start == -1) {
+                    index++;
+                    start = i;
+                } else if(c == ')') {
+                    start = -1;
+                } else if(c == '\'') {
+                    i += Line.getStringOffset(string, i);
+                }
+            }
+        }
+        if(index != -1) {
+            final Property[] properties = this.property.getChildProperties();
+            if(index < properties.length && properties[index] instanceof PPoolEntry){
+                final PPoolEntry entry = (PPoolEntry) properties[index];
+                textEditor.getEditor().getPoolEditor().setActiveRow(entry.getIndex());
+            }
+        }
     }
 
     @Override
@@ -71,24 +105,13 @@ public class PropertyLine extends Line {
                     id = 3;
                     start = i;
 
-                    boolean done = false;
-                    for(++i; i < string.length(); i++){
-                        final char c2 = string.charAt(i);
-                        if(c2 == '\''){
-                            done = true;
-                        } else if(done){
-                            if(c2 == ')'){
-                                inner--;
-                                break;
-                            }
-                            done = false;
-                        }
-                    }
+                    inner--;
+                    i += Line.getStringOffset(string, i) + 1;
                     trigger = true;
                     break;
             }
             if(trigger) {
-                if(start == -1){
+                if(start == -1) {
                     continue;
                 }
                 final Color color;
