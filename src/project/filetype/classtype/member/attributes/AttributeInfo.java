@@ -2,11 +2,10 @@ package project.filetype.classtype.member.attributes;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
-import util.Pair;
+import project.property.Property;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.text.AttributedString;
 
 /**
  * Created by Ryan Thomson on 23/12/2016.
@@ -40,7 +39,9 @@ public abstract class AttributeInfo {
         this.nameIndex = nameIndex;
     }
 
-    public Pair<String, AttributedString> getContentString(final ConstantPool pool) { return null; }
+    //public String getContentString(final ConstantPool pool) { return null; }
+
+    public Property[] getProperties() { return null; }
 
     public final int getNameIndex() {
         return this.nameIndex;

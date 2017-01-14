@@ -2,6 +2,8 @@ package project.filetype.classtype.member.attributes;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
+import project.property.PPoolEntry;
+import project.property.Property;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -20,11 +22,16 @@ public class _SourceFile extends AttributeInfo {
         this.sourceIndex = dis.readUnsignedShort();
     }
 
-    public int getSourceIndex(){
+    public int getSourceIndex() {
         return this.sourceIndex;
     }
 
-    public TagUTF8 getTagSource(final ConstantPool pool){
+    public TagUTF8 getTagSource(final ConstantPool pool) {
         return (TagUTF8) pool.getEntry(this.sourceIndex);
+    }
+
+    @Override
+    public Property[] getProperties() {
+        return new Property[]{ new PPoolEntry(this.sourceIndex) };
     }
 }

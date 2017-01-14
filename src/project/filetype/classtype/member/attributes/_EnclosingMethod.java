@@ -3,6 +3,8 @@ package project.filetype.classtype.member.attributes;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagNameAndType;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
+import project.property.PPoolEntry;
+import project.property.Property;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -36,5 +38,10 @@ public class _EnclosingMethod extends AttributeInfo {
 
     public TagNameAndType getTagMethod(final ConstantPool pool){
         return (TagNameAndType) pool.getEntry(this.methodIndex);
+    }
+
+    @Override
+    public Property[] getProperties() {
+        return new Property[]{ new PPoolEntry(this.classIndex), new PPoolEntry(this.methodIndex) };
     }
 }

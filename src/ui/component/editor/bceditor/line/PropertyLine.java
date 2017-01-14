@@ -78,6 +78,7 @@ public class PropertyLine extends Line {
                             done = true;
                         } else if(done){
                             if(c2 == ')'){
+                                inner--;
                                 break;
                             }
                             done = false;

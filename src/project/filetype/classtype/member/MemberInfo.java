@@ -4,10 +4,7 @@ import project.filetype.classtype.AccessFlags;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.tag.TagUTF8;
 import project.filetype.classtype.member.attributes.AttributeInfo;
-import project.property.PAccessFlags;
-import project.property.PDescriptor;
-import project.property.PName;
-import project.property.Property;
+import project.property.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -76,6 +73,9 @@ public abstract class MemberInfo {
             this.properties.add(new PName(this.nameIndex));
             this.properties.add(new PDescriptor(this.descriptorIndex));
             this.properties.add(new PAccessFlags(this.accessFlags, this.type));
+            for(final AttributeInfo attribute : this.attributes){
+                this.properties.add(new PAttribute(attribute));
+            }
         }
         return this.properties;
     }

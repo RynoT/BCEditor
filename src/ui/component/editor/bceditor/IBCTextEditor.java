@@ -91,7 +91,7 @@ public class IBCTextEditor extends IEditor {
 
         for(final FieldInfo field : type.getFields()) {
             this.lines.add(new FieldLine(field, 1));
-            //this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
+            this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
         }
         if(type.getFieldCount() > 0) {
             this.lines.add(new EmptyLine());
