@@ -50,7 +50,7 @@ public class InstructionLine extends Line {
                 } else if(operand.getType() == OperandType.INDEX_LOCAL){
                     sb.append(IBCEditor.formatIndexLocal(operand.getValue()));
                 } else if(operand.getType() == OperandType.BRANCH_OFFSET) {
-                    sb.append(IBCEditor.formatBranch(operand.getValue()));
+                    sb.append(IBCEditor.formatBranch(operand.getValue() + this.instruction.getPc()));
                 } else {
                     sb.append(operand.getValue());
                 }
