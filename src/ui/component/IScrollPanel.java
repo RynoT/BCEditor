@@ -1,6 +1,5 @@
 package ui.component;
 
-import javax.imageio.plugins.jpeg.JPEGHuffmanTable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -48,7 +47,7 @@ public class IScrollPanel extends IComponent {
                     .getUnitsToScroll() * IScrollPanel.this.vertical.getWheelMultiplier())));
         }
         if(horizontal) {
-            if(this.vertical != null){
+            if(this.vertical != null) {
                 final JPanel bottom = new JPanel();
                 {
                     bottom.setOpaque(false);
@@ -87,12 +86,22 @@ public class IScrollPanel extends IComponent {
         return this.viewport;
     }
 
-    public boolean isVerticalVisible(){
+    public boolean isVerticalVisible() {
         return this.vertical != null && this.vertical.isVisible();
     }
 
-    public boolean isHorizontalVisible(){
+    public boolean isHorizontalVisible() {
         return this.horizontal != null && this.horizontal.isVisible();
+    }
+
+    public void scrollToVisible(final int y, final int height) { //only supports y axis
+        final Point position = this.viewport.getViewPosition();
+        final Dimension size = this.viewport.getSize();
+        if(y > position.y && y + height < position.y + size.height){
+            return; //already visible
+        }
+        this.viewport.setViewPosition(new Point(position.x, y > position.y ? y - size.height + height : y));
+        this.updateScale();
     }
 
     private void updateScale() {
@@ -261,7 +270,7 @@ public class IScrollPanel extends IComponent {
             if(this.width == -1 || this.height == -1) {
                 return;
             }
-            if(this.backHover || this.scrolling){
+            if(this.backHover || this.scrolling) {
                 g.setColor(IScrollPanel.SCROLLER_HOVER_BACKGROUND);
 
                 g.fillRect(0, 0, super.getWidth() - 1, super.getHeight() - 1);

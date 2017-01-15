@@ -111,8 +111,8 @@ public class IBCTextEditor extends IEditor {
             }
             if(maxWidth != this.lineRenderer.maxLineWidth) {
                 this.lineRenderer.maxLineWidth = maxWidth;
-                this.lineRenderer.updateDimensions();
             }
+            this.lineRenderer.updateDimensions();
             this.lineRenderer.repaint();
             this.sideBar.repaint();
         }, AsyncType.MULTI);
@@ -125,34 +125,33 @@ public class IBCTextEditor extends IEditor {
     }
 
     public void populate() {
-        this.lines.clear();
-
+        final List<Line> lines = new ArrayList<>();
         final ClassLine classLine = new ClassLine(this.type, 0);
-        this.lines.add(classLine);
-        this.lines.add(new EmptyLine());
+        lines.add(classLine);
+        lines.add(new EmptyLine());
 
         for(final FieldInfo field : this.type.getFields()) {
-            this.lines.add(new FieldLine(field, 1));
+            lines.add(new FieldLine(field, 1));
         }
         if(this.type.getFieldCount() > 0) {
-            this.lines.add(new EmptyLine());
+            lines.add(new EmptyLine());
         }
         int maxPc = 0;
         for(final MethodInfo method : this.type.getMethods()) {
             final MethodLine methodLine = new MethodLine(method, classLine, 1);
-            this.lines.add(methodLine);
+            lines.add(methodLine);
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), this.type.getConstantPool());
             if(code != null) {
                 final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
                 for(final Instruction instruction : instructions) {
-                    this.lines.add(new InstructionLine(instruction, methodLine, 2));
+                    lines.add(new InstructionLine(instruction, methodLine, 2));
                 }
-                this.lines.add(new DefaultLine("}", 1));
+                lines.add(new DefaultLine("}", 1));
 
                 maxPc = Math.max(maxPc, instructions.get(instructions.size() - 1).getPc());
             }
-            this.lines.add(new EmptyLine());
+            lines.add(new EmptyLine());
         }
         if(maxPc > this.sideBar.maxPc) {
             this.sideBar.maxPc = maxPc;
@@ -162,21 +161,11 @@ public class IBCTextEditor extends IEditor {
             this.sideBar.setPreferredSize(new Dimension(width, Integer.MAX_VALUE));
         }
 
-        this.lines.add(new DefaultLine("}"));
-        this.lines.add(new EmptyLine());
+        lines.add(new DefaultLine("}"));
+        lines.add(new EmptyLine());
 
-        Async.submit(() -> {
-            int maxWidth = 0;
-            final FontMetrics metrics = IBCTextEditor.this.lineRenderer
-                    .getFontMetrics(IBCTextEditor.this.lineRenderer.getFont());
-            for(final Line line : IBCTextEditor.this.lines) {
-                line.update(this.type.getConstantPool());
-
-                maxWidth = Math.max(IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics), maxWidth);
-            }
-            IBCTextEditor.this.lineRenderer.maxLineWidth = maxWidth + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET;
-            IBCTextEditor.this.lineRenderer.updateDimensions();
-        }, AsyncType.MULTI);
+        this.lines.clear();
+        this.addLines(lines, 0);
     }
 
     private class SideBar extends JPanel {

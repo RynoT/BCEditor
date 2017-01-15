@@ -2,19 +2,13 @@ package ui.component.editor.bceditor.subeditor;
 
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.PoolTag;
-import ui.component.IBorder;
 import ui.component.IComponent;
-import ui.component.ILabel;
 import ui.component.IScrollPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.stream.Stream;
 
 /**
@@ -34,6 +28,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
     public static final Color TABLE_PREDECESSOR_COLOR = new Color(40, 117, 113);
 
     private final JPanel tablePanel;
+    private final IScrollPanel scrollPanel;
 
     private final ConstantPool pool;
     private int indexWidth = 0, bitWidth = 0;
@@ -54,6 +49,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
         {
             scrollPanel.setOpaque(false);
         }
+        this.scrollPanel = scrollPanel;
         super.add(scrollPanel, BorderLayout.CENTER);
     }
 
@@ -84,6 +80,7 @@ public class IBCPoolSubEditor extends IBCSubEditor {
             }
             next.repaint();
         }
+        this.scrollPanel.scrollToVisible(index * IBCPoolSubEditor.ROW_HEIGHT, IBCPoolSubEditor.ROW_HEIGHT);
     }
 
     @Override
