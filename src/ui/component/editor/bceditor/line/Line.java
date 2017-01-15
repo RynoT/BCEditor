@@ -8,10 +8,8 @@ import ui.component.editor.bceditor.IBCTextEditor;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.text.AttributedString;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -30,26 +28,37 @@ public abstract class Line {
     protected AttributedString attributes;
     protected int indent = 0;
 
-    protected List<Line> children = null;
+    private boolean expandHover = false;
+    private final boolean expandable;
+    protected final List<Line> children;
 
     Line(final int indent) {
-        this("", indent);
+        this(indent, false);
+    }
+
+    Line(final int indent, final boolean expandable) {
+        this("", indent, expandable);
     }
 
     Line(final String string, final int indent) {
+        this(string, indent, false);
+    }
+
+    Line(final String string, final int indent, final boolean expandable) {
         assert (string != null);
 
         this.setString(string);
         this.indent = indent;
+        this.expandable = expandable;
+
+        this.children = expandable ? new ArrayList<>() : null;
     }
 
-    public abstract void addChildren(final List<Line> lines, final int index);
-
-    public  void onActivate(final IBCTextEditor textEditor, final int caretIndex) {}
+    public void onActivate(final IBCTextEditor textEditor, final int caretIndex) { }
 
     public abstract void update(final ConstantPool pool);
 
-    public int getIndent(){
+    public int getIndent() {
         return this.indent;
     }
 
@@ -58,7 +67,27 @@ public abstract class Line {
         return this.string;
     }
 
-    public int getWidth(final FontMetrics metrics){
+    public boolean isExpanded() {
+        return this.children.size() > 0;
+    }
+
+    public boolean isExpandable() {
+        return this.expandable;
+    }
+
+    public boolean isExpandHovered() {
+        return this.expandHover;
+    }
+
+    public void setExpandHover(final boolean hover) {
+        this.expandHover = hover;
+    }
+
+    public int getChildCount() {
+        return this.expandable ? this.children.size() : 0;
+    }
+
+    public int getWidth(final FontMetrics metrics) {
         return metrics.stringWidth(this.string) + this.indent * Line.INDENT_PIXEL_OFFSET;
     }
 
@@ -66,7 +95,7 @@ public abstract class Line {
         this.setString(string, new AttributedString(string));
     }
 
-    protected void setString(final String string, final AttributedString attributes){
+    protected void setString(final String string, final AttributedString attributes) {
         assert string != null && attributes != null;
         this.string = string;
         this.attributes = attributes;
@@ -75,28 +104,33 @@ public abstract class Line {
         }
     }
 
-    public final void removeChildren(final List<Line> lines){
-        if(this.children == null){
+    public void expandChildren(final IBCTextEditor textEditor, final int index) {
+        assert !this.expandable; //should be overwritten if expandable
+    }
+
+    public final void collapseChildren(final IBCTextEditor textEditor) {
+        if(this.children == null) {
             return;
         }
-        lines.removeAll(this.children);
-        this.children = null;
+        textEditor.removeLines(this.children);
+        this.children.clear();
     }
 
     public final void render(final Graphics2D g2d, final int x, final int y) {
         assert this.string != null;
+        g2d.setColor(IBCTextEditor.DEFAULT_FOREGROUND);
         g2d.drawString(this.attributes.getIterator(), x + this.indent * Line.INDENT_PIXEL_OFFSET, y);
     }
 
-    static int getStringOffset(final String string, final int begin){
+    static int getStringOffset(final String string, final int begin) {
         assert string.charAt(begin) == '\'' : "Begin index must be at the start of string declaration (')";
         boolean done = false;
-        for(int i = begin + 1; i < string.length(); i++){
+        for(int i = begin + 1; i < string.length(); i++) {
             final char c = string.charAt(i);
-            if(c == '\''){
+            if(c == '\'') {
                 done = true;
-            } else if(done){
-                if(c == ')'){
+            } else if(done) {
+                if(c == ')') {
                     return i - begin - 1;
                 }
                 done = false;
@@ -206,7 +240,7 @@ public abstract class Line {
 
     static void colorGenerics(final String string, final AttributedString attributes, final Set<String> names, final int begin, final int end) {
         assert names != null;
-        if(names.size() == 0){
+        if(names.size() == 0) {
             return;
         }
         int idx = -1;

@@ -33,11 +33,6 @@ public class PropertyLine extends Line {
     }
 
     @Override
-    public void addChildren(final List<Line> lines, final int index) {
-        assert false; //should never be called on this line
-    }
-
-    @Override
     public void onActivate(final IBCTextEditor textEditor, final int caretIndex) {
         final String string = super.getString();
         assert caretIndex <= string.length();
@@ -76,7 +71,7 @@ public class PropertyLine extends Line {
         final String string = this.property.getContentString(pool);
         super.setString(string);
 
-        super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor.ATTRIBUTE_COLOR);
+        super.attributes.addAttribute(TextAttribute.FOREGROUND, IBCTextEditor.PROPERTY_COLOR);
 
         //id: -1 = undefined, 0 = property name, 1 = inner name, 2 = constant, 3 = string
         for(int i = 0, start = -1, id = -1, inner = 0; i < string.length(); i++) {

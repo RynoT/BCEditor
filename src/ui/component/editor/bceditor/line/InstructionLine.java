@@ -37,11 +37,6 @@ public class InstructionLine extends Line {
     }
 
     @Override
-    public void addChildren(final List<Line> lines, final int index) {
-        assert false;
-    }
-
-    @Override
     public void update(final ConstantPool pool) {
         final StringBuilder sb = new StringBuilder();
         final String mnemonic = this.instruction.getOpcode().getMnemonic();

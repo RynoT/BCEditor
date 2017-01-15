@@ -11,7 +11,9 @@ import ui.component.IComponent;
 import ui.component.IScrollPanel;
 import ui.component.editor.IEditor;
 import ui.component.editor.bceditor.line.*;
+import util.AssetManager;
 import util.async.Async;
+import util.async.AsyncEvent;
 import util.async.AsyncType;
 
 import javax.swing.*;
@@ -20,6 +22,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +46,7 @@ public class IBCTextEditor extends IEditor {
     public static final Color FIELD_NAME_COLOR = new Color(150, 120, 170);
     public static final Color CONSTANT_COLOR = new Color(92, 160, 173);
     public static final Color STRING_COLOR = new Color(100, 135, 80);
-    public static final Color ATTRIBUTE_COLOR = new Color(180, 188, 55);
+    public static final Color PROPERTY_COLOR = new Color(180, 188, 55);
 
     public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
     public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
@@ -95,6 +98,32 @@ public class IBCTextEditor extends IEditor {
         }
     }
 
+    public void addLines(final List<Line> lines, final int index) {
+        Async.submit(() -> {
+            this.lines.addAll(index, lines);
+
+            final FontMetrics metrics = this.lineRenderer.getFontMetrics(this.lineRenderer.getFont());
+            int maxWidth = IBCTextEditor.this.lineRenderer.maxLineWidth;
+            for(final Line line : lines) {
+                line.update(this.type.getConstantPool());
+                maxWidth = Math.max(IBCTextEditor.LINE_DEFAULT_INSET + line
+                        .getWidth(metrics) + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET, maxWidth);
+            }
+            if(maxWidth != this.lineRenderer.maxLineWidth) {
+                this.lineRenderer.maxLineWidth = maxWidth;
+                this.lineRenderer.updateDimensions();
+            }
+            this.lineRenderer.repaint();
+            this.sideBar.repaint();
+        }, AsyncType.MULTI);
+    }
+
+    public void removeLines(final List<Line> lines) {
+        this.lines.removeAll(lines);
+        this.lineRenderer.repaint();
+        this.sideBar.repaint();
+    }
+
     public void populate() {
         this.lines.clear();
 
@@ -104,7 +133,6 @@ public class IBCTextEditor extends IEditor {
 
         for(final FieldInfo field : this.type.getFields()) {
             this.lines.add(new FieldLine(field, 1));
-            this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
         }
         if(this.type.getFieldCount() > 0) {
             this.lines.add(new EmptyLine());
@@ -113,7 +141,6 @@ public class IBCTextEditor extends IEditor {
         for(final MethodInfo method : this.type.getMethods()) {
             final MethodLine methodLine = new MethodLine(method, classLine, 1);
             this.lines.add(methodLine);
-            this.lines.get(this.lines.size() - 1).addChildren(this.lines, this.lines.size() - 1);
 
             final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), this.type.getConstantPool());
             if(code != null) {
@@ -198,6 +225,9 @@ public class IBCTextEditor extends IEditor {
 
         private int caretPosition = -1;
 
+        private Line hoveredLine;
+        private BufferedImage expand, expandHover, collapse;
+
         private LineRenderer() {
             super.setOpaque(false);
             super.setFont(IBCEditor.EDITOR_FONT);
@@ -205,15 +235,58 @@ public class IBCTextEditor extends IEditor {
 
             this.charWidth = super.getFontMetrics(super.getFont()).charWidth(' '); //font is monospaced
 
-            super.addMouseListener(new MouseAdapter() {
+            final MouseAdapter adapter = new MouseAdapter() {
                 @Override
                 public void mousePressed(final MouseEvent e) {
-                    final Line line = IBCTextEditor.this.lines.get(e.getY() / IBCTextEditor.LINE_HEIGHT);
-                    final int position = (e.getX() - line.getIndent() * Line.INDENT_PIXEL_OFFSET) / LineRenderer.this.charWidth; //font is monospaced
-                    LineRenderer.this.caretPosition = Math.max(0, Math.min(position, line.getString().length()));
-                    IBCTextEditor.this.setActiveLine(line);
+                    final Line line = this.getLine(e.getPoint());
+                    if(line.isExpandable() && line == LineRenderer.this.hoveredLine && line.isExpandHovered()) {
+                        if(line.isExpanded()) {
+                            line.setExpandHover(false);
+                            line.collapseChildren(IBCTextEditor.this);
+                            LineRenderer.super.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+                        } else {
+                            line.expandChildren(IBCTextEditor.this, e.getY() / IBCTextEditor.LINE_HEIGHT);
+                        }
+                        LineRenderer.super.repaint();
+                    } else {
+                        final int position = (e.getX() - line.getIndent() * Line.INDENT_PIXEL_OFFSET) / LineRenderer.this.charWidth; //font is monospaced
+                        LineRenderer.this.caretPosition = Math.max(0, Math.min(position, line.getString().length()));
+                        IBCTextEditor.this.setActiveLine(line);
+                    }
                 }
-            });
+
+                @Override
+                public void mouseMoved(final MouseEvent e) {
+                    final Line line = this.getLine(e.getPoint()), hover = LineRenderer.this.hoveredLine;
+
+                    boolean repaint = false;
+                    if(hover != line) {
+                        if(hover != null && hover.isExpandHovered()) {
+                            repaint = true;
+                            hover.setExpandHover(false);
+                        }
+                        LineRenderer.this.hoveredLine = line;
+                    }
+                    if(line.isExpandable()) {
+                        final boolean expand = LineRenderer.this.isMouseOverExpand(line, e.getPoint());
+                        if(line.isExpandHovered() != expand) {
+                            line.setExpandHover(expand);
+                            repaint = true;
+                        }
+                    }
+                    if(repaint) {
+                        LineRenderer.super.repaint();
+                        LineRenderer.super.setCursor(line.isExpandHovered() ? Cursor.getPredefinedCursor(Cursor
+                                .DEFAULT_CURSOR) : Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+                    }
+                }
+
+                private Line getLine(final Point point) {
+                    return IBCTextEditor.this.lines.get(point.y / IBCTextEditor.LINE_HEIGHT);
+                }
+            };
+            super.addMouseListener(adapter);
+            super.addMouseMotionListener(adapter);
             super.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyTyped(final KeyEvent e) {
@@ -225,6 +298,26 @@ public class IBCTextEditor extends IEditor {
                     line.setString(line.getString() + String.valueOf(e.getKeyChar()));
                 }
             });
+            AssetManager.loadImage(AssetManager.EXPAND_SMALL_ICON, new AsyncEvent<BufferedImage>() {
+                @Override
+                public void onComplete(final BufferedImage item) {
+                    LineRenderer.this.expand = item;
+                    LineRenderer.this.repaint();
+                }
+            });
+            AssetManager.loadImage(AssetManager.EXPAND_SMALL_HOVER_ICON, new AsyncEvent<BufferedImage>() {
+                @Override
+                public void onComplete(final BufferedImage item) {
+                    LineRenderer.this.expandHover = item;
+                }
+            });
+            AssetManager.loadImage(AssetManager.COLLAPSE_SMALL_ICON, new AsyncEvent<BufferedImage>() {
+                @Override
+                public void onComplete(final BufferedImage item) {
+                    LineRenderer.this.collapse = item;
+                    LineRenderer.this.repaint();
+                }
+            });
         }
 
         private void updateDimensions() {
@@ -233,6 +326,17 @@ public class IBCTextEditor extends IEditor {
 
             super.revalidate();
             super.repaint();
+        }
+
+        private boolean isMouseOverExpand(final Line line, final Point point) {
+            if(!line.isExpandable() || this.expand == null) {
+                return false;
+            }
+            if(IBCTextEditor.this.lines.get(point.y / IBCTextEditor.LINE_HEIGHT) != line) {
+                return false;
+            }
+            final int right = IBCTextEditor.LINE_DEFAULT_INSET + line.getIndent() * Line.INDENT_PIXEL_OFFSET;
+            return point.x > right - this.expand.getWidth() && point.x < right;
         }
 
         @Override
@@ -258,8 +362,26 @@ public class IBCTextEditor extends IEditor {
                     g2d.setColor(IComponent.DEFAULT_FOREGROUND);
                     if(this.caretPosition != -1) {
                         final int xIndentOffset = line.getIndent() * Line.INDENT_PIXEL_OFFSET;
-                        g.fillRect(xIndentOffset + this.caretPosition * this.charWidth + this.charWidth - IBCTextEditor.CARET_WIDTH / 2,
+                        g2d.fillRect(xIndentOffset + this.caretPosition * this.charWidth + this.charWidth - IBCTextEditor.CARET_WIDTH / 2,
                                 i * IBCTextEditor.LINE_HEIGHT, IBCTextEditor.CARET_WIDTH, IBCTextEditor.LINE_HEIGHT);
+                    }
+                }
+                if(line.isExpandable()) {
+                    final BufferedImage image = line.isExpanded() ? this.collapse : (line.isExpandHovered() ? this.expandHover : this.expand);
+                    if(image != null) {
+                        int x = IBCTextEditor.LINE_DEFAULT_INSET + line.getIndent() * Line.INDENT_PIXEL_OFFSET - image.getWidth();
+                        final int y = i * IBCTextEditor.LINE_HEIGHT;
+                        g2d.drawImage(image, x, y, null);
+
+                        if(line.isExpanded()) {
+                            x += image.getWidth() / 2;
+                            g2d.setColor(IBCTextEditor.PROPERTY_COLOR);
+                            g2d.drawLine(x, y, x, y - line.getChildCount() * IBCTextEditor.LINE_HEIGHT + IBCTextEditor.LINE_HEIGHT / 2);
+                            for(int c = 0; c < line.getChildCount(); c++) {
+                                final int j = y - c * IBCTextEditor.LINE_HEIGHT - IBCTextEditor.LINE_HEIGHT / 2;
+                                g2d.drawLine(x, j, x + image.getWidth() / 4, j);
+                            }
+                        }
                     }
                 }
                 line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, IBCTextEditor.LINE_HEIGHT

@@ -22,7 +22,7 @@ public class FieldLine extends Line {
     private final FieldInfo field;
 
     public FieldLine(final FieldInfo field, final int indent) {
-        super(indent);
+        super(indent, true);
 
         assert field != null;
         this.field = field;
@@ -33,15 +33,14 @@ public class FieldLine extends Line {
     }
 
     @Override
-    public void addChildren(final List<Line> lines, final int index) {
-        assert super.children == null : "Remove children before adding";
+    public void expandChildren(final IBCTextEditor textEditor, final int index) {
+        assert super.isExpandable() && super.children != null;
 
-        super.children = new ArrayList<>();
         final List<Property> properties = this.field.getProperties();
         for(final Property property : properties){
             super.children.add(new PropertyLine(property, this));
         }
-        lines.addAll(index, super.children);
+        textEditor.addLines(super.children, index);
     }
 
     @Override

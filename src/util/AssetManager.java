@@ -20,6 +20,9 @@ public class AssetManager {
     public static final String EXPANDED_ICON = AssetManager.RESOURCE_FOLDER + "expanded.png";
     public static final String COLLAPSED_ICON = AssetManager.RESOURCE_FOLDER + "collapsed.png";
     public static final String MENU_EXPAND_ICON = AssetManager.RESOURCE_FOLDER + "menu_expand.png";
+    public static final String EXPAND_SMALL_ICON = AssetManager.RESOURCE_FOLDER + "expand_small.png";
+    public static final String EXPAND_SMALL_HOVER_ICON = AssetManager.RESOURCE_FOLDER + "expand_small_hover.png";
+    public static final String COLLAPSE_SMALL_ICON = AssetManager.RESOURCE_FOLDER + "collapse_small.png";
 
     public static final String FOLDER_ICON = AssetManager.RESOURCE_FOLDER + "folder.png";
     public static final String CLASS_ICON = AssetManager.RESOURCE_FOLDER + "class.png";

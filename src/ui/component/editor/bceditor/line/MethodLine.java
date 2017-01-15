@@ -8,6 +8,7 @@ import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Exceptions;
 import project.filetype.classtype.member.attributes._Signature;
 import project.property.Property;
+import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -27,7 +28,7 @@ public class MethodLine extends Line {
     private Set<String> genericNames = null;
 
     public MethodLine(final MethodInfo method, final ClassLine classLine, final int indent) {
-        super(indent);
+        super(indent, true);
 
         assert method != null && classLine != null;
         this.method = method;
@@ -39,15 +40,14 @@ public class MethodLine extends Line {
     }
 
     @Override
-    public void addChildren(final List<Line> lines, final int index) {
-        assert super.children == null : "Remove children before adding";
+    public void expandChildren(final IBCTextEditor textEditor, final int index) {
+        assert super.isExpandable() && super.children != null;
 
-        super.children = new ArrayList<>();
         final List<Property> properties = this.method.getProperties();
         for(final Property property : properties){
             super.children.add(new PropertyLine(property, this));
         }
-        lines.addAll(index, super.children);
+        textEditor.addLines(super.children, index);
     }
 
     @Override
