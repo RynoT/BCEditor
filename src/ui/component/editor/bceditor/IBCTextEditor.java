@@ -7,6 +7,8 @@ import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
 import project.filetype.classtype.opcode.Instruction;
+import project.filetype.classtype.opcode.Operand;
+import project.filetype.classtype.opcode.OperandType;
 import ui.component.IComponent;
 import ui.component.IScrollPanel;
 import ui.component.editor.IEditor;
@@ -36,6 +38,7 @@ public class IBCTextEditor extends IEditor {
     public static final int CARET_WIDTH = 2;
     public static final int SIDE_BAR_TEXT_PADDING = 6;
     public static final int HORIZONTAL_SCROLL_OFFSET = 10;
+    public static final int BRANCH_LINE_OFFSET = 12;
 
     public static final Color LINE_ACTIVE_COLOR = new Color(55, 55, 55);
 
@@ -92,10 +95,6 @@ public class IBCTextEditor extends IEditor {
 
         assert this.lineRenderer.caretPosition != -1;
         line.onActivate(this, this.lineRenderer.caretPosition);
-
-        if(line instanceof InstructionLine) {
-            final InstructionLine instruction = (InstructionLine) line;
-        }
     }
 
     public void addLines(final List<Line> lines, final int index) {
@@ -126,6 +125,8 @@ public class IBCTextEditor extends IEditor {
 
     public void removeLines(final List<Line> lines) {
         this.lines.removeAll(lines);
+
+        this.lineRenderer.updateDimensions();
         this.lineRenderer.repaint();
         this.sideBar.repaint();
     }
@@ -351,16 +352,50 @@ public class IBCTextEditor extends IEditor {
             final List<Line> lines = IBCTextEditor.this.lines;
             for(int i = min; i < Math.min(lines.size(), max); i++) {
                 final Line line = lines.get(i);
+                // Render unique active-line elements
                 if(IBCTextEditor.this.active == line) {
                     g2d.setColor(IBCTextEditor.LINE_ACTIVE_COLOR);
                     g2d.fillRect(0, i * IBCTextEditor.LINE_HEIGHT, super.getWidth(), IBCTextEditor.LINE_HEIGHT);
                     g2d.setColor(IComponent.DEFAULT_FOREGROUND);
+                    // Render caret if set
                     if(this.caretPosition != -1) {
                         final int xIndentOffset = line.getIndent() * Line.INDENT_PIXEL_OFFSET;
                         g2d.fillRect(xIndentOffset + this.caretPosition * this.charWidth + this.charWidth - IBCTextEditor.CARET_WIDTH / 2,
                                 i * IBCTextEditor.LINE_HEIGHT, IBCTextEditor.CARET_WIDTH, IBCTextEditor.LINE_HEIGHT);
                     }
+                    // Render branches
+                    if(line instanceof InstructionLine) {
+                        final InstructionLine instruction = (InstructionLine) line;
+                        g2d.setColor(IComponent.DEFAULT_BACKGROUND_HIGHLIGHT);
+
+                        final int x = IBCTextEditor.LINE_DEFAULT_INSET + line.getIndent() * Line.INDENT_PIXEL_OFFSET - IBCTextEditor.BRANCH_LINE_OFFSET;
+                        final int y = i * IBCTextEditor.LINE_HEIGHT + IBCTextEditor.LINE_HEIGHT / 2;
+                        for(final Operand operand : instruction.getInstruction().getOperands()) {
+                            if(operand.getType() != OperandType.BRANCH_OFFSET) {
+                                continue;
+                            }
+                            final int pcOffset = operand.getValue();
+                            assert pcOffset != 0;
+                            for(int j = i; ; ) {
+                                if(j != i) {
+                                    final Line next = lines.get(j);
+                                    if(!(next instanceof InstructionLine)) {
+                                        break;
+                                    }
+                                    final int nextPc = ((InstructionLine) next).getInstruction().getPc();
+                                    if(nextPc == instruction.getInstruction().getPc() + pcOffset) {
+                                        final int y2 = j * IBCTextEditor.LINE_HEIGHT + IBCTextEditor.LINE_HEIGHT / 2;
+                                        g2d.drawLine(x, y, x, y2);
+                                        g2d.drawLine(x, y2, x + IBCTextEditor.BRANCH_LINE_OFFSET / 2, y2);
+                                        break;
+                                    }
+                                }
+                                j += pcOffset < 0 ? -1 : 1;
+                            }
+                        }
+                    }
                 }
+                // Render arrow next to expandable lines
                 if(line.isExpandable()) {
                     final BufferedImage image = line.isExpanded() ? this.collapse : (line.isExpandHovered() ? this.expandHover : this.expand);
                     if(image != null) {
@@ -382,10 +417,14 @@ public class IBCTextEditor extends IEditor {
                 // Render the line
                 final int lineY = IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2;
                 line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, lineY);
-                if(line.getComment() != null && line instanceof InstructionLine) {
-                    g2d.setColor(IBCTextEditor.STRING_COLOR);
-                    g2d.drawString(line.getComment(), ((InstructionLine) line).getMethodLine()
-                            .getMaxInstructionWidth() + Line.INDENT_PIXEL_OFFSET / 2, lineY);
+                // Render additional attributes of the line
+                if(line instanceof InstructionLine) {
+                    // Render the line comment
+                    if(line.getComment() != null) {
+                        g2d.setColor(IBCTextEditor.STRING_COLOR);
+                        g2d.drawString(line.getComment(), ((InstructionLine) line).getMethodLine()
+                                .getMaxInstructionWidth() + Line.INDENT_PIXEL_OFFSET / 2, lineY);
+                    }
                 }
             }
         }
