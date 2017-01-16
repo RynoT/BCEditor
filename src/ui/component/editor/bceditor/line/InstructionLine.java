@@ -37,6 +37,16 @@ public class InstructionLine extends Line {
     }
 
     @Override
+    public void onActivate(final IBCTextEditor textEditor, final int caretIndex) {
+        for(final Operand operand : this.instruction.getOperands()){
+            if(operand.getType() == OperandType.INDEX_POOL){
+                textEditor.getEditor().getPoolEditor().setActiveRow(operand.getValue());
+                break;
+            }
+        }
+    }
+
+    @Override
     public void update(final ConstantPool pool) {
         final StringBuilder sb = new StringBuilder();
         final String mnemonic = this.instruction.getOpcode().getMnemonic();
