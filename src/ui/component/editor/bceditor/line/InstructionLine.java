@@ -57,6 +57,9 @@ public class InstructionLine extends Line {
                 final Operand operand = this.instruction.getOperands().get(i);
                 if(operand.getType() == OperandType.INDEX_POOL) {
                     sb.append(IBCEditor.formatIndexPool(operand.getValue()));
+
+                    // Set the comment of this line equal to the pool entry
+                    super.setComment(pool.getEntry(operand.getValue()).getContentString(pool));
                 } else if(operand.getType() == OperandType.INDEX_LOCAL){
                     sb.append(IBCEditor.formatIndexLocal(operand.getValue()));
                 } else if(operand.getType() == OperandType.BRANCH_OFFSET) {
@@ -79,8 +82,8 @@ public class InstructionLine extends Line {
         if(this.instruction.getOperandCount() > 0){
             int offset = mnemonic.length() + 1;
             final String[] operands = str.substring(offset).split("\\s");
-            assert operands.length == this.instruction.getOperandCount();
-            for(int i = 0; i < operands.length; i++){
+            assert operands.length >= this.instruction.getOperandCount();
+            for(int i = 0; i < this.instruction.getOperandCount(); i++){
                 final OperandType type = this.instruction.getOperands().get(i).getType();
                 int length = operands[i].length();
                 if(i < operands.length - 1){

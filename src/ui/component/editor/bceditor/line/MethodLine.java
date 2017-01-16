@@ -12,8 +12,9 @@ import ui.component.editor.bceditor.IBCTextEditor;
 
 import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.util.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.
@@ -26,6 +27,7 @@ public class MethodLine extends Line {
     private final ClassLine classLine;
 
     private Set<String> genericNames = null;
+    private int maxInstructionWidth = 0;
 
     public MethodLine(final MethodInfo method, final ClassLine classLine, final int indent) {
         super(indent, true);
@@ -35,8 +37,16 @@ public class MethodLine extends Line {
         this.classLine = classLine;
     }
 
-    public Set<String> getGenericNames(){
+    public Set<String> getGenericNames() {
         return this.genericNames;
+    }
+
+    public int getMaxInstructionWidth() {
+        return this.maxInstructionWidth;
+    }
+
+    public void setMaxInstructionWidth(final int width) {
+        this.maxInstructionWidth = width;
     }
 
     @Override
@@ -44,7 +54,7 @@ public class MethodLine extends Line {
         assert super.isExpandable() && super.children != null;
 
         final List<Property> properties = this.method.getProperties();
-        for(final Property property : properties){
+        for(final Property property : properties) {
             super.children.add(new PropertyLine(property, this));
         }
         textEditor.addLines(super.children, index);
@@ -56,7 +66,7 @@ public class MethodLine extends Line {
 
         assert this.classLine != null && this.classLine.getGenericNames() != null;
         this.genericNames = new HashSet<>();
-        if(this.classLine.getGenericNames().size() > 0){
+        if(this.classLine.getGenericNames().size() > 0) {
             //inherit all generic types from class
             this.genericNames.addAll(this.classLine.getGenericNames());
         }

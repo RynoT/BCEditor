@@ -106,8 +106,14 @@ public class IBCTextEditor extends IEditor {
             int maxWidth = IBCTextEditor.this.lineRenderer.maxLineWidth;
             for(final Line line : lines) {
                 line.update(this.type.getConstantPool());
-                maxWidth = Math.max(IBCTextEditor.LINE_DEFAULT_INSET + line
-                        .getWidth(metrics) + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET, maxWidth);
+
+                final int width = IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics);
+                // Let the method know which instruction takes the largest width so we know where to render the comments
+                if(line instanceof InstructionLine && line.getComment() != null
+                        && width > ((InstructionLine) line).getMethodLine().getMaxInstructionWidth()) {
+                    ((InstructionLine) line).getMethodLine().setMaxInstructionWidth(width);
+                }
+                maxWidth = Math.max(width + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET, maxWidth);
             }
             if(maxWidth != this.lineRenderer.maxLineWidth) {
                 this.lineRenderer.maxLineWidth = maxWidth;
@@ -373,9 +379,14 @@ public class IBCTextEditor extends IEditor {
                         }
                     }
                 }
-                line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, IBCTextEditor.LINE_HEIGHT
-                        * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2);
-                //g2d.fillRect(0, IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2, 100, 2);
+                // Render the line
+                final int lineY = IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2;
+                line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, lineY);
+                if(line.getComment() != null && line instanceof InstructionLine) {
+                    g2d.setColor(IBCTextEditor.STRING_COLOR);
+                    g2d.drawString(line.getComment(), ((InstructionLine) line).getMethodLine()
+                            .getMaxInstructionWidth() + Line.INDENT_PIXEL_OFFSET / 2, lineY);
+                }
             }
         }
     }

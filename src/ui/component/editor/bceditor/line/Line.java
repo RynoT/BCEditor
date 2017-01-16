@@ -24,7 +24,7 @@ public abstract class Line {
     static final Map<String, Color> KEYWORD_COLOR_MAP = new HashMap<>(40);
     static final Map<String, Color> SYMBOL_COLOR_MAP = new HashMap<>(2);
 
-    private String string;
+    private String string, comment;
     protected AttributedString attributes;
     protected int indent = 0;
 
@@ -67,6 +67,10 @@ public abstract class Line {
         return this.string;
     }
 
+    public String getComment() {
+        return this.comment;
+    }
+
     public boolean isExpanded() {
         return this.children.size() > 0;
     }
@@ -93,6 +97,10 @@ public abstract class Line {
 
     public void setString(final String string) {
         this.setString(string, new AttributedString(string));
+    }
+
+    public void setComment(final String comment) {
+        this.comment = comment;
     }
 
     protected void setString(final String string, final AttributedString attributes) {
