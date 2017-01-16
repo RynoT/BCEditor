@@ -345,9 +345,10 @@ public class IBCTextEditor extends IEditor {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             final Point viewPosition = IBCTextEditor.this.scrollPanel.getViewport().getViewPosition();
+            final Dimension viewSize = IBCTextEditor.this.scrollPanel.getViewport().getExtentSize();
             final int min = viewPosition.y / IBCTextEditor.LINE_HEIGHT;
-            final int max = (viewPosition.y + super.getHeight()) / IBCTextEditor.LINE_HEIGHT;
-
+            final int max = (viewPosition.y + viewSize.height + IBCTextEditor.LINE_HEIGHT) / IBCTextEditor.LINE_HEIGHT;
+            
             final int textHeight = g.getFontMetrics().getHeight() / 2;
             final List<Line> lines = IBCTextEditor.this.lines;
             for(int i = min; i < Math.min(lines.size(), max); i++) {
