@@ -99,36 +99,40 @@ public class IBCTextEditor extends IEditor {
 
     public void addLines(final List<Line> lines, final int index) {
         Async.submit(() -> {
-            this.lines.addAll(index, lines);
+            synchronized(this.lines) {
+                this.lines.addAll(index, lines);
 
-            final FontMetrics metrics = this.lineRenderer.getFontMetrics(this.lineRenderer.getFont());
-            int maxWidth = IBCTextEditor.this.lineRenderer.maxLineWidth;
-            for(final Line line : lines) {
-                line.update(this.type.getConstantPool());
+                final FontMetrics metrics = this.lineRenderer.getFontMetrics(this.lineRenderer.getFont());
+                int maxWidth = IBCTextEditor.this.lineRenderer.maxLineWidth;
+                for(final Line line : lines) {
+                    line.update(this.type.getConstantPool());
 
-                final int width = IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics);
-                // Let the method know which instruction takes the largest width so we know where to render the comments
-                if(line instanceof InstructionLine && line.getComment() != null
-                        && width > ((InstructionLine) line).getMethodLine().getMaxInstructionWidth()) {
-                    ((InstructionLine) line).getMethodLine().setMaxInstructionWidth(width);
+                    final int width = IBCTextEditor.LINE_DEFAULT_INSET + line.getWidth(metrics);
+                    // Let the method know which instruction takes the largest width so we know where to render the comments
+                    if(line instanceof InstructionLine && line.getComment() != null
+                            && width > ((InstructionLine) line).getMethodLine().getMaxInstructionWidth()) {
+                        ((InstructionLine) line).getMethodLine().setMaxInstructionWidth(width);
+                    }
+                    maxWidth = Math.max(width + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET, maxWidth);
                 }
-                maxWidth = Math.max(width + IBCTextEditor.HORIZONTAL_SCROLL_OFFSET, maxWidth);
+                if(maxWidth != this.lineRenderer.maxLineWidth) {
+                    this.lineRenderer.maxLineWidth = maxWidth;
+                }
+                this.lineRenderer.updateDimensions();
+                this.lineRenderer.repaint();
+                this.sideBar.repaint();
             }
-            if(maxWidth != this.lineRenderer.maxLineWidth) {
-                this.lineRenderer.maxLineWidth = maxWidth;
-            }
-            this.lineRenderer.updateDimensions();
-            this.lineRenderer.repaint();
-            this.sideBar.repaint();
         }, AsyncType.MULTI);
     }
 
     public void removeLines(final List<Line> lines) {
-        this.lines.removeAll(lines);
+        synchronized(this.lines) {
+            this.lines.removeAll(lines);
 
-        this.lineRenderer.updateDimensions();
-        this.lineRenderer.repaint();
-        this.sideBar.repaint();
+            this.lineRenderer.updateDimensions();
+            this.lineRenderer.repaint();
+            this.sideBar.repaint();
+        }
     }
 
     public void populate() {
