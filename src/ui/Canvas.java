@@ -2,18 +2,18 @@ package ui;
 
 import project.Project;
 import project.ZipProject;
-import project.filetype.FileType;
 import ui.component.*;
-import ui.component.explorer.IFileNode;
 import util.AssetManager;
 import util.async.Async;
 import util.async.AsyncType;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -36,6 +36,8 @@ public class Canvas extends JFrame {
 
     // Canvas is a singleton. Accessed using Canvas.getCanvas()
     private static final Canvas canvas = new Canvas();
+
+    private String lastDirectory = System.getProperty("user.dir");
 
     private int activeMenuCount = 0;
     private IMenu[] activeMenu = new IMenu[Canvas.MAX_ACTIVE_MENUS];
@@ -76,12 +78,12 @@ public class Canvas extends JFrame {
         this.activeMenu[this.activeMenuCount++] = menu;
     }
 
-    public static void setProject(final Project project){
+    public static void setProject(final Project project) {
         assert (project == null || project.isLoaded());
         assert (SwingUtilities.isEventDispatchThread());
 
         final IProjectExplorer explorer = Canvas.getProjectExplorer();
-        if(explorer.getProject() != null){
+        if(explorer.getProject() != null) {
             explorer.clearProject();
 
             Canvas.getFileViewer().clearTabs();
@@ -120,6 +122,51 @@ public class Canvas extends JFrame {
                             {
                                 open.setMnemonic(KeyEvent.VK_O);
                                 open.getInternalButton().addEvent(() -> {
+                                    final JFileChooser chooser = new JFileChooser(this.lastDirectory);
+                                    chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                                    chooser.setFileFilter(new FileFilter() {
+                                        @Override
+                                        public boolean accept(final File file) {
+                                            final String name = file.getName().toLowerCase();
+                                            return file.isDirectory() || name.endsWith(".jar") || name.endsWith(".zip") || name.endsWith(".class");
+                                        }
+
+                                        @Override
+                                        public String getDescription() {
+                                            return "Java (*.CLASS;*.JAR;*.ZIP)";
+                                        }
+                                    });
+                                    if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                                        final File chosen = chooser.getSelectedFile();
+                                        assert chosen != null && chosen.exists();
+                                        this.lastDirectory = chooser.getCurrentDirectory().getAbsolutePath();
+
+                                        final Project project;
+                                        if(chosen.isDirectory()) {
+                                            assert false; //TODO folder project
+                                            project = null;
+                                        } else {
+                                            project = new ZipProject(chosen.getAbsolutePath());
+                                        }
+                                        Async.submit(() -> {
+                                            try {
+                                                if(project.load()) {
+                                                    SwingUtilities.invokeLater(() -> Canvas.setProject(project));
+                                                } else {
+                                                    System.err.println("[Project] An error occurred whilst loading the project");
+                                                }
+                                            } catch(final IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }, AsyncType.SINGLE);
+                                    }
+                                });
+                            }
+                            menu.addItem(open);
+
+                            final IMenuItem openTest = new IMenuItem("Open Test", AssetManager.MENU_EXPAND_ICON);
+                            {
+                                openTest.getInternalButton().addEvent(() -> {
                                     final Project project = new ZipProject("../Test.jar");
                                     Async.submit(() -> {
                                         try {
@@ -128,13 +175,12 @@ public class Canvas extends JFrame {
                                             } else {
                                                 System.err.println("[Project] An error occurred whilst loading the project");
                                             }
-                                        } catch(final IOException e) {
-                                            e.printStackTrace();
+                                        } catch(final IOException ignored) {
                                         }
                                     }, AsyncType.SINGLE);
                                 });
                             }
-                            menu.addItem(open);
+                            menu.addItem(openTest);
                             //menu.addItem(new ISeparator(IOrientation.EAST));
                         }
                         this.pushActiveMenu(menu);
