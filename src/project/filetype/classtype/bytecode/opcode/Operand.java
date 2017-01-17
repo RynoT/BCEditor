@@ -1,4 +1,4 @@
-package project.filetype.classtype.opcode;
+package project.filetype.classtype.bytecode.opcode;
 
 import java.io.DataInputStream;
 import java.io.IOException;

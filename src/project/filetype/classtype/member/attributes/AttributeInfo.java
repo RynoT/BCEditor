@@ -6,6 +6,8 @@ import project.property.Property;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by Ryan Thomson on 23/12/2016.
@@ -38,8 +40,6 @@ public abstract class AttributeInfo {
     AttributeInfo(final int nameIndex) {
         this.nameIndex = nameIndex;
     }
-
-    //public String getContentString(final ConstantPool pool) { return null; }
 
     public Property[] getProperties() { return null; }
 

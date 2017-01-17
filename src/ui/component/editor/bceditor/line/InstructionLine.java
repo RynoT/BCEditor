@@ -1,16 +1,13 @@
 package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.constantpool.ConstantPool;
-import project.filetype.classtype.opcode.Instruction;
-import project.filetype.classtype.opcode.Operand;
-import project.filetype.classtype.opcode.OperandType;
+import project.filetype.classtype.bytecode.Instruction;
+import project.filetype.classtype.bytecode.opcode.Operand;
+import project.filetype.classtype.bytecode.opcode.OperandType;
 import ui.component.editor.bceditor.IBCEditor;
 import ui.component.editor.bceditor.IBCTextEditor;
 
-import java.awt.*;
 import java.awt.font.TextAttribute;
-import java.util.*;
-import java.util.List;
 
 /**
  * Created by Ryan Thomson on 30/12/2016.

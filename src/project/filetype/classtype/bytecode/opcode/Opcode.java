@@ -1,4 +1,4 @@
-package project.filetype.classtype.opcode;
+package project.filetype.classtype.bytecode.opcode;
 
 /**
  * Created by Ryan Thomson on 28/12/2016.

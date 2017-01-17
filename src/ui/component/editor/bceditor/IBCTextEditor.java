@@ -1,14 +1,12 @@
 package ui.component.editor.bceditor;
 
 import project.filetype.ClassType;
-import project.filetype.classtype.ClassFormat;
+import project.filetype.classtype.bytecode.BytecodeAnalyzer;
+import project.filetype.classtype.bytecode.Instruction;
+import project.filetype.classtype.bytecode.opcode.Operand;
+import project.filetype.classtype.bytecode.opcode.OperandType;
 import project.filetype.classtype.member.FieldInfo;
 import project.filetype.classtype.member.MethodInfo;
-import project.filetype.classtype.member.attributes.AttributeInfo;
-import project.filetype.classtype.member.attributes._Code;
-import project.filetype.classtype.opcode.Instruction;
-import project.filetype.classtype.opcode.Operand;
-import project.filetype.classtype.opcode.OperandType;
 import ui.component.IComponent;
 import ui.component.IScrollPanel;
 import ui.component.editor.IEditor;
@@ -53,7 +51,12 @@ public class IBCTextEditor extends IEditor {
 
     public static final Color SIDE_BAR_FOREGROUND = new Color(135, 135, 135);
     public static final BasicStroke SIDE_BAR_STROKE = new BasicStroke(1, BasicStroke
-            .CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{ 1f, 2f }, 0.0f);
+            .CAP_BUTT, BasicStroke.JOIN_ROUND, 1.0f, new float[]{ 1.0f, 2.0f }, 0.0f);
+
+    public static final Color TEXT_ERROR_COLOR = new Color(230, 195, 195);
+    public static final Color UNDERLINE_ERROR_COLOR = new Color(200, 20, 20, 255);
+    public static final BasicStroke UNDERLINE_STROKE = new BasicStroke(2.4f, BasicStroke.CAP_BUTT,
+            BasicStroke.JOIN_ROUND, 1.0f, new float[]{ 3.0f, 3.0f }, 0.0f);
 
     private final ClassType type;
 
@@ -149,18 +152,18 @@ public class IBCTextEditor extends IEditor {
         }
         int maxPc = 0;
         for(final MethodInfo method : this.type.getMethods()) {
-            final MethodLine methodLine = new MethodLine(method, classLine, 1);
+            final BytecodeAnalyzer analyzer = new BytecodeAnalyzer(method);
+            final MethodLine methodLine = new MethodLine(method, analyzer, classLine, 1);
             lines.add(methodLine);
 
-            final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, method.getAttributes(), this.type.getConstantPool());
-            if(code != null) {
-                final List<Instruction> instructions = ClassFormat.format(code.getRawCode());
-                for(final Instruction instruction : instructions) {
+            analyzer.analyze(this.type.getConstantPool());
+            if(analyzer.getInstructionCount() > 0) {
+                for(final Instruction instruction : analyzer.getInstructions()) {
                     lines.add(new InstructionLine(instruction, methodLine, 2));
                 }
                 lines.add(new DefaultLine("}", 1));
 
-                maxPc = Math.max(maxPc, instructions.get(instructions.size() - 1).getPc());
+                maxPc = Math.max(maxPc, analyzer.getInstructions().get(analyzer.getInstructionCount() - 1).getPc());
             }
             lines.add(new EmptyLine());
         }
@@ -345,6 +348,7 @@ public class IBCTextEditor extends IEditor {
 
             final Graphics2D g2d = (Graphics2D) g;
             g2d.setFont(super.getFont());
+            g2d.setStroke(new BasicStroke(1.0f));
             g2d.setColor(IComponent.DEFAULT_FOREGROUND);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -352,7 +356,7 @@ public class IBCTextEditor extends IEditor {
             final Dimension viewSize = IBCTextEditor.this.scrollPanel.getViewport().getExtentSize();
             final int min = viewPosition.y / IBCTextEditor.LINE_HEIGHT;
             final int max = (viewPosition.y + viewSize.height + IBCTextEditor.LINE_HEIGHT) / IBCTextEditor.LINE_HEIGHT;
-            
+
             final int textHeight = g.getFontMetrics().getHeight() / 2;
             final List<Line> lines = IBCTextEditor.this.lines;
             for(int i = min; i < Math.min(lines.size(), max); i++) {
@@ -421,9 +425,20 @@ public class IBCTextEditor extends IEditor {
                 }
                 // Render the line
                 final int lineY = IBCTextEditor.LINE_HEIGHT * (i + 1) - (IBCTextEditor.LINE_HEIGHT - textHeight) / 2;
-                line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, lineY);
+                Color textColor = IBCTextEditor.DEFAULT_FOREGROUND;
+
                 // Render additional attributes of the line
                 if(line instanceof InstructionLine) {
+                    final Instruction instruction = ((InstructionLine) line).getInstruction();
+                    if(instruction.isAttributeSet(Instruction.ATTRIBUTE_ERROR)) {
+                        final int x = IBCTextEditor.LINE_DEFAULT_INSET + line.getIndentWidth();
+                        g2d.setColor(IBCTextEditor.UNDERLINE_ERROR_COLOR);
+                        g2d.setStroke(IBCTextEditor.UNDERLINE_STROKE);
+                        g2d.drawLine(x, lineY + 3, x + g.getFontMetrics().stringWidth(line.getString()), lineY + 3);
+
+                        textColor = IBCTextEditor.TEXT_ERROR_COLOR;
+                    }
+
                     // Render the line comment
                     if(line.getComment() != null) {
                         g2d.setColor(IBCTextEditor.STRING_COLOR);
@@ -431,6 +446,8 @@ public class IBCTextEditor extends IEditor {
                                 .getMaxInstructionWidth() + Line.INDENT_PIXEL_OFFSET / 2, lineY);
                     }
                 }
+                g2d.setColor(textColor);
+                line.render(g2d, IBCTextEditor.LINE_DEFAULT_INSET, lineY);
             }
         }
     }

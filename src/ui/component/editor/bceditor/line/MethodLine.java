@@ -2,6 +2,7 @@ package ui.component.editor.bceditor.line;
 
 import project.filetype.classtype.AccessFlags;
 import project.filetype.classtype.Descriptor;
+import project.filetype.classtype.bytecode.BytecodeAnalyzer;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
@@ -25,20 +26,26 @@ public class MethodLine extends Line {
 
     private final MethodInfo method;
     private final ClassLine classLine;
+    private final BytecodeAnalyzer analyzer;
 
     private Set<String> genericNames = null;
     private int maxInstructionWidth = 0;
 
-    public MethodLine(final MethodInfo method, final ClassLine classLine, final int indent) {
+    public MethodLine(final MethodInfo method, final BytecodeAnalyzer analyzer, final ClassLine classLine, final int indent) {
         super(indent, true);
 
-        assert method != null && classLine != null;
+        assert method != null && analyzer != null && classLine != null;
         this.method = method;
+        this.analyzer = analyzer;
         this.classLine = classLine;
     }
 
     public Set<String> getGenericNames() {
         return this.genericNames;
+    }
+
+    public BytecodeAnalyzer getAnalyzer() {
+        return this.analyzer;
     }
 
     public int getMaxInstructionWidth() {

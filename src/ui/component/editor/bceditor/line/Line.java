@@ -62,6 +62,10 @@ public abstract class Line {
         return this.indent;
     }
 
+    public int getIndentWidth() {
+        return this.indent * Line.INDENT_PIXEL_OFFSET;
+    }
+
     public String getString() {
         assert this.string != null;
         return this.string;
@@ -126,7 +130,6 @@ public abstract class Line {
 
     public final void render(final Graphics2D g2d, final int x, final int y) {
         assert this.string != null;
-        g2d.setColor(IBCTextEditor.DEFAULT_FOREGROUND);
         g2d.drawString(this.attributes.getIterator(), x + this.indent * Line.INDENT_PIXEL_OFFSET, y);
     }
 
