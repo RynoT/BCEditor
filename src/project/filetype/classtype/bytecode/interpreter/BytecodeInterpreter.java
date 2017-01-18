@@ -1,17 +1,18 @@
 package project.filetype.classtype.bytecode.interpreter;
 
 import project.filetype.classtype.AccessFlags;
+import project.filetype.classtype.Descriptor;
 import project.filetype.classtype.bytecode.BytecodeAnalyzer;
 import project.filetype.classtype.bytecode.Instruction;
-import project.filetype.classtype.bytecode.interpreter.item.InvalidItem;
-import project.filetype.classtype.bytecode.interpreter.item.MethodItem;
-import project.filetype.classtype.bytecode.interpreter.item.NumberItem;
-import project.filetype.classtype.bytecode.interpreter.item.ObjectItem;
+import project.filetype.classtype.bytecode.interpreter.item.*;
 import project.filetype.classtype.bytecode.opcode.Opcode;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Ryan Thomson on 18/01/2017.
@@ -31,10 +32,19 @@ public class BytecodeInterpreter {
         // Reset attributes for instructions
         analyzer.getInstructions().forEach(instruction -> instruction.setAttributes(0x0));
 
+        final boolean isStatic = AccessFlags.containsFlag(method.getAccessFlags(), AccessFlags.ACC_STATIC);
         final MethodStack stack = new MethodStack(code.getMaxStack());
-        final MethodLocal local = new MethodLocal(code.getMaxLocals());
-        if(!AccessFlags.containsFlag(method.getAccessFlags(), AccessFlags.ACC_STATIC)) { //if method is not static
+        final MethodLocal local = new MethodLocal(isStatic ? code.getMaxLocals() : code.getMaxLocals() + 1);
+
+        if(!isStatic) { //if method is not static
             local.set(new ObjectItem(null, "this"), 0); //local 0 is always 'this' for non-static methods
+        }
+        final MethodItem[] parameters = BytecodeInterpreter.getParameters(method, pool);
+        if(parameters.length > 0) {
+            int index = isStatic ? 0 : 1;
+            for(final MethodItem item : parameters) {
+                local.set(item, index++);
+            }
         }
         //if(method.get)
         for(final Instruction instruction : analyzer.getInstructions()) {
@@ -43,7 +53,7 @@ public class BytecodeInterpreter {
                 // Const values
                 case _iconst_m1:
                     //m1 is special and will not work with our processConst algorithm. We must handle it separately.
-                    stack.push(new NumberItem(instruction, String.valueOf(-1), NumberItem.NumberType.INTEGER));
+                    stack.push(new NumberItem(instruction, String.valueOf(-1), PrimitiveType.INTEGER));
                     break;
                 case _iconst_0:
                 case _iconst_1:
@@ -60,6 +70,7 @@ public class BytecodeInterpreter {
                 case _dconst_1:
                     BytecodeInterpreter.processConst(instruction, stack);
                     break;
+
                 // Load values
                 case _iload:
                 case _fload:
@@ -99,10 +110,10 @@ public class BytecodeInterpreter {
         System.out.println("[BytecodeInterpreter] Error: " + message + " (instruction: " + instruction.toString() + ")");
     }
 
-    private static void processConst(final Instruction instruction, final MethodStack stack){
+    private static void processConst(final Instruction instruction, final MethodStack stack) {
         final String value = BytecodeInterpreter.getOpcodeIndex(instruction.getOpcode());
         assert value.length() == 1 : "Invalid value: " + value;
-        final NumberItem.NumberType type = NumberItem.NumberType.get(instruction.getOpcode().name().charAt(1));
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         assert type != null : "Invalid opcode: " + instruction.getOpcode().name();
         stack.push(new NumberItem(instruction, value, type));
     }
@@ -110,16 +121,16 @@ public class BytecodeInterpreter {
     private static void processLoad(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
         final int index;
         // Get index of local entry
-        if(predefined){
+        if(predefined) {
             index = Integer.parseInt(BytecodeInterpreter.getOpcodeIndex(instruction.getOpcode()));
-        } else if(instruction.getOperandCount() == 0){
+        } else if(instruction.getOperandCount() == 0) {
             stack.push(new InvalidItem(instruction));
             BytecodeInterpreter.setError(instruction, "Index operand not set");
             return;
         } else {
             index = instruction.getOperands().get(0).getValue();
         }
-        final NumberItem.NumberType type = NumberItem.NumberType.get(instruction.getOpcode().name().charAt(1));
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         assert type != null : "Invalid opcode: " + instruction.getOpcode().name();
 
         final MethodItem item = local.get(index);
@@ -132,5 +143,27 @@ public class BytecodeInterpreter {
         } else {
             stack.push(new NumberItem(instruction, item.getValue(), type));
         }
+    }
+
+    private static MethodItem[] getParameters(final MethodInfo method, final ConstantPool pool) {
+        final List<MethodItem> items = new ArrayList<>();
+        final String descriptor = Descriptor.decode(method.getTagDescriptor(pool).getValue());
+        for(final String sp : descriptor.substring(1, descriptor.lastIndexOf(')')).split(",\\s")) {
+            int dimensions = 0;
+            for(int i = 0; i < sp.length(); i++) {
+                if(sp.charAt(i) == '[') {
+                    dimensions++;
+                }
+            }
+            final PrimitiveType type = PrimitiveType.get(sp);
+            if(dimensions != 0){
+                items.add(new ArrayRefItem(null, type, dimensions));
+            } else if(type != PrimitiveType.OBJECT) {
+                items.add(new NumberItem(null, null, type));
+            } else { //if type is object
+                items.add(new ObjectItem(null, null));
+            }
+        }
+        return items.toArray(new MethodItem[items.size()]);
     }
 }

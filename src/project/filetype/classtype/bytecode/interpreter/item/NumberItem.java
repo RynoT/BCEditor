@@ -8,13 +8,14 @@ import project.filetype.classtype.bytecode.Instruction;
 public class NumberItem extends MethodItem {
 
     private final String value;
-    private final NumberType type;
+    private final PrimitiveType type;
 
-    public NumberItem(final Instruction reference, final String value, final NumberType type) {
+    public NumberItem(final Instruction reference, final String value, final PrimitiveType type) {
         super(reference);
 
         this.value = value;
         this.type = type;
+        assert type != PrimitiveType.OBJECT;
     }
 
     @Override
@@ -22,25 +23,7 @@ public class NumberItem extends MethodItem {
         return this.value;
     }
 
-    public NumberType getType() {
+    public PrimitiveType getType() {
         return this.type;
-    }
-
-    public enum NumberType {
-        INTEGER, FLOAT, LONG, DOUBLE;
-
-        public static NumberType get(final char c) {
-            switch(c) {
-                case 'i':
-                    return NumberType.INTEGER;
-                case 'f':
-                    return NumberType.FLOAT;
-                case 'l':
-                    return NumberType.LONG;
-                case 'd':
-                    return NumberType.DOUBLE;
-            }
-            return null;
-        }
     }
 }
