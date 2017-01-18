@@ -1,5 +1,7 @@
 package project.filetype.classtype.bytecode;
 
+import project.filetype.classtype.AccessFlags;
+import project.filetype.classtype.bytecode.interpreter.BytecodeInterpreter;
 import project.filetype.classtype.bytecode.opcode.Opcode;
 import project.filetype.classtype.bytecode.opcode.Operand;
 import project.filetype.classtype.bytecode.opcode.OperandType;
@@ -28,6 +30,10 @@ public class BytecodeAnalyzer {
         this.method = method;
     }
 
+    public MethodInfo getMethod() {
+        return this.method;
+    }
+
     public int getInstructionCount() {
         return this.instructions.size();
     }
@@ -36,16 +42,17 @@ public class BytecodeAnalyzer {
         return this.instructions;
     }
 
-    public void analyze(final ConstantPool pool) {
+    public void interpret(final ConstantPool pool){
+        BytecodeInterpreter.interpret(this, pool);
+    }
+
+    public void decode(final ConstantPool pool) {
         final _Code code = (_Code) AttributeInfo.findFirst(AttributeInfo.CODE, this.method.getAttributes(), pool);
         if(code == null) {
             return;
         }
         // Turn bytes into readable instructions
         this.format(code.getRawCode());
-
-        assert this.instructions.size() > 0; //should always be one or more
-        this.instructions.get(0).attributes = Instruction.ATTRIBUTE_ERROR;
     }
 
     private void format(final byte[] code) {

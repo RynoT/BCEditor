@@ -156,7 +156,8 @@ public class IBCTextEditor extends IEditor {
             final MethodLine methodLine = new MethodLine(method, analyzer, classLine, 1);
             lines.add(methodLine);
 
-            analyzer.analyze(this.type.getConstantPool());
+            analyzer.decode(this.type.getConstantPool()); //turn bytes into instructions
+            analyzer.interpret(this.type.getConstantPool()); //read the instructions to look for errors and what-not
             if(analyzer.getInstructionCount() > 0) {
                 for(final Instruction instruction : analyzer.getInstructions()) {
                     lines.add(new InstructionLine(instruction, methodLine, 2));
@@ -285,7 +286,8 @@ public class IBCTextEditor extends IEditor {
                 }
 
                 private Line getLine(final Point point) {
-                    return IBCTextEditor.this.lines.get(point.y / IBCTextEditor.LINE_HEIGHT);
+                    return IBCTextEditor.this.lines.get(Math.min(point.y / IBCTextEditor
+                            .LINE_HEIGHT, IBCTextEditor.this.lines.size() - 1));
                 }
             };
             super.addMouseListener(adapter);
@@ -348,7 +350,6 @@ public class IBCTextEditor extends IEditor {
 
             final Graphics2D g2d = (Graphics2D) g;
             g2d.setFont(super.getFont());
-            g2d.setStroke(new BasicStroke(1.0f));
             g2d.setColor(IComponent.DEFAULT_FOREGROUND);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -431,11 +432,12 @@ public class IBCTextEditor extends IEditor {
                 if(line instanceof InstructionLine) {
                     final Instruction instruction = ((InstructionLine) line).getInstruction();
                     if(instruction.isAttributeSet(Instruction.ATTRIBUTE_ERROR)) {
+                        final Stroke strokeCache = g2d.getStroke();
                         final int x = IBCTextEditor.LINE_DEFAULT_INSET + line.getIndentWidth();
                         g2d.setColor(IBCTextEditor.UNDERLINE_ERROR_COLOR);
                         g2d.setStroke(IBCTextEditor.UNDERLINE_STROKE);
                         g2d.drawLine(x, lineY + 3, x + g.getFontMetrics().stringWidth(line.getString()), lineY + 3);
-
+                        g2d.setStroke(strokeCache);
                         textColor = IBCTextEditor.TEXT_ERROR_COLOR;
                     }
 

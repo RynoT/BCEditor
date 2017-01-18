@@ -21,7 +21,8 @@ public class Instruction {
 
     private final List<Operand> operands = new ArrayList<>(4);
 
-    int attributes = 0x0; //used by analyzer
+    private int attributes = 0x0; //used by analyzer
+    private String errorMessage = null;
 
     public Instruction(final Opcode opcode, final int pc) {
         this.opcode = opcode;
@@ -36,12 +37,28 @@ public class Instruction {
         return this.opcode;
     }
 
+    public int getAttributes() {
+        return this.attributes;
+    }
+
     public int getOperandCount() {
         return this.operands.size();
     }
 
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
     public List<Operand> getOperands() {
         return this.operands;
+    }
+
+    public void setErrorMessage(final String error) {
+        this.errorMessage = error;
+    }
+
+    public void setAttributes(final int attributes) {
+        this.attributes = attributes;
     }
 
     public boolean isAttributeSet(final int attribute) { //used for text editor
