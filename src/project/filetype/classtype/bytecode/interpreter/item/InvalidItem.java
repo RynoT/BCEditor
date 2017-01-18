@@ -5,9 +5,9 @@ import project.filetype.classtype.bytecode.Instruction;
 /**
  * Created by Ryan Thomson on 18/01/2017.
  */
-public class ArrayItem extends MethodItem {
+public class InvalidItem extends MethodItem {
 
-    public ArrayItem(final Instruction reference) {
+    public InvalidItem(final Instruction reference) {
         super(reference);
     }
 

@@ -9,9 +9,14 @@ public class ObjectItem extends MethodItem {
 
     private final String name;
 
-    public ObjectItem(final Instruction reference, final String name){
+    public ObjectItem(final Instruction reference, final String name) {
         super(reference);
 
         this.name = name;
+    }
+
+    @Override
+    public String getValue() {
+        return this.name;
     }
 }

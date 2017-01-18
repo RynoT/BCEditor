@@ -64,4 +64,21 @@ public class Instruction {
     public boolean isAttributeSet(final int attribute) { //used for text editor
         return (this.attributes & attribute) == attribute;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(this.opcode.name().substring(1)).append("[pc: ").append(this.pc);
+        if(this.operands.size() > 0){
+            sb.append(", operands: ");
+            for(int i = 0; i < this.operands.size(); i++){
+                sb.append(this.operands.get(i).getValue());
+                if(i < this.operands.size() - 1){
+                    sb.append(", ");
+                }
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }

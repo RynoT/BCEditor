@@ -13,6 +13,8 @@ public abstract class MethodItem {
         this.reference = reference;
     }
 
+    public abstract String getValue();
+
     public Instruction getReference() {
         return this.reference;
     }

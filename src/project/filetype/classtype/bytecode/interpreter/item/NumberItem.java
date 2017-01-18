@@ -17,6 +17,7 @@ public class NumberItem extends MethodItem {
         this.type = type;
     }
 
+    @Override
     public String getValue() {
         return this.value;
     }
@@ -26,6 +27,20 @@ public class NumberItem extends MethodItem {
     }
 
     public enum NumberType {
-        INTEGER, FLOAT, LONG, DOUBLE
+        INTEGER, FLOAT, LONG, DOUBLE;
+
+        public static NumberType get(final char c) {
+            switch(c) {
+                case 'i':
+                    return NumberType.INTEGER;
+                case 'f':
+                    return NumberType.FLOAT;
+                case 'l':
+                    return NumberType.LONG;
+                case 'd':
+                    return NumberType.DOUBLE;
+            }
+            return null;
+        }
     }
 }
