@@ -31,7 +31,9 @@ public class ConstantPool {
     }
 
     public PoolTag getEntry(final int index) {
-        assert (index >= 0 && index < this.entries.size());
+        if(index < 0 || index >= this.entries.size()){
+            return null;
+        }
         return this.entries.get(index);
     }
 

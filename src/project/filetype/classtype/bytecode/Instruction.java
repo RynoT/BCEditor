@@ -53,6 +53,10 @@ public class Instruction {
         return this.operands;
     }
 
+    public Operand getOperand(final int index) {
+        return this.operands.get(index);
+    }
+
     public void setErrorMessage(final String error) {
         this.errorMessage = error;
     }
@@ -69,11 +73,11 @@ public class Instruction {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(this.opcode.name().substring(1)).append("[pc: ").append(this.pc);
-        if(this.operands.size() > 0){
+        if(this.operands.size() > 0) {
             sb.append(", operands: ");
-            for(int i = 0; i < this.operands.size(); i++){
+            for(int i = 0; i < this.operands.size(); i++) {
                 sb.append(this.operands.get(i).getValue());
-                if(i < this.operands.size() - 1){
+                if(i < this.operands.size() - 1) {
                     sb.append(", ");
                 }
             }
