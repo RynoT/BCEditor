@@ -50,10 +50,10 @@ public class BytecodeInterpreter {
         for(final Instruction instruction : analyzer.getInstructions()) {
             final Opcode opcode = instruction.getOpcode();
             switch(opcode) {
-                // Const values
+                // Const mnemonics
                 case _iconst_m1:
                     //m1 is special and will not work with our processConst algorithm. We must handle it separately.
-                    stack.push(new NumberItem(instruction, String.valueOf(-1), PrimitiveType.INTEGER));
+                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, String.valueOf(-1), PrimitiveType.INTEGER));
                     break;
                 case _iconst_0:
                 case _iconst_1:
@@ -71,7 +71,7 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processConst(instruction, stack);
                     break;
 
-                // Load values
+                // Load mnemonics
                 case _iload:
                 case _fload:
                 case _lload:
@@ -96,18 +96,62 @@ public class BytecodeInterpreter {
                 case _dload_3:
                     BytecodeInterpreter.processLoad(instruction, local, stack, true);
                     break;
+
+                // Store mnemonics
+                case _istore:
+                case _fstore:
+                case _lstore:
+                case _dstore:
+                    BytecodeInterpreter.processStore(instruction, local, stack, false);
+                    break;
+                case _istore_0:
+                case _istore_1:
+                case _istore_2:
+                case _istore_3:
+                case _fstore_0:
+                case _fstore_1:
+                case _fstore_2:
+                case _fstore_3:
+                case _lstore_0:
+                case _lstore_1:
+                case _lstore_2:
+                case _lstore_3:
+                case _dstore_0:
+                case _dstore_1:
+                case _dstore_2:
+                case _dstore_3:
+                    BytecodeInterpreter.processStore(instruction, local, stack, true);
+                    break;
             }
         }
-    }
-
-    private static String getOpcodeIndex(final Opcode opcode) {
-        return opcode.name().substring(opcode.name().length() - 1);
     }
 
     private static void setError(final Instruction instruction, final String message) {
         instruction.setAttributes(Instruction.ATTRIBUTE_ERROR);
         instruction.setErrorMessage(message);
         System.out.println("[BytecodeInterpreter] Error: " + message + " (instruction: " + instruction.toString() + ")");
+    }
+
+    private static String getOpcodeIndex(final Opcode opcode) {
+        return opcode.name().substring(opcode.name().length() - 1);
+    }
+
+    private static int getIndex(final Instruction instruction, final boolean predefined) {
+        final int index;
+        // Get index of local entry
+        if(predefined) {
+            index = Integer.parseInt(BytecodeInterpreter.getOpcodeIndex(instruction.getOpcode()));
+        } else if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "Index operand not set");
+            return -1;
+        } else {
+            index = instruction.getOperands().get(0).getValue();
+            if(index < 0) {
+                BytecodeInterpreter.setError(instruction, "Invalid index operand (must be 0 or greater)");
+                return -1;
+            }
+        }
+        return index;
     }
 
     private static void processConst(final Instruction instruction, final MethodStack stack) {
@@ -118,30 +162,50 @@ public class BytecodeInterpreter {
         stack.push(new NumberItem(instruction, value, type));
     }
 
+    private static void processStackPush(final Instruction instruction, final MethodStack stack, final MethodItem item){
+        if(!stack.push(item)){
+            instruction.setErrorMessage("Stack is full");
+        }
+    }
+
     private static void processLoad(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
-        final int index;
-        // Get index of local entry
-        if(predefined) {
-            index = Integer.parseInt(BytecodeInterpreter.getOpcodeIndex(instruction.getOpcode()));
-        } else if(instruction.getOperandCount() == 0) {
-            stack.push(new InvalidItem(instruction));
-            BytecodeInterpreter.setError(instruction, "Index operand not set");
+        final int index = BytecodeInterpreter.getIndex(instruction, predefined);
+        if(index == -1) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
             return;
-        } else {
-            index = instruction.getOperands().get(0).getValue();
         }
         final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         assert type != null : "Invalid opcode: " + instruction.getOpcode().name();
 
         final MethodItem item = local.get(index);
         if(item == null) {
-            stack.push(new InvalidItem(instruction));
-            BytecodeInterpreter.setError(instruction, "Local variable " + index + " is not set or doesn't exist");
-        } else if(!(item instanceof NumberItem) || ((NumberItem) item).getType() != type) {
-            stack.push(new InvalidItem(instruction));
-            BytecodeInterpreter.setError(instruction, "Local variable " + index + " is not an integer");
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+            BytecodeInterpreter.setError(instruction, "Local " + index + " is not set or doesn't exist");
+        } else if(!(item instanceof NumberItem) || type != item.getType()) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+            BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to load local of type " + item.getType().name());
         } else {
-            stack.push(new NumberItem(instruction, item.getValue(), type));
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, item.getValue(), type));
+        }
+    }
+
+    private static void processStore(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
+        final int index = BytecodeInterpreter.getIndex(instruction, predefined);
+        if(index == -1) {
+            stack.push(new InvalidItem(instruction));
+            return;
+        }
+        final MethodItem item = stack.peek();
+        if(item == null) {
+            BytecodeInterpreter.setError(instruction, "Stack is empty");
+        } else {
+            final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
+            assert type != null;
+            if(type != item.getType()) {
+                BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to store element of type " + item.getType().name());
+                return;
+            }
+            local.set(stack.pop(), index);
         }
     }
 
@@ -156,7 +220,7 @@ public class BytecodeInterpreter {
                 }
             }
             final PrimitiveType type = PrimitiveType.get(sp);
-            if(dimensions != 0){
+            if(dimensions != 0) {
                 items.add(new ArrayRefItem(null, type, dimensions));
             } else if(type != PrimitiveType.OBJECT) {
                 items.add(new NumberItem(null, null, type));

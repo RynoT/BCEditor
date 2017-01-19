@@ -23,6 +23,7 @@ public class NumberItem extends MethodItem {
         return this.value;
     }
 
+    @Override
     public PrimitiveType getType() {
         return this.type;
     }

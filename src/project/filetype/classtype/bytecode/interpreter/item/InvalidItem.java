@@ -16,4 +16,9 @@ public class InvalidItem extends MethodItem {
         return null;
     }
 
+    @Override
+    public PrimitiveType getType() {
+        return PrimitiveType.INVALID;
+    }
+
 }

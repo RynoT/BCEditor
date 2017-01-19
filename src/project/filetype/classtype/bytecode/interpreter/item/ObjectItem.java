@@ -19,4 +19,9 @@ public class ObjectItem extends MethodItem {
     public String getValue() {
         return this.name;
     }
+
+    @Override
+    public PrimitiveType getType() {
+        return PrimitiveType.OBJECT;
+    }
 }

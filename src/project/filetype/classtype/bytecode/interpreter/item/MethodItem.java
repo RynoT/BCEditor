@@ -15,6 +15,8 @@ public abstract class MethodItem {
 
     public abstract String getValue();
 
+    public abstract PrimitiveType getType();
+
     public Instruction getReference() {
         return this.reference;
     }

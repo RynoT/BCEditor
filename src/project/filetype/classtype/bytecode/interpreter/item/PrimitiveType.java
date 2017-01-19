@@ -4,7 +4,7 @@ package project.filetype.classtype.bytecode.interpreter.item;
  * Created by Ryan Thomson on 18/01/2017.
  */
 public enum PrimitiveType {
-    INTEGER, FLOAT, LONG, DOUBLE, OBJECT;
+    INTEGER, FLOAT, LONG, DOUBLE, OBJECT, INVALID;
 
     public static PrimitiveType get(final char c) {
         switch(c) {

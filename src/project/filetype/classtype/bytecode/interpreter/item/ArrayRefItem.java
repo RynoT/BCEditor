@@ -21,13 +21,14 @@ public class ArrayRefItem extends MethodItem {
         return this.dimensions;
     }
 
-    public PrimitiveType getType() {
-        return this.type;
-    }
-
     @Override
     public String getValue() {
         return null;
+    }
+
+    @Override
+    public PrimitiveType getType() {
+        return this.type;
     }
 
 }
