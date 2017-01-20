@@ -47,10 +47,36 @@ public class BytecodeInterpreter {
                 local.set(item, index++);
             }
         }
-        //if(method.get)
         for(final Instruction instruction : analyzer.getInstructions()) {
             final Opcode opcode = instruction.getOpcode();
             switch(opcode) {
+                // Do nothing mnemonics
+                case _nop:
+                case _breakpoint:
+                case _impdep1:
+                case _impdep2:
+                    break;
+
+                // Pop mnemonics
+                case _pop:
+                case _pop2:
+                    BytecodeInterpreter.processPop(instruction, stack);
+                    break;
+
+                // Swap mnemonic
+                case _swap:
+                    if(stack.getCount() < 2) {
+                        BytecodeInterpreter.setError(instruction, "There must be at least two elements on the stack");
+                        break;
+                    }
+                    assert stack.get(0) != null && stack.get(1) != null;
+                    if(stack.get(0).getType().getStackSize() == 2 || stack.get(1).getType().getStackSize() == 2) {
+                        BytecodeInterpreter.setError(instruction, "Swap cannot be used for LONG or DOUBLE");
+                        break;
+                    }
+                    stack.swap(0, 1);
+                    break;
+
                 // Push mnemonics
                 case _bipush:
                 case _sipush:
@@ -165,6 +191,9 @@ public class BytecodeInterpreter {
                 case _dstore_3:
                     BytecodeInterpreter.processStore(instruction, local, stack, true);
                     break;
+
+                default:
+                    System.out.println("[BytecodeInterpreter] Unsupported opcode: " + opcode.name().substring(1));
             }
         }
     }
@@ -233,6 +262,26 @@ public class BytecodeInterpreter {
         }
     }
 
+    private static void processPop(final Instruction instruction, final MethodStack stack) {
+        if(instruction.getOpcode() == Opcode._pop && stack.getCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "Stack is empty");
+            return;
+        }
+        MethodItem item = stack.pop();
+        if(instruction.getOpcode() == Opcode._pop2) {
+            if(item.getType() == PrimitiveType.LONG || item.getType() == PrimitiveType.DOUBLE) {
+                return;
+            }
+            item = stack.peek();
+            if(item.getType() == PrimitiveType.LONG || item.getType() == PrimitiveType.DOUBLE) {
+                BytecodeInterpreter.setError(instruction, "Second stack element of type "
+                        + item.getType() + " cannot be removed this way");
+                return;
+            }
+            stack.pop();
+        }
+    }
+
     private static void processLoad(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
         final int index = BytecodeInterpreter.getIndex(instruction, predefined);
         if(index == -1) {
@@ -250,7 +299,7 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
             BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to load local of type " + item.getType().name());
         } else {
-            if(type == PrimitiveType.OBJECT){
+            if(type == PrimitiveType.OBJECT) {
                 BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, item.getValue()));
             } else {
                 BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, item.getValue(), type));
@@ -283,13 +332,13 @@ public class BytecodeInterpreter {
             return; //no action needs to be taken
         }
         final MethodItem item = stack.peek();
-        if(item == null){
+        if(item == null) {
             BytecodeInterpreter.setError(instruction, "Stack is empty");
             return;
         }
         final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         assert type != null;
-        if(item.getType() != type){
+        if(item.getType() != type) {
             BytecodeInterpreter.setError(instruction, item.getType() + " cannot be returned using " + instruction.getOpcode().name().substring(1));
         }
         stack.pop();

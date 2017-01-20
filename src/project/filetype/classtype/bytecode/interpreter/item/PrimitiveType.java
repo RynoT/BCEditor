@@ -4,7 +4,17 @@ package project.filetype.classtype.bytecode.interpreter.item;
  * Created by Ryan Thomson on 18/01/2017.
  */
 public enum PrimitiveType {
-    INTEGER, FLOAT, LONG, DOUBLE, OBJECT, INVALID;
+    INTEGER(1), FLOAT(1), LONG(2), DOUBLE(2), OBJECT(1), INVALID(1);
+
+    private final int stackSize;
+
+    PrimitiveType(final int stackSize) {
+        this.stackSize = stackSize;
+    }
+
+    public int getStackSize() {
+        return this.stackSize;
+    }
 
     public static PrimitiveType get(final char c) {
         switch(c) {
