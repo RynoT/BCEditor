@@ -63,6 +63,18 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processPop(instruction, stack);
                     break;
 
+                // Dup mnemonics
+                case _dup:
+                case _dup_x1:
+                case _dup_x2:
+                    BytecodeInterpreter.processDup(instruction, stack);
+                    break;
+                case _dup2:
+                case _dup2_x1:
+                case _dup2_x2:
+                    BytecodeInterpreter.processDup2(instruction, stack);
+                    break;
+
                 // Swap mnemonic
                 case _swap:
                     if(stack.getCount() < 2) {
@@ -253,31 +265,44 @@ public class BytecodeInterpreter {
         assert value.length() == 1 : "Invalid value: " + value;
         final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         assert type != null : "Invalid opcode: " + instruction.getOpcode().name();
-        stack.push(new NumberItem(instruction, value, type));
+        BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, type));
     }
 
     private static void processStackPush(final Instruction instruction, final MethodStack stack, final MethodItem item) {
-        if(!stack.push(item)) {
+        boolean success = true;
+        if(item.getType().getStackSize() == 2){
+            success = stack.push(new FillerItem());
+        }
+        if(!success || !stack.push(item)) {
             instruction.setErrorMessage("Stack is full");
+
+            // If we managed to push the filler, we must remove it since the item failed to push
+            if(success){
+                stack.pop();
+            }
         }
     }
 
     private static void processPop(final Instruction instruction, final MethodStack stack) {
-        if(instruction.getOpcode() == Opcode._pop && stack.getCount() == 0) {
+        if(instruction.getOpcode() == Opcode._pop && stack.getCount() < 1) {
             BytecodeInterpreter.setError(instruction, "Stack is empty");
             return;
         }
+        if(instruction.getOpcode() == Opcode._pop2 && stack.getCount() < 2){
+            BytecodeInterpreter.setError(instruction, "Stack must have at least two items");
+            return;
+        }
         MethodItem item = stack.pop();
+        assert item != null;
         if(instruction.getOpcode() == Opcode._pop2) {
-            if(item.getType() == PrimitiveType.LONG || item.getType() == PrimitiveType.DOUBLE) {
-                return;
-            }
             item = stack.peek();
+            assert item != null;
             if(item.getType() == PrimitiveType.LONG || item.getType() == PrimitiveType.DOUBLE) {
                 BytecodeInterpreter.setError(instruction, "Second stack element of type "
                         + item.getType() + " cannot be removed this way");
                 return;
             }
+            // If first item is a long or double then this item will be a filler item
             stack.pop();
         }
     }
@@ -323,7 +348,12 @@ public class BytecodeInterpreter {
                 BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to store element of type " + item.getType().name());
                 return;
             }
-            local.set(stack.pop(), index);
+            stack.pop();
+            if(item.getType().getStackSize() == 2){
+                assert stack.getCount() > 0;
+                stack.pop();
+            }
+            local.set(item, index);
         }
     }
 
@@ -342,6 +372,76 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.setError(instruction, item.getType() + " cannot be returned using " + instruction.getOpcode().name().substring(1));
         }
         stack.pop();
+        if(item.getType().getStackSize() == 2){
+            assert stack.getCount() > 0;
+            stack.pop();
+        }
+    }
+
+    private static void processDup(final Instruction instruction, final MethodStack stack){
+        if(stack.getCount() < 1){
+            BytecodeInterpreter.setError(instruction, "No stack items to duplicate");
+            return;
+        }
+        final MethodItem item = stack.peek(); //top
+        if(item.getType().getStackSize() == 2){
+            BytecodeInterpreter.setError(instruction, instruction.getOpcode().name().substring(1) + " cannot be used to duplicate item which takes two stack slots");
+            return;
+        }
+        switch(instruction.getOpcode()){
+            case _dup:
+                stack.push(item);
+                break;
+            case _dup_x1:
+                if(stack.getCount() <= 1){
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 2 items in it");
+                    return;
+                }
+                stack.insert(item, 2);
+                break;
+            case _dup_x2:
+                if(stack.getCount() <= 2){
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
+                    return;
+                }
+                stack.insert(item, 3);
+                break;
+
+            default: assert false;
+        }
+    }
+
+    private static void processDup2(final Instruction instruction, final MethodStack stack){
+        if(stack.getCount() < 2){
+            BytecodeInterpreter.setError(instruction, "Stack must contain at least two items");
+            return;
+        }
+        final MethodItem item1 = stack.get(0), item2 = stack.get(1);
+        assert item1 != null && item2 != null;
+        switch(instruction.getOpcode()){
+            case _dup2:
+                stack.push(item2);
+                stack.push(item1);
+                break;
+            case _dup2_x1:
+                if(stack.getCount() <= 3){
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
+                    return;
+                }
+                stack.insert(item2, 2);
+                stack.insert(item1, 2);
+                break;
+            case _dup2_x2:
+                if(stack.getCount() <= 4){
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 4 items in it");
+                    return;
+                }
+                stack.insert(item2, 3);
+                stack.insert(item1, 3);
+                break;
+
+            default: assert false;
+        }
     }
 
     private static void processLdc(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {

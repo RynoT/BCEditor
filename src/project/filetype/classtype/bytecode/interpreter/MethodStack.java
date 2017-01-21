@@ -63,7 +63,7 @@ class MethodStack {
         if(this.pointer == this.stack.length - 1) {
             return false;
         }
-        index = this.pointer - index;
+        index = Math.max(0, this.pointer - index);
         // Shift the array to make space for new element
         System.arraycopy(this.stack, index, this.stack, index + 1, this.stack.length - index - 1);
 
