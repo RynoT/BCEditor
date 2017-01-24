@@ -78,15 +78,46 @@ public class BytecodeInterpreter {
                 // Swap mnemonic
                 case _swap:
                     if(stack.getCount() < 2) {
-                        BytecodeInterpreter.setError(instruction, "There must be at least two elements on the stack");
+                        BytecodeInterpreter.setError(instruction, "There must be at least two items on the stack");
                         break;
                     }
                     assert stack.get(0) != null && stack.get(1) != null;
                     if(stack.get(0).getType().getStackSize() == 2 || stack.get(1).getType().getStackSize() == 2) {
-                        BytecodeInterpreter.setError(instruction, "Swap cannot be used for LONG or DOUBLE");
+                        BytecodeInterpreter.setError(instruction, "Swap cannot be used for items which take two slots");
                         break;
                     }
                     stack.swap(0, 1);
+                    break;
+
+                // Monitor mnemonic
+                case _monitorenter:
+                case _monitorexit:
+                    if(stack.getCount() < 1) {
+                        BytecodeInterpreter.setError(instruction, "Requires object reference");
+                        break;
+                    }
+                    final MethodItem item = stack.peek();
+                    if(item == null || item.getType() != PrimitiveType.OBJECT) {
+                        BytecodeInterpreter.setError(instruction, "Requires object reference");
+                        break;
+                    }
+                    stack.pop();
+                    break;
+
+                // New mnemonic
+                case _new:
+                    if(instruction.getOperandCount() == 0) {
+                        BytecodeInterpreter.setError(instruction, "No operand");
+                        BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+                    } else {
+                        final PoolTag tag = pool.getEntry(instruction.getOperand(0).getValue());
+                        if(tag == null || tag.getPoolTagId() != PoolTag.TAG_CLASS) {
+                            BytecodeInterpreter.setError(instruction, "ConstantPool index must be to Class Ref");
+                            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+                            break;
+                        }
+                        BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, tag.getContentString(pool)));
+                    }
                     break;
 
                 // Push mnemonics
@@ -270,14 +301,14 @@ public class BytecodeInterpreter {
 
     private static void processStackPush(final Instruction instruction, final MethodStack stack, final MethodItem item) {
         boolean success = true;
-        if(item.getType().getStackSize() == 2){
+        if(item.getType().getStackSize() == 2) {
             success = stack.push(new FillerItem());
         }
         if(!success || !stack.push(item)) {
             instruction.setErrorMessage("Stack is full");
 
             // If we managed to push the filler, we must remove it since the item failed to push
-            if(success){
+            if(success) {
                 stack.pop();
             }
         }
@@ -288,7 +319,7 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.setError(instruction, "Stack is empty");
             return;
         }
-        if(instruction.getOpcode() == Opcode._pop2 && stack.getCount() < 2){
+        if(instruction.getOpcode() == Opcode._pop2 && stack.getCount() < 2) {
             BytecodeInterpreter.setError(instruction, "Stack must have at least two items");
             return;
         }
@@ -349,7 +380,7 @@ public class BytecodeInterpreter {
                 return;
             }
             stack.pop();
-            if(item.getType().getStackSize() == 2){
+            if(item.getType().getStackSize() == 2) {
                 assert stack.getCount() > 0;
                 stack.pop();
             }
@@ -372,59 +403,64 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.setError(instruction, item.getType() + " cannot be returned using " + instruction.getOpcode().name().substring(1));
         }
         stack.pop();
-        if(item.getType().getStackSize() == 2){
+        if(item.getType().getStackSize() == 2) {
             assert stack.getCount() > 0;
             stack.pop();
         }
     }
 
-    private static void processDup(final Instruction instruction, final MethodStack stack){
-        if(stack.getCount() < 1){
+    private static void processMath(final Instruction instruction, final MethodStack stack) {
+
+    }
+
+    private static void processDup(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 1) {
             BytecodeInterpreter.setError(instruction, "No stack items to duplicate");
             return;
         }
         final MethodItem item = stack.peek(); //top
-        if(item.getType().getStackSize() == 2){
+        if(item.getType().getStackSize() == 2) {
             BytecodeInterpreter.setError(instruction, instruction.getOpcode().name().substring(1) + " cannot be used to duplicate item which takes two stack slots");
             return;
         }
-        switch(instruction.getOpcode()){
+        switch(instruction.getOpcode()) {
             case _dup:
                 stack.push(item);
                 break;
             case _dup_x1:
-                if(stack.getCount() <= 1){
+                if(stack.getCount() <= 1) {
                     BytecodeInterpreter.setError(instruction, "Stack must have at least 2 items in it");
                     return;
                 }
                 stack.insert(item, 2);
                 break;
             case _dup_x2:
-                if(stack.getCount() <= 2){
+                if(stack.getCount() <= 2) {
                     BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
                     return;
                 }
                 stack.insert(item, 3);
                 break;
 
-            default: assert false;
+            default:
+                assert false;
         }
     }
 
-    private static void processDup2(final Instruction instruction, final MethodStack stack){
-        if(stack.getCount() < 2){
+    private static void processDup2(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 2) {
             BytecodeInterpreter.setError(instruction, "Stack must contain at least two items");
             return;
         }
         final MethodItem item1 = stack.get(0), item2 = stack.get(1);
         assert item1 != null && item2 != null;
-        switch(instruction.getOpcode()){
+        switch(instruction.getOpcode()) {
             case _dup2:
                 stack.push(item2);
                 stack.push(item1);
                 break;
             case _dup2_x1:
-                if(stack.getCount() <= 3){
+                if(stack.getCount() <= 3) {
                     BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
                     return;
                 }
@@ -432,7 +468,7 @@ public class BytecodeInterpreter {
                 stack.insert(item1, 2);
                 break;
             case _dup2_x2:
-                if(stack.getCount() <= 4){
+                if(stack.getCount() <= 4) {
                     BytecodeInterpreter.setError(instruction, "Stack must have at least 4 items in it");
                     return;
                 }
@@ -440,7 +476,8 @@ public class BytecodeInterpreter {
                 stack.insert(item1, 3);
                 break;
 
-            default: assert false;
+            default:
+                assert false;
         }
     }
 

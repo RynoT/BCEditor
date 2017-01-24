@@ -14,6 +14,7 @@ public class _SourceDebugExtension extends AttributeInfo {
         super(nameIndex);
 
         this.raw = new byte[length];
+        dis.readFully(this.raw);
     }
 
     public byte[] getRawBytes(){
