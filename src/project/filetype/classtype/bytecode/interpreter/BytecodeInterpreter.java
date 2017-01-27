@@ -8,6 +8,8 @@ import project.filetype.classtype.bytecode.interpreter.item.*;
 import project.filetype.classtype.bytecode.opcode.Opcode;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.PoolTag;
+import project.filetype.classtype.constantpool.tag.TagNameAndType;
+import project.filetype.classtype.constantpool.tag.TagRef;
 import project.filetype.classtype.member.MethodInfo;
 import project.filetype.classtype.member.attributes.AttributeInfo;
 import project.filetype.classtype.member.attributes._Code;
@@ -35,7 +37,7 @@ public class BytecodeInterpreter {
 
         final boolean isStatic = AccessFlags.containsFlag(method.getAccessFlags(), AccessFlags.ACC_STATIC);
         final MethodStack stack = new MethodStack(code.getMaxStack());
-        final MethodLocal local = new MethodLocal(isStatic ? code.getMaxLocals() : code.getMaxLocals() + 1);
+        final MethodLocal local = new MethodLocal(code.getMaxLocals(), isStatic);
 
         final MethodItem[] parameters = BytecodeInterpreter.getParameters(method, pool, isStatic);
         for(int i = 0; i < parameters.length; i++) {
@@ -49,6 +51,14 @@ public class BytecodeInterpreter {
                 case _breakpoint:
                 case _impdep1:
                 case _impdep2:
+                    break;
+
+                // Get mnemonics
+                case _getfield:
+                case _getstatic:
+                case _putfield:
+                case _putstatic:
+                    BytecodeInterpreter.processGetAndPut(instruction, stack, pool);
                     break;
 
                 // Pop mnemonics
@@ -101,17 +111,17 @@ public class BytecodeInterpreter {
                 // New mnemonic
                 case _new:
                     if(instruction.getOperandCount() == 0) {
-                        BytecodeInterpreter.setError(instruction, "No operand");
+                        BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
                         BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-                    } else {
-                        final PoolTag tag = pool.getEntry(instruction.getOperand(0).getValue());
-                        if(tag == null || tag.getPoolTagId() != PoolTag.TAG_CLASS) {
-                            BytecodeInterpreter.setError(instruction, "ConstantPool index must be to Class Ref");
-                            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-                            break;
-                        }
-                        BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, tag.getContentString(pool)));
+                        break;
                     }
+                    final PoolTag tag = pool.getEntry(instruction.getOperand(0).getValue());
+                    if(tag == null || tag.getPoolTagId() != PoolTag.TAG_CLASS) {
+                        BytecodeInterpreter.setError(instruction, "ConstantPool index must be to Class Ref");
+                        BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+                        break;
+                    }
+                    BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "new " + tag.getContentString(pool)));
                     break;
 
                 // Push mnemonics
@@ -397,7 +407,7 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
             BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to load local of type " + item.getType().name());
         } else {
-            final String value = "local" + index; //item.getValue() will return value inside local. This is not necessarily what we want.
+            final String value = local.getLocalName(index);
             if(type == PrimitiveType.OBJECT) {
                 BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
             } else {
@@ -449,6 +459,193 @@ public class BytecodeInterpreter {
         if(item.getType().getStackSize() == 2) {
             assert stack.getCount() > 0;
             stack.pop();
+        }
+    }
+
+    private static void processGetAndPut(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+            return;
+        }
+        final int index = instruction.getOperand(0).getValue();
+        if(index <= 0 || index >= pool.getEntryCount()) {
+            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+            return;
+        }
+        final PoolTag entry = pool.getEntry(index);
+        if(!(entry instanceof TagRef) || ((TagRef) entry).getType() != TagRef.TagRefType.FIELD) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
+            return;
+        }
+        final TagNameAndType entryNameAndType = ((TagRef) entry).getTagNameAndType(pool);
+
+        final MethodItem ref, item;
+        String expression = "";
+        // GetField requires an object reference which is obtained from the stack
+        if(instruction.getOpcode() == Opcode._getfield || instruction.getOpcode() == Opcode._putfield) {
+            ref = stack.peek();
+            if(ref == null) {
+                BytecodeInterpreter.setError(instruction, "Object reference required from stack");
+                return;
+            }
+            if(ref.getType() != PrimitiveType.OBJECT) {
+                BytecodeInterpreter.setError(instruction, "Object reference must be of type " + PrimitiveType.OBJECT + ", not " + ref.getType());
+                return;
+            }
+            stack.pop();
+
+            expression += ref.getValue() + ".";
+        } else {
+            ref = null;
+        }
+        if(instruction.getOpcode() == Opcode._putfield || instruction.getOpcode() == Opcode._putstatic) {
+            item = stack.peek();
+            if(item == null) {
+                if(ref != null) {
+                    stack.push(ref);
+                }
+                BytecodeInterpreter.setError(instruction, "Value required from stack");
+                return;
+            }
+            stack.pop();
+        } else {
+            item = null;
+        }
+
+        switch(instruction.getOpcode()) {
+            case _getfield:
+                expression += entryNameAndType.getTagName(pool).getValue();
+                break;
+            case _getstatic:
+                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue();
+                break;
+            case _putfield:
+                assert item != null;
+                expression += entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
+                break;
+            case _putstatic:
+                assert item != null;
+                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
+                break;
+        }
+        final PrimitiveType type = PrimitiveType.get(Descriptor.decode(entryNameAndType.getTagDescriptor(pool).getValue()));
+        if(type == PrimitiveType.OBJECT) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+        } else {
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
+        }
+        System.out.println("exp: " + expression);
+    }
+
+    private static void processDup(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 1) {
+            BytecodeInterpreter.setError(instruction, "No stack items to duplicate");
+            return;
+        }
+        final MethodItem item = stack.peek(); //top
+        if(item.getType().getStackSize() == 2) {
+            BytecodeInterpreter.setError(instruction, instruction.getOpcode().name().substring(1) + " cannot be used to duplicate item which takes two stack slots");
+            return;
+        }
+        switch(instruction.getOpcode()) {
+            case _dup:
+                stack.push(item);
+                break;
+            case _dup_x1:
+                if(stack.getCount() <= 1) {
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 2 items in it");
+                    return;
+                }
+                stack.insert(item, 2);
+                break;
+            case _dup_x2:
+                if(stack.getCount() <= 2) {
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
+                    return;
+                }
+                stack.insert(item, 3);
+                break;
+
+            default:
+                assert false;
+        }
+    }
+
+    private static void processDup2(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 2) {
+            BytecodeInterpreter.setError(instruction, "Stack must contain at least two items");
+            return;
+        }
+        final MethodItem item1 = stack.get(0), item2 = stack.get(1);
+        assert item1 != null && item2 != null;
+        switch(instruction.getOpcode()) {
+            case _dup2:
+                stack.push(item2);
+                stack.push(item1);
+                break;
+            case _dup2_x1:
+                if(stack.getCount() <= 3) {
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
+                    return;
+                }
+                stack.insert(item2, 2);
+                stack.insert(item1, 2);
+                break;
+            case _dup2_x2:
+                if(stack.getCount() <= 4) {
+                    BytecodeInterpreter.setError(instruction, "Stack must have at least 4 items in it");
+                    return;
+                }
+                stack.insert(item2, 3);
+                stack.insert(item1, 3);
+                break;
+
+            default:
+                assert false;
+        }
+    }
+
+    private static void processLdc(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+            return;
+        }
+        final int index = instruction.getOperand(0).getValue();
+        if(index <= 0 || index >= pool.getEntryCount()) {
+            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+            return;
+        }
+        // Validate index size
+        if((instruction.getOpcode() == Opcode._ldc && index >= Byte.MAX_VALUE * 2 - 1) || index >= Short.MAX_VALUE * 2 - 1) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index is too large");
+            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
+            return;
+        }
+        final PoolTag entry = pool.getEntry(index);
+        final String value = entry.getContentString(pool);
+        if(instruction.getOpcode() == Opcode._ldc2_w) {
+            switch(entry.getPoolTagId()) {
+                case PoolTag.TAG_LONG:
+                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.LONG));
+                    break;
+                case PoolTag.TAG_DOUBLE:
+                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.DOUBLE));
+                    break;
+            }
+        } else {
+            switch(entry.getPoolTagId()) {
+                case PoolTag.TAG_STRING:
+                    BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
+                    break;
+                case PoolTag.TAG_INTEGER:
+                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.INTEGER));
+                    break;
+                case PoolTag.TAG_FLOAT:
+                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.FLOAT));
+                    break;
+            }
         }
     }
 
@@ -527,123 +724,6 @@ public class BytecodeInterpreter {
                 BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction,
                         "(" + item2.getValue() + " " + operator + " " + item1.getValue() + ")", type));
                 break;
-        }
-    }
-
-    private static void processDup(final Instruction instruction, final MethodStack stack) {
-        if(stack.getCount() < 1) {
-            BytecodeInterpreter.setError(instruction, "No stack items to duplicate");
-            return;
-        }
-        final MethodItem item = stack.peek(); //top
-        if(item.getType().getStackSize() == 2) {
-            BytecodeInterpreter.setError(instruction, instruction.getOpcode().name().substring(1) + " cannot be used to duplicate item which takes two stack slots");
-            return;
-        }
-        switch(instruction.getOpcode()) {
-            case _dup:
-                stack.push(item);
-                break;
-            case _dup_x1:
-                if(stack.getCount() <= 1) {
-                    BytecodeInterpreter.setError(instruction, "Stack must have at least 2 items in it");
-                    return;
-                }
-                stack.insert(item, 2);
-                break;
-            case _dup_x2:
-                if(stack.getCount() <= 2) {
-                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
-                    return;
-                }
-                stack.insert(item, 3);
-                break;
-
-            default:
-                assert false;
-        }
-    }
-
-    private static void processDup2(final Instruction instruction, final MethodStack stack) {
-        if(stack.getCount() < 2) {
-            BytecodeInterpreter.setError(instruction, "Stack must contain at least two items");
-            return;
-        }
-        final MethodItem item1 = stack.get(0), item2 = stack.get(1);
-        assert item1 != null && item2 != null;
-        switch(instruction.getOpcode()) {
-            case _dup2:
-                stack.push(item2);
-                stack.push(item1);
-                break;
-            case _dup2_x1:
-                if(stack.getCount() <= 3) {
-                    BytecodeInterpreter.setError(instruction, "Stack must have at least 3 items in it");
-                    return;
-                }
-                stack.insert(item2, 2);
-                stack.insert(item1, 2);
-                break;
-            case _dup2_x2:
-                if(stack.getCount() <= 4) {
-                    BytecodeInterpreter.setError(instruction, "Stack must have at least 4 items in it");
-                    return;
-                }
-                stack.insert(item2, 3);
-                stack.insert(item1, 3);
-                break;
-
-            default:
-                assert false;
-        }
-    }
-
-    private static void processLdc(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
-        if(instruction.getOperandCount() == 0) {
-            BytecodeInterpreter.setError(instruction, "No operand");
-            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-            return;
-        }
-        final int index = instruction.getOperand(0).getValue();
-        if(index <= 0) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index must be greater than 0");
-            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-            return;
-        }
-        final PoolTag entry = pool.getEntry(index);
-        if(entry == null) {
-            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
-            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-            return;
-        }
-        // Validate index size
-        if((instruction.getOpcode() == Opcode._ldc && index >= Byte.MAX_VALUE * 2 - 1) || index >= Short.MAX_VALUE * 2 - 1) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index is too large");
-            BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
-            return;
-        }
-        final String value = entry.getContentString(pool);
-        if(instruction.getOpcode() == Opcode._ldc2_w) {
-            switch(entry.getPoolTagId()) {
-                case PoolTag.TAG_LONG:
-                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.LONG));
-                    break;
-                case PoolTag.TAG_DOUBLE:
-                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.DOUBLE));
-                    break;
-            }
-        } else {
-            switch(entry.getPoolTagId()) {
-                case PoolTag.TAG_STRING:
-                    BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
-                    break;
-                case PoolTag.TAG_INTEGER:
-                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.INTEGER));
-                    break;
-                case PoolTag.TAG_FLOAT:
-                    BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.FLOAT));
-                    break;
-            }
         }
     }
 }

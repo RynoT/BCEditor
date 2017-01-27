@@ -1,6 +1,8 @@
 package project.filetype.classtype.bytecode.interpreter.item;
 
 import project.filetype.classtype.bytecode.opcode.Opcode;
+import project.filetype.classtype.constantpool.PoolTag;
+import project.filetype.classtype.constantpool.tag.*;
 
 /**
  * Created by Ryan Thomson on 18/01/2017.
@@ -52,5 +54,24 @@ public enum PrimitiveType {
             return PrimitiveType.DOUBLE;
         }
         return PrimitiveType.OBJECT;
+    }
+
+    public static PrimitiveType get(final PoolTag tag) {
+        if(tag instanceof TagInteger) {
+            return PrimitiveType.INTEGER;
+        }
+        if(tag instanceof TagFloat) {
+            return PrimitiveType.FLOAT;
+        }
+        if(tag instanceof TagLong) {
+            return PrimitiveType.LONG;
+        }
+        if(tag instanceof TagDouble) {
+            return PrimitiveType.DOUBLE;
+        }
+        if(tag instanceof TagString) {
+            return PrimitiveType.OBJECT;
+        }
+        return null;
     }
 }

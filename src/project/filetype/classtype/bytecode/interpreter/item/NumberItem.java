@@ -13,9 +13,12 @@ public class NumberItem extends MethodItem {
     public NumberItem(final Instruction reference, final String value, final PrimitiveType type) {
         super(reference);
 
+        // NumberItem must have a number type
+        assert type == PrimitiveType.INTEGER || type == PrimitiveType.FLOAT
+                || type == PrimitiveType.LONG || type == PrimitiveType.DOUBLE;
+
         this.value = value;
         this.type = type;
-        assert type != PrimitiveType.OBJECT;
     }
 
     @Override
