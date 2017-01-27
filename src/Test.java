@@ -34,7 +34,10 @@ public abstract class Test extends HashMap<Image, Void> implements Runnable, Clo
     public <T extends InputStream> void test2(List<? extends T> list, T set) {
     }
 
-    public <De> void ryan(De what) {
+    public <De> void ryan(De what, int j) {
+        final int x = 4 * j;
+        final int y = 9 << x;
+        System.out.println(y + x);
     }
 
     public <D extends InputStream, K> void turndownforwhat(D what) {

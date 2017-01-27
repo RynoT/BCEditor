@@ -1,5 +1,7 @@
 package project.filetype.classtype.bytecode.interpreter.item;
 
+import project.filetype.classtype.bytecode.opcode.Opcode;
+
 /**
  * Created by Ryan Thomson on 18/01/2017.
  */
@@ -14,6 +16,10 @@ public enum PrimitiveType {
 
     public int getStackSize() {
         return this.stackSize;
+    }
+
+    public static PrimitiveType get(final Opcode opcode) {
+        return PrimitiveType.get(opcode.name().charAt(1));
     }
 
     public static PrimitiveType get(final char c) {
