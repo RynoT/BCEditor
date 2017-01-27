@@ -37,15 +37,9 @@ public class BytecodeInterpreter {
         final MethodStack stack = new MethodStack(code.getMaxStack());
         final MethodLocal local = new MethodLocal(isStatic ? code.getMaxLocals() : code.getMaxLocals() + 1);
 
-        if(!isStatic) { //if method is not static
-            local.set(new ObjectItem(null, "this"), 0); //local 0 is always 'this' for non-static methods
-        }
-        final MethodItem[] parameters = BytecodeInterpreter.getParameters(method, pool);
-        if(parameters.length > 0) {
-            int index = isStatic ? 0 : 1;
-            for(final MethodItem item : parameters) {
-                local.set(item, index++);
-            }
+        final MethodItem[] parameters = BytecodeInterpreter.getParameters(method, pool, isStatic);
+        for(int i = 0; i < parameters.length; i++) {
+            local.set(parameters[i], i);
         }
         for(final Instruction instruction : analyzer.getInstructions()) {
             final Opcode opcode = instruction.getOpcode();
@@ -248,6 +242,7 @@ public class BytecodeInterpreter {
                 case _ishr:
                 case _iushr:
                 case _ixor:
+                case _iinc:
                 case _fadd:
                 case _fsub:
                 case _fmul:
@@ -309,9 +304,12 @@ public class BytecodeInterpreter {
         return index;
     }
 
-    private static MethodItem[] getParameters(final MethodInfo method, final ConstantPool pool) {
+    private static MethodItem[] getParameters(final MethodInfo method, final ConstantPool pool, final boolean isStatic) {
         final List<MethodItem> items = new ArrayList<>();
         final String descriptor = Descriptor.decode(method.getTagDescriptor(pool).getValue());
+        if(!isStatic) {
+            items.add(new ObjectItem(null, "this")); //local 0 is always 'this' for non-static methods
+        }
         for(final String sp : descriptor.substring(1, descriptor.lastIndexOf(')')).split(",\\s")) {
             if(sp.equals("")) {
                 continue;
@@ -323,12 +321,13 @@ public class BytecodeInterpreter {
                 }
             }
             final PrimitiveType type = PrimitiveType.get(sp);
+            final String value = "local" + items.size();
             if(dimensions != 0) {
                 items.add(new ArrayRefItem(null, type, dimensions));
             } else if(type != PrimitiveType.OBJECT) {
-                items.add(new NumberItem(null, null, type));
+                items.add(new NumberItem(null, value, type));
             } else { //if type is object
-                items.add(new ObjectItem(null, null));
+                items.add(new ObjectItem(null, value));
             }
         }
         return items.toArray(new MethodItem[items.size()]);
@@ -398,10 +397,11 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
             BytecodeInterpreter.setError(instruction, type.name() + " cannot be used to load local of type " + item.getType().name());
         } else {
+            final String value = "local" + index; //item.getValue() will return value inside local. This is not necessarily what we want.
             if(type == PrimitiveType.OBJECT) {
-                BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, item.getValue()));
+                BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
             } else {
-                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, item.getValue(), type));
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, type));
             }
         }
     }
@@ -468,60 +468,65 @@ public class BytecodeInterpreter {
 
         final String name = instruction.getOpcode().name().substring(2);
         // is comparing a string here really the best way?
-        if(name.equals("neg")) { //if we only need to pop one stack item
-            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, "-" + item1.getValue(), type));
-        } else {
-            final MethodItem item2 = stack.peek();
-            if(item2.getType() != type) {
-                stack.push(item1); //re-add the item we validated because this item is not valid
-                BytecodeInterpreter.setError(instruction, item2.getType() + " cannot be used with type " + type);
-                return;
-            }
-            stack.pop(); //item2 was validated, pop it and finish interpreting the opcode
+        switch(name) {
+            case "neg":  //if we only need to pop one stack item
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, "-" + item1.getValue(), type));
+                break;
+            case "inc":
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, item1.getValue() + "++", type));
+                break;
+            default:
+                final MethodItem item2 = stack.peek();
+                if(item2.getType() != type) {
+                    stack.push(item1); //re-add the item we validated because this item is not valid
+                    BytecodeInterpreter.setError(instruction, item2.getType() + " cannot be used with type " + type);
+                    return;
+                }
+                stack.pop(); //item2 was validated, pop it and finish interpreting the opcode
 
-            final String operator;
-            switch(name) {
-                case "add":
-                    operator = "+";
-                    break;
-                case "sub":
-                    operator = "-";
-                    break;
-                case "mul":
-                    operator = "*";
-                    break;
-                case "div":
-                    operator = "/";
-                    break;
-                case "rem":
-                    operator = "%";
-                    break;
-                case "and":
-                    operator = "&";
-                    break;
-                case "or":
-                    operator = "|";
-                    break;
-                case "shl":
-                    operator = "<";
-                    break;
-                case "shr":
-                    operator = ">";
-                    break;
-                case "ushr":
-                    operator = ">>";
-                    break;
-                case "xor":
-                    operator = "^";
-                    break;
-                default:
-                    operator = null;
-            }
-            assert operator != null : "Bad opcode: " + instruction.getOpcode();
+                final String operator;
+                switch(name) {
+                    case "add":
+                        operator = "+";
+                        break;
+                    case "sub":
+                        operator = "-";
+                        break;
+                    case "mul":
+                        operator = "*";
+                        break;
+                    case "div":
+                        operator = "/";
+                        break;
+                    case "rem":
+                        operator = "%";
+                        break;
+                    case "and":
+                        operator = "&";
+                        break;
+                    case "or":
+                        operator = "|";
+                        break;
+                    case "shl":
+                        operator = "<<";
+                        break;
+                    case "shr":
+                        operator = ">>";
+                        break;
+                    case "ushr":
+                        operator = ">>>";
+                        break;
+                    case "xor":
+                        operator = "^";
+                        break;
+                    default:
+                        operator = null;
+                }
+                assert operator != null : "Bad opcode: " + instruction.getOpcode();
 
-            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction,
-                    "(" + item1.getValue() + " " + operator + " " + item2.getValue() + ")", type));
-            System.out.println(stack.peek().getValue());
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction,
+                        "(" + item2.getValue() + " " + operator + " " + item1.getValue() + ")", type));
+                break;
         }
     }
 
