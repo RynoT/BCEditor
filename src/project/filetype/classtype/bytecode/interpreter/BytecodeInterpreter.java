@@ -38,8 +38,10 @@ public class BytecodeInterpreter {
         final boolean isStatic = AccessFlags.containsFlag(method.getAccessFlags(), AccessFlags.ACC_STATIC);
         final MethodStack stack = new MethodStack(code.getMaxStack());
         final MethodLocal local = new MethodLocal(code.getMaxLocals(), isStatic);
+        System.out.println("[BytecodeInterpreter] Method: " + method.getTagName(pool).getValue()
+                + ", MaxStack: " + code.getMaxStack() + ", MaxLocals: " + code.getMaxLocals());
 
-        final MethodItem[] parameters = BytecodeInterpreter.getParameters(method, pool, isStatic);
+        final MethodItem[] parameters = BytecodeInterpreter.getParameters(method.getTagDescriptor(pool).getValue(), isStatic);
         for(int i = 0; i < parameters.length; i++) {
             local.set(parameters[i], i);
         }
@@ -59,6 +61,15 @@ public class BytecodeInterpreter {
                 case _putfield:
                 case _putstatic:
                     BytecodeInterpreter.processGetAndPut(instruction, stack, pool);
+                    break;
+
+                // Invoke mnemonics
+                case _invokestatic:
+                case _invokedynamic:
+                case _invokespecial:
+                case _invokevirtual:
+                case _invokeinterface:
+                    BytecodeInterpreter.processInvoke(instruction, stack, pool);
                     break;
 
                 // Pop mnemonics
@@ -314,16 +325,21 @@ public class BytecodeInterpreter {
         return index;
     }
 
-    private static MethodItem[] getParameters(final MethodInfo method, final ConstantPool pool, final boolean isStatic) {
+    private static String[] getParameters(final String descriptorEncoded) {
+        final String descriptor = Descriptor.decode(descriptorEncoded);
+        if(descriptor.startsWith("()")) {
+            return new String[0];
+        }
+        return descriptor.substring(1, descriptor.lastIndexOf(')')).split(",\\s");
+    }
+
+    private static MethodItem[] getParameters(final String descriptorEncoded, final boolean isStatic) {
         final List<MethodItem> items = new ArrayList<>();
-        final String descriptor = Descriptor.decode(method.getTagDescriptor(pool).getValue());
         if(!isStatic) {
             items.add(new ObjectItem(null, "this")); //local 0 is always 'this' for non-static methods
         }
-        for(final String sp : descriptor.substring(1, descriptor.lastIndexOf(')')).split(",\\s")) {
-            if(sp.equals("")) {
-                continue;
-            }
+        for(final String sp : BytecodeInterpreter.getParameters(descriptorEncoded)) {
+            assert !sp.equals("");
             int dimensions = 0;
             for(int i = 0; i < sp.length(); i++) {
                 if(sp.charAt(i) == '[') {
@@ -357,10 +373,10 @@ public class BytecodeInterpreter {
             success = stack.push(new FillerItem());
         }
         if(!success || !stack.push(item)) {
-            instruction.setErrorMessage("Stack is full");
+            BytecodeInterpreter.setError(instruction, "Stack is full");
 
             // If we managed to push the filler, we must remove it since the item failed to push
-            if(success) {
+            if(success && item.getType().getStackSize() == 2) {
                 stack.pop();
             }
         }
@@ -460,81 +476,6 @@ public class BytecodeInterpreter {
             assert stack.getCount() > 0;
             stack.pop();
         }
-    }
-
-    private static void processGetAndPut(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
-        if(instruction.getOperandCount() == 0) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
-            return;
-        }
-        final int index = instruction.getOperand(0).getValue();
-        if(index <= 0 || index >= pool.getEntryCount()) {
-            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
-            return;
-        }
-        final PoolTag entry = pool.getEntry(index);
-        if(!(entry instanceof TagRef) || ((TagRef) entry).getType() != TagRef.TagRefType.FIELD) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
-            return;
-        }
-        final TagNameAndType entryNameAndType = ((TagRef) entry).getTagNameAndType(pool);
-
-        final MethodItem ref, item;
-        String expression = "";
-        // GetField requires an object reference which is obtained from the stack
-        if(instruction.getOpcode() == Opcode._getfield || instruction.getOpcode() == Opcode._putfield) {
-            ref = stack.peek();
-            if(ref == null) {
-                BytecodeInterpreter.setError(instruction, "Object reference required from stack");
-                return;
-            }
-            if(ref.getType() != PrimitiveType.OBJECT) {
-                BytecodeInterpreter.setError(instruction, "Object reference must be of type " + PrimitiveType.OBJECT + ", not " + ref.getType());
-                return;
-            }
-            stack.pop();
-
-            expression += ref.getValue() + ".";
-        } else {
-            ref = null;
-        }
-        if(instruction.getOpcode() == Opcode._putfield || instruction.getOpcode() == Opcode._putstatic) {
-            item = stack.peek();
-            if(item == null) {
-                if(ref != null) {
-                    stack.push(ref);
-                }
-                BytecodeInterpreter.setError(instruction, "Value required from stack");
-                return;
-            }
-            stack.pop();
-        } else {
-            item = null;
-        }
-
-        switch(instruction.getOpcode()) {
-            case _getfield:
-                expression += entryNameAndType.getTagName(pool).getValue();
-                break;
-            case _getstatic:
-                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue();
-                break;
-            case _putfield:
-                assert item != null;
-                expression += entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
-                break;
-            case _putstatic:
-                assert item != null;
-                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
-                break;
-        }
-        final PrimitiveType type = PrimitiveType.get(Descriptor.decode(entryNameAndType.getTagDescriptor(pool).getValue()));
-        if(type == PrimitiveType.OBJECT) {
-            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
-        } else {
-            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
-        }
-        System.out.println("exp: " + expression);
     }
 
     private static void processDup(final Instruction instruction, final MethodStack stack) {
@@ -646,6 +587,178 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.FLOAT));
                     break;
             }
+        }
+    }
+
+    private static void processInvoke(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+            return;
+        }
+        final int index = instruction.getOperand(0).getValue();
+        if(index <= 0 || index >= pool.getEntryCount()) {
+            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+            return;
+        }
+        final PoolTag entry = pool.getEntry(index);
+        assert entry != null;
+        if(instruction.getOpcode() == Opcode._invokeinterface ? entry.getPoolTagId() != PoolTag.TAG_IM_REF
+                : entry.getPoolTagId() != PoolTag.TAG_METHOD_REF) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
+            return;
+        }
+        assert entry instanceof TagRef;
+
+        final String descriptor = ((TagRef) entry).getTagNameAndType(pool).getTagDescriptor(pool).getValue();
+        final int parameterCount = BytecodeInterpreter.getParameters(descriptor).length;
+        final MethodItem[] parameters = new MethodItem[parameterCount];
+        for(int i = parameterCount - 1; i >= 0; i--) {
+            final MethodItem next = stack.peek();
+            //TODO verify type
+            if(next == null) {
+                BytecodeInterpreter.setError(instruction, "Method requires " + parameterCount + " parameters from stack");
+                // Put all of our popped parameters back onto the stack
+                for(++i; i < parameters.length; i++) {
+                    stack.push(parameters[i]);
+                }
+                return;
+            }
+            stack.pop();
+            parameters[i] = next;
+        }
+
+        MethodItem ref = null;
+        switch(instruction.getOpcode()) {
+            case _invokedynamic:
+                if(instruction.getOperandCount() < 3 || instruction.getOperand(1).getValue() != 0
+                        || instruction.getOperand(2).getValue() != 0) {
+                    BytecodeInterpreter.setError(instruction, "invokedynamic requires two 0 operands as padding");
+                    return;
+                }
+            case _invokestatic:
+                break;
+            case _invokeinterface:
+                if(instruction.getOperandCount() < 3 || instruction.getOperand(2).getValue() != 0) {
+                    BytecodeInterpreter.setError(instruction, "invokeinterface requires three operands (index, count, 0)");
+                    return;
+                }
+                if(instruction.getOperand(1).getValue() != parameterCount + 1) {
+                    BytecodeInterpreter.setError(instruction, "Second operand must be value " + (parameterCount + 1));
+                    return;
+                }
+            case _invokespecial:
+            case _invokevirtual:
+                ref = stack.peek();
+                if(ref == null || ref.getType() != PrimitiveType.OBJECT) {
+                    BytecodeInterpreter.setError(instruction, instruction.getOpcode().name().substring(1) + " requires object reference from stack");
+                    return;
+                }
+                stack.pop();
+                break;
+            default:
+                assert false;
+        }
+        // If we get here that means everything was successful and we can complete the process
+        if(descriptor.charAt(descriptor.length() - 1) == 'V') {
+            // If the method returns void, we don't have to do anything further since it doesn't push anything to the stack
+            return;
+        }
+        // Construct method call expression
+        String expression = "";
+        if(instruction.getOpcode() == Opcode._invokestatic) {
+            expression += ((TagRef) entry).getTagClass(pool).getContentString(pool);
+        } else {
+            assert ref != null;
+            expression += ref.getValue();
+        }
+        expression += "." + ((TagRef) entry).getTagNameAndType(pool).getTagName(pool).getValue() + "(";
+        for(int i = 0; i < parameters.length; i++) {
+            expression += parameters[i].getValue();
+            if(i < parameters.length - 1) {
+                expression += ", ";
+            }
+        }
+        expression += ")";
+
+        final PrimitiveType type = PrimitiveType.get(Descriptor.decode(String.valueOf(descriptor.charAt(descriptor.length() - 1))));
+        if(type == PrimitiveType.OBJECT) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+        } else {
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
+        }
+    }
+
+    private static void processGetAndPut(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+            return;
+        }
+        final int index = instruction.getOperand(0).getValue();
+        if(index <= 0 || index >= pool.getEntryCount()) {
+            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+            return;
+        }
+        final PoolTag entry = pool.getEntry(index);
+        if(!(entry instanceof TagRef) || ((TagRef) entry).getType() != TagRef.TagRefType.FIELD) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
+            return;
+        }
+        final TagNameAndType entryNameAndType = ((TagRef) entry).getTagNameAndType(pool);
+
+        final MethodItem ref, item;
+        String expression = "";
+        // GetField requires an object reference which is obtained from the stack
+        if(instruction.getOpcode() == Opcode._getfield || instruction.getOpcode() == Opcode._putfield) {
+            ref = stack.peek();
+            if(ref == null) {
+                BytecodeInterpreter.setError(instruction, "Object reference required from stack");
+                return;
+            }
+            if(ref.getType() != PrimitiveType.OBJECT) {
+                BytecodeInterpreter.setError(instruction, "Object reference must be of type " + PrimitiveType.OBJECT + ", not " + ref.getType());
+                return;
+            }
+            stack.pop();
+
+            expression += ref.getValue() + ".";
+        } else {
+            ref = null;
+        }
+        if(instruction.getOpcode() == Opcode._putfield || instruction.getOpcode() == Opcode._putstatic) {
+            item = stack.peek();
+            if(item == null) {
+                if(ref != null) {
+                    stack.push(ref);
+                }
+                BytecodeInterpreter.setError(instruction, "Value required from stack");
+                return;
+            }
+            stack.pop();
+        } else {
+            item = null;
+        }
+
+        switch(instruction.getOpcode()) {
+            case _getfield:
+                expression += entryNameAndType.getTagName(pool).getValue();
+                break;
+            case _getstatic:
+                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue();
+                break;
+            case _putfield:
+                assert item != null;
+                expression += entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
+                break;
+            case _putstatic:
+                assert item != null;
+                expression += ((TagRef) entry).getTagClass(pool).getContentString(pool) + "." + entryNameAndType.getTagName(pool).getValue() + " = " + item.getValue();
+                break;
+        }
+        final PrimitiveType type = PrimitiveType.get(Descriptor.decode(entryNameAndType.getTagDescriptor(pool).getValue()));
+        if(type == PrimitiveType.OBJECT) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+        } else {
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
         }
     }
 

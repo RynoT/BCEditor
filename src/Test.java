@@ -2,6 +2,7 @@ import java.awt.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,7 @@ public abstract class Test extends HashMap<Image, Void> implements Runnable, Clo
         final int x = 4 * j;
         final int y = 9 << x;
         System.out.println(y + x);
+        test2(new ArrayList(), null);
     }
 
     public <D extends InputStream, K> void turndownforwhat(D what) {
