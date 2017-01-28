@@ -38,8 +38,8 @@ public class BytecodeInterpreter {
         final boolean isStatic = AccessFlags.containsFlag(method.getAccessFlags(), AccessFlags.ACC_STATIC);
         final MethodStack stack = new MethodStack(code.getMaxStack());
         final MethodLocal local = new MethodLocal(code.getMaxLocals(), isStatic);
-        System.out.println("[BytecodeInterpreter] Method: " + method.getTagName(pool).getValue()
-                + ", MaxStack: " + code.getMaxStack() + ", MaxLocals: " + code.getMaxLocals());
+        //System.out.println("[BytecodeInterpreter] Method: " + method.getTagName(pool).getValue()
+        //        + ", MaxStack: " + code.getMaxStack() + ", MaxLocals: " + code.getMaxLocals());
 
         final MethodItem[] parameters = BytecodeInterpreter.getParameters(method.getTagDescriptor(pool).getValue(), isStatic);
         for(int i = 0; i < parameters.length; i++) {
@@ -707,7 +707,18 @@ public class BytecodeInterpreter {
 
         final MethodItem ref, item;
         String expression = "";
-        // GetField requires an object reference which is obtained from the stack
+        // PutField and PutStatic both require an item from the stack to put into the field
+        if(instruction.getOpcode() == Opcode._putfield || instruction.getOpcode() == Opcode._putstatic) {
+            item = stack.peek();
+            if(item == null) {
+                BytecodeInterpreter.setError(instruction, "Value required from stack");
+                return;
+            }
+            stack.pop();
+        } else {
+            item = null;
+        }
+        // GetField and PutField both require an object reference which is obtained from the stack
         if(instruction.getOpcode() == Opcode._getfield || instruction.getOpcode() == Opcode._putfield) {
             ref = stack.peek();
             if(ref == null) {
@@ -723,19 +734,6 @@ public class BytecodeInterpreter {
             expression += ref.getValue() + ".";
         } else {
             ref = null;
-        }
-        if(instruction.getOpcode() == Opcode._putfield || instruction.getOpcode() == Opcode._putstatic) {
-            item = stack.peek();
-            if(item == null) {
-                if(ref != null) {
-                    stack.push(ref);
-                }
-                BytecodeInterpreter.setError(instruction, "Value required from stack");
-                return;
-            }
-            stack.pop();
-        } else {
-            item = null;
         }
 
         switch(instruction.getOpcode()) {
