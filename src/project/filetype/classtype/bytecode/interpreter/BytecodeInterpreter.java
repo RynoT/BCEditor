@@ -8,6 +8,7 @@ import project.filetype.classtype.bytecode.interpreter.item.*;
 import project.filetype.classtype.bytecode.opcode.Opcode;
 import project.filetype.classtype.constantpool.ConstantPool;
 import project.filetype.classtype.constantpool.PoolTag;
+import project.filetype.classtype.constantpool.tag.TagClass;
 import project.filetype.classtype.constantpool.tag.TagNameAndType;
 import project.filetype.classtype.constantpool.tag.TagRef;
 import project.filetype.classtype.member.MethodInfo;
@@ -88,6 +89,35 @@ public class BytecodeInterpreter {
                 case _dup2_x1:
                 case _dup2_x2:
                     BytecodeInterpreter.processDup2(instruction, stack);
+                    break;
+
+                // Checkcast mnemoinc
+                case _checkcast:
+                    if(instruction.getOperandCount() == 0) {
+                        BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+                        break;
+                    }
+                    final int index = instruction.getOperand(0).getValue();
+                    if(index <= 0 || index >= pool.getEntryCount()){
+                        BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+                        break;
+                    }
+                    final PoolTag checkTag = pool.getEntry(index);
+                    if(!(checkTag instanceof TagClass)){
+                        BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type Class ref");
+                        break;
+                    }
+                    final MethodItem ref = stack.peek();
+                    if(ref == null) {
+                        BytecodeInterpreter.setError(instruction, "Stack is empty");
+                        break;
+                    }
+                    if(ref.getType() != PrimitiveType.OBJECT){
+                        BytecodeInterpreter.setError(instruction, ref.getType() + " cannot be used in place of " + PrimitiveType.OBJECT);
+                        break;
+                    }
+                    stack.pop();
+                    BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "(" + checkTag.getContentString(pool) + ")" + ref.getValue()));
                     break;
 
                 // Swap mnemonic
@@ -732,8 +762,6 @@ public class BytecodeInterpreter {
             stack.pop();
 
             expression += ref.getValue() + ".";
-        } else {
-            ref = null;
         }
 
         switch(instruction.getOpcode()) {
