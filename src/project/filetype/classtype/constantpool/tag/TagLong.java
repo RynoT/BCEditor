@@ -11,6 +11,8 @@ import java.io.IOException;
  */
 public class TagLong extends PoolTag {
 
+    public static final String NAME = "Long";
+
     private final long value;
 
     public TagLong(final DataInputStream dis) throws IOException {
@@ -33,7 +35,7 @@ public class TagLong extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "Long";
+        return TagLong.NAME;
     }
 
     @Override

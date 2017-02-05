@@ -91,20 +91,25 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processDup2(instruction, stack);
                     break;
 
-                // Checkcast mnemoinc
+                // Array mnemonics
+                case _anewarray:
+
+                    break;
+
+                // Checkcast mnemonic
                 case _checkcast:
                     if(instruction.getOperandCount() == 0) {
                         BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
                         break;
                     }
                     final int index = instruction.getOperand(0).getValue();
-                    if(index <= 0 || index >= pool.getEntryCount()){
+                    if(index <= 0 || index >= pool.getEntryCount()) {
                         BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
                         break;
                     }
                     final PoolTag checkTag = pool.getEntry(index);
-                    if(!(checkTag instanceof TagClass)){
-                        BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type Class ref");
+                    if(!(checkTag instanceof TagClass)) {
+                        BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
                         break;
                     }
                     final MethodItem ref = stack.peek();
@@ -112,8 +117,8 @@ public class BytecodeInterpreter {
                         BytecodeInterpreter.setError(instruction, "Stack is empty");
                         break;
                     }
-                    if(ref.getType() != PrimitiveType.OBJECT){
-                        BytecodeInterpreter.setError(instruction, ref.getType() + " cannot be used in place of " + PrimitiveType.OBJECT);
+                    if(ref.getType() != PrimitiveType.OBJECT) {
+                        BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.OBJECT);
                         break;
                     }
                     stack.pop();
@@ -427,7 +432,7 @@ public class BytecodeInterpreter {
             item = stack.peek();
             assert item != null;
             if(item.getType() == PrimitiveType.LONG || item.getType() == PrimitiveType.DOUBLE) {
-                BytecodeInterpreter.setError(instruction, "Second stack element of type "
+                BytecodeInterpreter.setError(instruction, "Second stack item of type "
                         + item.getType() + " cannot be removed this way");
                 return;
             }
@@ -632,10 +637,18 @@ public class BytecodeInterpreter {
         }
         final PoolTag entry = pool.getEntry(index);
         assert entry != null;
-        if(instruction.getOpcode() == Opcode._invokeinterface ? entry.getPoolTagId() != PoolTag.TAG_IM_REF
-                : entry.getPoolTagId() != PoolTag.TAG_METHOD_REF) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
-            return;
+        switch(instruction.getOpcode()){
+            case _invokeinterface:
+                if(entry.getPoolTagId() != PoolTag.TAG_IM_REF) {
+                    BytecodeInterpreter.setError(instruction, "ConstantPool index must be of type " + TagRef.INTERFACE_METHOD_NAME);
+                    return;
+                }
+                break;
+            default:
+                if(entry.getPoolTagId() != PoolTag.TAG_METHOD_REF){
+                    BytecodeInterpreter.setError(instruction, "ConstantPool index must be of type " + TagRef.METHOD_NAME);
+                    return;
+                }
         }
         assert entry instanceof TagRef;
 
@@ -730,7 +743,7 @@ public class BytecodeInterpreter {
         }
         final PoolTag entry = pool.getEntry(index);
         if(!(entry instanceof TagRef) || ((TagRef) entry).getType() != TagRef.TagRefType.FIELD) {
-            BytecodeInterpreter.setError(instruction, "ConstantPool index cannot be of type " + entry.getPoolTagName());
+            BytecodeInterpreter.setError(instruction, "ConstantPool index must be of type " + TagRef.FIELD_NAME);
             return;
         }
         final TagNameAndType entryNameAndType = ((TagRef) entry).getTagNameAndType(pool);

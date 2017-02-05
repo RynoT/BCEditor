@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class TagInvokeDynamic extends PoolTag {
 
+    public static final String NAME = "Invoke Dynamic";
+
     private final int bootstrapMethodIndex, nameTypeIndex;
 
     public TagInvokeDynamic(final DataInputStream dis) throws IOException {
@@ -47,7 +49,7 @@ public class TagInvokeDynamic extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "Invoke Dynamic";
+        return TagInvokeDynamic.NAME;
     }
 
     @Override

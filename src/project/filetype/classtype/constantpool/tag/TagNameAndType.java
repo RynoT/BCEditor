@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class TagNameAndType extends PoolTag {
 
+    public static final String NAME = "Name and Type";
+
     private final int nameIndex, descriptorIndex;
 
     public TagNameAndType(final DataInputStream dis) throws IOException {
@@ -47,7 +49,7 @@ public class TagNameAndType extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "Name and Type";
+        return TagNameAndType.NAME;
     }
 
     @Override

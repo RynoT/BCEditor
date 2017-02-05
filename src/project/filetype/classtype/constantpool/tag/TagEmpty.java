@@ -8,6 +8,8 @@ import project.filetype.classtype.constantpool.PoolTag;
  */
 public class TagEmpty extends PoolTag {
 
+    public static final String NAME = "empty";
+
     @Override
     public int getPoolTagId() {
         return -1;
@@ -20,7 +22,7 @@ public class TagEmpty extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "empty";
+        return TagEmpty.NAME;
     }
 
     @Override

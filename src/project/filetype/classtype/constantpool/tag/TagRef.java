@@ -11,6 +11,10 @@ import java.io.IOException;
  */
 public class TagRef extends PoolTag {
 
+    public static final String FIELD_NAME = "Field ref";
+    public static final String METHOD_NAME = "Method ref";
+    public static final String INTERFACE_METHOD_NAME = "Interface ref";
+
     private final int classIndex, nameTypeIndex;
     private final TagRefType type;
 
@@ -64,11 +68,11 @@ public class TagRef extends PoolTag {
     public String getPoolTagName() {
         switch(this.type){
             case FIELD:
-                return "Field ref";
+                return TagRef.FIELD_NAME;
             case METHOD:
-                return "Method ref";
+                return TagRef.METHOD_NAME;
             case INTERFACE_METHOD:
-                return "Interface ref";
+                return TagRef.INTERFACE_METHOD_NAME;
         }
         assert (false);
         return null;

@@ -11,6 +11,8 @@ import java.io.IOException;
  */
 public class TagUTF8 extends PoolTag {
 
+    public static final String NAME = "UTF-8";
+
     private final String value;
 
     public TagUTF8(final DataInputStream dis) throws IOException {
@@ -35,7 +37,7 @@ public class TagUTF8 extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "UTF-8";
+        return TagUTF8.NAME;
     }
 
     @Override

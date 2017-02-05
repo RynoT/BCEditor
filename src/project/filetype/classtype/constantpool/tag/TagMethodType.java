@@ -12,6 +12,8 @@ import java.io.IOException;
  */
 public class TagMethodType extends PoolTag {
 
+    public static final String NAME = "Method Type";
+
     private final int descriptorIndex;
 
     public TagMethodType(final DataInputStream dis) throws IOException {
@@ -38,7 +40,7 @@ public class TagMethodType extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "Method Type";
+        return TagMethodType.NAME;
     }
 
     @Override

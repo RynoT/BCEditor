@@ -12,6 +12,8 @@ import java.io.IOException;
 // int, short, char, byte, boolean
 public class TagInteger extends PoolTag {
 
+    public static final String NAME = "Integer";
+
     private final int value;
 
     public TagInteger(final DataInputStream dis) throws IOException {
@@ -34,7 +36,7 @@ public class TagInteger extends PoolTag {
 
     @Override
     public String getPoolTagName() {
-        return "Integer";
+        return TagInteger.NAME;
     }
 
     @Override
