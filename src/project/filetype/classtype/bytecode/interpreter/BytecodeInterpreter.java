@@ -95,7 +95,7 @@ public class BytecodeInterpreter {
                 // Array mnemonics
                 case _newarray:
                 case _anewarray:
-                    BytecodeInterpreter.processNewArray(instruction, stack pool);
+                    BytecodeInterpreter.processNewArray(instruction, stack, pool);
                     break;
 
                 // Checkcast mnemonic
@@ -633,52 +633,49 @@ public class BytecodeInterpreter {
         }
     }
 
-    private static void processNewArray(final Instruction instruction, final MethodStack stack, final ConstantPool pool){
-        if(instruction.getOpcode() != Opcode._multianewarray) {
-            if(instruction.getOperandCount() < 1) {
-                BytecodeInterpreter.setError(instruction, instruction.getOpcode() == Opcode._newarray
-                        ? "Type" : "ConstantPool index" + " operand required");
-                return;
-            }
-            String input;
-            PrimitiveType primitive;
-            final int operand = instruction.getOperand(0).getValue();
-            if(instruction.getOpcode() == Opcode._newarray){
-                if(operand < 4 || operand > 11) {
-                    BytecodeInterpreter.setError(instruction, "Type must be a value between 4 and 11");
-                    return;
-                }
-                input = ArrayRefItem.getType(operand);
-                primitive = ArrayRefItem.getPrimitive(operand);
-            } else {
-                if(operand <= 0 || operand >= pool.getEntryCount()) {
-                    BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
-                    return;
-                }
-                final PoolTag tag = pool.getEntry(operand);
-                if(!(tag instanceof TagClass)) {
-                    BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
-                    return;
-                }
-                input = tag.getContentString(pool);
-                primitive = PrimitiveType.OBJECT;
-            }
-            final MethodItem item = stack.peek();
-            if(item == null){
-                BytecodeInterpreter.setError(instruction, "Stack is empty");
-                return;
-            }
-            if(item.getType() != PrimitiveType.INTEGER){
-                BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.INTEGER);
-                return;
-            }
-            stack.pop();
-
-            input = "new " + input + "[" + item.getValue() + "]";
-            stack.push(new ArrayRefItem(instruction, input, primitive, 1));
-        } else {
-
+    private static void processNewArray(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        assert instruction.getOpcode() != Opcode._multianewarray : "This method doesn't support this array type";
+        if(instruction.getOperandCount() < 1) {
+            BytecodeInterpreter.setError(instruction, instruction.getOpcode() == Opcode._newarray
+                    ? "Type" : "ConstantPool index" + " operand required");
+            return;
         }
+        String input;
+        PrimitiveType primitive;
+        final int operand = instruction.getOperand(0).getValue();
+        if(instruction.getOpcode() == Opcode._newarray) {
+            if(operand < 4 || operand > 11) {
+                BytecodeInterpreter.setError(instruction, "Type must be a value between 4 and 11");
+                return;
+            }
+            input = ArrayRefItem.getType(operand);
+            primitive = ArrayRefItem.getPrimitive(operand);
+        } else {
+            if(operand <= 0 || operand >= pool.getEntryCount()) {
+                BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+                return;
+            }
+            final PoolTag tag = pool.getEntry(operand);
+            if(!(tag instanceof TagClass)) {
+                BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
+                return;
+            }
+            input = tag.getContentString(pool);
+            primitive = PrimitiveType.OBJECT;
+        }
+        final MethodItem item = stack.peek();
+        if(item == null) {
+            BytecodeInterpreter.setError(instruction, "Stack is empty");
+            return;
+        }
+        if(item.getType() != PrimitiveType.INTEGER) {
+            BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.INTEGER);
+            return;
+        }
+        stack.pop();
+
+        input = "new " + input + "[" + item.getValue() + "]";
+        stack.push(new ArrayRefItem(instruction, input, primitive, 1));
     }
 
     private static void processInvoke(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
