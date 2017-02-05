@@ -98,9 +98,10 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processNewArray(instruction, stack, pool);
                     break;
 
-                // Checkcast mnemonic
+                // Checkcast and Instanceof mnemonic
                 case _checkcast:
-                    BytecodeInterpreter.processCast(instruction, stack, pool);
+                case _instanceof:
+                    BytecodeInterpreter.processInstanceofAndCast(instruction, stack, pool);
                     break;
 
                 // Swap mnemonic
@@ -493,7 +494,7 @@ public class BytecodeInterpreter {
         }
     }
 
-    private static void processCast(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+    private static void processInstanceofAndCast(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
         if(instruction.getOperandCount() == 0) {
             BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
             return;
@@ -503,8 +504,8 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
             return;
         }
-        final PoolTag checkTag = pool.getEntry(index);
-        if(!(checkTag instanceof TagClass)) {
+        final PoolTag tag = pool.getEntry(index);
+        if(!(tag instanceof TagClass)) {
             BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
             return;
         }
@@ -518,7 +519,14 @@ public class BytecodeInterpreter {
             return;
         }
         stack.pop();
-        BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "(" + checkTag.getContentString(pool) + ")" + ref.getValue()));
+        if(instruction.getOpcode() == Opcode._checkcast) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction,
+                    "(" + tag.getContentString(pool) + ")" + ref.getValue()));
+        } else {
+            assert instruction.getOpcode() == Opcode._instanceof;
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction,
+                    ref.getValue() + " instanceof " + tag.getContentString(pool), PrimitiveType.INTEGER));
+        }
     }
 
     private static void processDup(final Instruction instruction, final MethodStack stack) {
