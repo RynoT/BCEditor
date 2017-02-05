@@ -46,6 +46,7 @@ public class BytecodeInterpreter {
         for(int i = 0; i < parameters.length; i++) {
             local.set(parameters[i], i);
         }
+        ;
         for(final Instruction instruction : analyzer.getInstructions()) {
             final Opcode opcode = instruction.getOpcode();
             switch(opcode) {
@@ -92,37 +93,14 @@ public class BytecodeInterpreter {
                     break;
 
                 // Array mnemonics
+                case _newarray:
                 case _anewarray:
-
+                    BytecodeInterpreter.processNewArray(instruction, stack pool);
                     break;
 
                 // Checkcast mnemonic
                 case _checkcast:
-                    if(instruction.getOperandCount() == 0) {
-                        BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
-                        break;
-                    }
-                    final int index = instruction.getOperand(0).getValue();
-                    if(index <= 0 || index >= pool.getEntryCount()) {
-                        BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
-                        break;
-                    }
-                    final PoolTag checkTag = pool.getEntry(index);
-                    if(!(checkTag instanceof TagClass)) {
-                        BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
-                        break;
-                    }
-                    final MethodItem ref = stack.peek();
-                    if(ref == null) {
-                        BytecodeInterpreter.setError(instruction, "Stack is empty");
-                        break;
-                    }
-                    if(ref.getType() != PrimitiveType.OBJECT) {
-                        BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.OBJECT);
-                        break;
-                    }
-                    stack.pop();
-                    BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "(" + checkTag.getContentString(pool) + ")" + ref.getValue()));
+                    BytecodeInterpreter.processCast(instruction, stack, pool);
                     break;
 
                 // Swap mnemonic
@@ -141,7 +119,7 @@ public class BytecodeInterpreter {
 
                 // Monitor mnemonic
                 case _monitorenter:
-                case _monitorexit:
+                case _monitorexit: {
                     if(stack.getCount() < 1) {
                         BytecodeInterpreter.setError(instruction, "Requires object reference");
                         break;
@@ -153,9 +131,10 @@ public class BytecodeInterpreter {
                     }
                     stack.pop();
                     break;
+                }
 
                 // New mnemonic
-                case _new:
+                case _new: {
                     if(instruction.getOperandCount() == 0) {
                         BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
                         BytecodeInterpreter.processStackPush(instruction, stack, new InvalidItem(instruction));
@@ -169,6 +148,7 @@ public class BytecodeInterpreter {
                     }
                     BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "new " + tag.getContentString(pool)));
                     break;
+                }
 
                 // Push mnemonics
                 case _bipush:
@@ -384,7 +364,7 @@ public class BytecodeInterpreter {
             final PrimitiveType type = PrimitiveType.get(sp);
             final String value = "local" + items.size();
             if(dimensions != 0) {
-                items.add(new ArrayRefItem(null, type, dimensions));
+                items.add(new ArrayRefItem(null, null, type, dimensions));
             } else if(type != PrimitiveType.OBJECT) {
                 items.add(new NumberItem(null, value, type));
             } else { //if type is object
@@ -513,6 +493,34 @@ public class BytecodeInterpreter {
         }
     }
 
+    private static void processCast(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
+            return;
+        }
+        final int index = instruction.getOperand(0).getValue();
+        if(index <= 0 || index >= pool.getEntryCount()) {
+            BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+            return;
+        }
+        final PoolTag checkTag = pool.getEntry(index);
+        if(!(checkTag instanceof TagClass)) {
+            BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
+            return;
+        }
+        final MethodItem ref = stack.peek();
+        if(ref == null) {
+            BytecodeInterpreter.setError(instruction, "Stack is empty");
+            return;
+        }
+        if(ref.getType() != PrimitiveType.OBJECT) {
+            BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.OBJECT);
+            return;
+        }
+        stack.pop();
+        BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "(" + checkTag.getContentString(pool) + ")" + ref.getValue()));
+    }
+
     private static void processDup(final Instruction instruction, final MethodStack stack) {
         if(stack.getCount() < 1) {
             BytecodeInterpreter.setError(instruction, "No stack items to duplicate");
@@ -625,6 +633,54 @@ public class BytecodeInterpreter {
         }
     }
 
+    private static void processNewArray(final Instruction instruction, final MethodStack stack, final ConstantPool pool){
+        if(instruction.getOpcode() != Opcode._multianewarray) {
+            if(instruction.getOperandCount() < 1) {
+                BytecodeInterpreter.setError(instruction, instruction.getOpcode() == Opcode._newarray
+                        ? "Type" : "ConstantPool index" + " operand required");
+                return;
+            }
+            String input;
+            PrimitiveType primitive;
+            final int operand = instruction.getOperand(0).getValue();
+            if(instruction.getOpcode() == Opcode._newarray){
+                if(operand < 4 || operand > 11) {
+                    BytecodeInterpreter.setError(instruction, "Type must be a value between 4 and 11");
+                    return;
+                }
+                input = ArrayRefItem.getType(operand);
+                primitive = ArrayRefItem.getPrimitive(operand);
+            } else {
+                if(operand <= 0 || operand >= pool.getEntryCount()) {
+                    BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
+                    return;
+                }
+                final PoolTag tag = pool.getEntry(operand);
+                if(!(tag instanceof TagClass)) {
+                    BytecodeInterpreter.setError(instruction, "ConstantPool entry must be of type " + TagClass.NAME);
+                    return;
+                }
+                input = tag.getContentString(pool);
+                primitive = PrimitiveType.OBJECT;
+            }
+            final MethodItem item = stack.peek();
+            if(item == null){
+                BytecodeInterpreter.setError(instruction, "Stack is empty");
+                return;
+            }
+            if(item.getType() != PrimitiveType.INTEGER){
+                BytecodeInterpreter.setError(instruction, "Stack item must be of type " + PrimitiveType.INTEGER);
+                return;
+            }
+            stack.pop();
+
+            input = "new " + input + "[" + item.getValue() + "]";
+            stack.push(new ArrayRefItem(instruction, input, primitive, 1));
+        } else {
+
+        }
+    }
+
     private static void processInvoke(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
         if(instruction.getOperandCount() == 0) {
             BytecodeInterpreter.setError(instruction, "ConstantPool index operand required");
@@ -637,7 +693,7 @@ public class BytecodeInterpreter {
         }
         final PoolTag entry = pool.getEntry(index);
         assert entry != null;
-        switch(instruction.getOpcode()){
+        switch(instruction.getOpcode()) {
             case _invokeinterface:
                 if(entry.getPoolTagId() != PoolTag.TAG_IM_REF) {
                     BytecodeInterpreter.setError(instruction, "ConstantPool index must be of type " + TagRef.INTERFACE_METHOD_NAME);
@@ -645,7 +701,7 @@ public class BytecodeInterpreter {
                 }
                 break;
             default:
-                if(entry.getPoolTagId() != PoolTag.TAG_METHOD_REF){
+                if(entry.getPoolTagId() != PoolTag.TAG_METHOD_REF) {
                     BytecodeInterpreter.setError(instruction, "ConstantPool index must be of type " + TagRef.METHOD_NAME);
                     return;
                 }
