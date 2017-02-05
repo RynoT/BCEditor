@@ -92,11 +92,28 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processDup2(instruction, stack);
                     break;
 
-                // Array mnemonics
+                // New array mnemonics
                 case _newarray:
                 case _anewarray:
                     BytecodeInterpreter.processNewArray(instruction, stack, pool);
                     break;
+
+                // Array length mnemonic
+                case _arraylength: {
+                    final MethodItem item = stack.peek();
+                    if(item == null){
+                        BytecodeInterpreter.setError(instruction, "Stack is empty");
+                        return;
+                    }
+                    if(!(item instanceof ArrayRefItem)){
+                        BytecodeInterpreter.setError(instruction, "Stack item must be array ref");
+                        return;
+                    }
+                    stack.pop();
+                    stack.push(new NumberItem(instruction, item.getValue() + ".length", PrimitiveType.INTEGER));
+                    System.out.println(item.getValue() + ".length");
+                    break;
+                }
 
                 // Checkcast and Instanceof mnemonic
                 case _checkcast:
@@ -341,6 +358,16 @@ public class BytecodeInterpreter {
         return index;
     }
 
+    private static int getDimensionsCount(final String descriptorEncoded){
+        int count = 0;
+        for(int i = 0; i < descriptorEncoded.length(); i++){
+            if(descriptorEncoded.charAt(i) == '['){
+                count++;
+            }
+        }
+        return count;
+    }
+
     private static String[] getParameters(final String descriptorEncoded) {
         final String descriptor = Descriptor.decode(descriptorEncoded);
         if(descriptor.startsWith("()")) {
@@ -356,12 +383,7 @@ public class BytecodeInterpreter {
         }
         for(final String sp : BytecodeInterpreter.getParameters(descriptorEncoded)) {
             assert !sp.equals("");
-            int dimensions = 0;
-            for(int i = 0; i < sp.length(); i++) {
-                if(sp.charAt(i) == '[') {
-                    dimensions++;
-                }
-            }
+            final int dimensions = BytecodeInterpreter.getDimensionsCount(sp);
             final PrimitiveType type = PrimitiveType.get(sp);
             final String value = "local" + items.size();
             if(dimensions != 0) {
@@ -784,11 +806,17 @@ public class BytecodeInterpreter {
         }
         expression += ")";
 
-        final PrimitiveType type = PrimitiveType.get(Descriptor.decode(String.valueOf(descriptor.charAt(descriptor.length() - 1))));
-        if(type == PrimitiveType.OBJECT) {
-            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+        final String decoded = Descriptor.decode(descriptor), returnType = decoded.substring(decoded.lastIndexOf(')') + 1);
+        final int dimensions = BytecodeInterpreter.getDimensionsCount(returnType);
+        final PrimitiveType type = PrimitiveType.get(returnType);
+        if(dimensions > 0){
+            BytecodeInterpreter.processStackPush(instruction, stack, new ArrayRefItem(instruction, expression, type, dimensions));
         } else {
-            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
+            if(type == PrimitiveType.OBJECT) {
+                BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+            } else {
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
+            }
         }
     }
 
