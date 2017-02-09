@@ -46,7 +46,6 @@ public class BytecodeInterpreter {
         for(int i = 0; i < parameters.length; i++) {
             local.set(parameters[i], i);
         }
-        ;
         for(final Instruction instruction : analyzer.getInstructions()) {
             final Opcode opcode = instruction.getOpcode();
             switch(opcode) {

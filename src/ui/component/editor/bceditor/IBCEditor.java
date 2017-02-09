@@ -54,7 +54,7 @@ public class IBCEditor extends IEditor {
             final IButton attributeButton = new IButton("Attributes").setToggle(true);
             this.attributeEditor = new IBCAttributeEditor();
             attributeButton.addEvent(this.attributeEditor::populate);
-            toolbar.addTab(new ITab(attributeButton, this.attributeEditor, false), false);
+            //toolbar.addTab(new ITab(attributeButton, this.attributeEditor, false), false);
             //attributeButton.click();
 
             toolbar.addComponentListener(new ComponentAdapter() {
