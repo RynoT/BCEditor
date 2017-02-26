@@ -1,5 +1,6 @@
 package ui;
 
+import project.FolderProject;
 import project.Project;
 import project.ZipProject;
 import ui.component.*;
@@ -142,11 +143,10 @@ public class Canvas extends JFrame {
                                         this.lastDirectory = chooser.getCurrentDirectory().getAbsolutePath();
 
                                         final Project project;
-                                        if(chosen.isDirectory()) {
-                                            assert false; //TODO folder project
-                                            project = null;
-                                        } else {
+                                        if(chosen.isFile()) {
                                             project = new ZipProject(chosen.getAbsolutePath());
+                                        } else {
+                                            project = new FolderProject(chosen.getAbsolutePath());
                                         }
                                         Async.submit(() -> {
                                             try {
