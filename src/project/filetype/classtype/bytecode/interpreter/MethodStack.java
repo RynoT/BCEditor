@@ -33,6 +33,10 @@ class MethodStack {
         this.stack[index2] = temp;
     }
 
+    public void empty(){
+        this.pointer = -1;
+    }
+
     public MethodItem peek() {
         if(this.pointer == -1) {
             return null;

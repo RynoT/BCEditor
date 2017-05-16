@@ -82,4 +82,24 @@ public enum PrimitiveType {
         }
         return null;
     }
+
+    public static String getName(final char c){
+        switch(c) {
+            case 'i':
+                return "int";
+            case 'b':
+                return "byte";
+            case 'c':
+                return "char";
+            case 's':
+                return "short";
+            case 'f':
+                return "float";
+            case 'l':
+                return "long";
+            case 'd':
+                return "double";
+        }
+        return null;
+    }
 }
