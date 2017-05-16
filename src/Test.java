@@ -29,6 +29,14 @@ public abstract class Test extends HashMap<Image, Void> implements Runnable, Clo
         System.out.println("Ok\" then");
     }
 
+    public boolean test2(){
+        boolean b = true;
+        if(Math.random() < 0.5f){
+            b = false;
+        }
+        return b;
+    }
+
     public <T extends InputStream> void test(List<? super T> list, T set) throws IOException, InterruptedException {
     }
 

@@ -500,8 +500,12 @@ public class BytecodeInterpreter {
             BytecodeInterpreter.setError(instruction, "Arrayref required");
             return;
         }
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode());
+        if(type != arrayref.getType()){
+            BytecodeInterpreter.setError(instruction, "This mnemonic cannot push type " + arrayref.getType());
+            return;
+        }
         final String value = arrayref.getValue() + "[" + index.getValue() + "]";
-        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
         if(type == PrimitiveType.OBJECT) {
             BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
         } else {
@@ -536,7 +540,27 @@ public class BytecodeInterpreter {
     }
 
     private static void processArrayStore(final Instruction instruction, final MethodStack stack) {
-
+        if(stack.getCount() < 3){
+            BytecodeInterpreter.setError(instruction, "Arrayref, index, and value stack items required");
+            return;
+        }
+        final MethodItem value = stack.pop(), index = stack.pop();
+        assert value != null && index != null;
+        if(index.getType() != PrimitiveType.INTEGER){
+            BytecodeInterpreter.setError(instruction, "Index must be of type " + PrimitiveType.INTEGER + " not " + index.getType());
+            return;
+        }
+        final MethodItem arrayref = stack.pop();
+        assert arrayref != null;
+        if(!(arrayref instanceof ArrayRefItem)){
+            BytecodeInterpreter.setError(instruction, "Arrayref required");
+            return;
+        }
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode());
+        if(type != arrayref.getType()){
+            BytecodeInterpreter.setError(instruction, "Expected type " + arrayref.getType() + ", got " + type);
+            return;
+        }
     }
 
     private static void processStore(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {

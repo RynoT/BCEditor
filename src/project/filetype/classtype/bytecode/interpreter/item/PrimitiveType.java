@@ -31,15 +31,18 @@ public enum PrimitiveType {
 
     public static PrimitiveType get(final char c) {
         switch(c) {
-            case 'i':
+            case 'i': // int
+            case 'b': // byte/boolean
+            case 'c': // char
+            case 's': // short
                 return PrimitiveType.INTEGER;
-            case 'f':
+            case 'f': // float
                 return PrimitiveType.FLOAT;
-            case 'l':
+            case 'l': // long
                 return PrimitiveType.LONG;
-            case 'd':
+            case 'd': // double
                 return PrimitiveType.DOUBLE;
-            case 'a':
+            case 'a': // object
                 return PrimitiveType.OBJECT;
         }
         return null;
