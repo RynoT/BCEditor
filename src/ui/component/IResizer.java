@@ -1,5 +1,6 @@
 package ui.component;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -52,7 +53,7 @@ public class IResizer extends IComponent implements ComponentListener {
         super.setMinimumSize(dimension);
     }
 
-    public int getResizerSize(){
+    public int getResizerSize() {
         return this.detailed ? IResizer.RESIZER_SIZE_DETAILED : IResizer.RESIZER_SIZE_NORMAL;
     }
 
@@ -60,7 +61,7 @@ public class IResizer extends IComponent implements ComponentListener {
     protected void paintComponent(final Graphics g) {
         super.paintComponent(g);
 
-        if(this.detailed){
+        if(this.detailed) {
             g.setColor(IResizer.RESIZER_DETAILED_DOT_COLOR);
 
             if(this.orientation.isHorizontal()) {
@@ -83,12 +84,12 @@ public class IResizer extends IComponent implements ComponentListener {
 
     @Override
     public void componentResized(final ComponentEvent e) {
-        if(this.comp1 == null || e.getComponent() != this.parent){
+        if(this.comp1 == null || e.getComponent() != this.parent) {
             return;
         }
         final boolean horizontal = this.orientation.isHorizontal();
         final int value = horizontal ? this.comp1.getWidth() : this.comp1.getHeight();
-        if(value < IResizer.COMPONENT_MIN_SIZE){
+        if(value < IResizer.COMPONENT_MIN_SIZE) {
             final int max = (horizontal ? this.parent.getWidth() : this.parent.getHeight()) - IResizer.COMPONENT_MIN_SIZE;
             final Dimension current = this.comp2.getPreferredSize();
             this.comp2.setPreferredSize(new Dimension(horizontal ? max : current.width, horizontal ? current.height : max));
@@ -130,22 +131,22 @@ public class IResizer extends IComponent implements ComponentListener {
                 this.pressY = e.getYOnScreen();
             }
             if(IResizer.this.orientation == IOrientation.SOUTH
-                    || IResizer.this.orientation == IOrientation.EAST){
+                    || IResizer.this.orientation == IOrientation.EAST) {
                 offset = -offset;
             }
             final Component comp1 = IResizer.this.comp1, comp2 = IResizer.this.comp2;
             final Dimension dim2 = comp2.getPreferredSize();
 
             int newSize;
-            if(horizontal){
+            if(horizontal) {
                 newSize = dim2.width + offset;
             } else {
                 newSize = dim2.height + offset;
             }
-            if(comp1 != null && (horizontal ? comp1.getWidth() : comp1.getHeight()) - offset < IResizer.COMPONENT_MIN_SIZE){
+            if(comp1 != null && (horizontal ? comp1.getWidth() : comp1.getHeight()) - offset < IResizer.COMPONENT_MIN_SIZE) {
                 newSize = (horizontal ? IResizer.this.parent.getWidth()
                         : IResizer.this.parent.getHeight()) - IResizer.COMPONENT_MIN_SIZE;
-            } else if(newSize < IResizer.COMPONENT_MIN_SIZE + IResizer.this.getResizerSize()){
+            } else if(newSize < IResizer.COMPONENT_MIN_SIZE + IResizer.this.getResizerSize()) {
                 newSize = IResizer.COMPONENT_MIN_SIZE + IResizer.this.getResizerSize();
             }
             comp2.setPreferredSize(new Dimension(horizontal ? newSize : dim2.width, horizontal ? dim2.height : newSize));

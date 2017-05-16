@@ -211,6 +211,19 @@ public class BytecodeInterpreter {
                 case _dreturn:
                     BytecodeInterpreter.processReturn(instruction, stack);
                     break;
+                case _ret:
+                    if(instruction.getOperandCount() == 0){
+                        BytecodeInterpreter.setError(instruction, "Index operand required");
+                    }
+                    break;
+
+                // Goto mnemonics
+                case _goto:
+                case _goto_w:
+                    if(instruction.getOperandCount() == 0){
+                        BytecodeInterpreter.setError(instruction, "Branch operand required");
+                    }
+                    break;
 
                 // If mnemonics
                 case _ifeq:
@@ -249,6 +262,7 @@ public class BytecodeInterpreter {
                 case _l2f:
                 case _l2i:
                     BytecodeInterpreter.processCast(instruction, stack);
+                    break;
 
                     // Const mnemonics
                 case _aconst_null:
@@ -354,6 +368,14 @@ public class BytecodeInterpreter {
                 case _iastore:
                 case _lastore:
                     BytecodeInterpreter.processArrayStore(instruction, stack);
+                    break;
+
+                case _dcmpg:
+                case _dcmpl:
+                case _lcmp:
+                case _fcmpg:
+                case _fcmpl:
+                    BytecodeInterpreter.processCmp(instruction, stack);
                     break;
 
                 // Math mnemonics
@@ -620,6 +642,33 @@ public class BytecodeInterpreter {
             }
             local.set(item, index);
         }
+    }
+
+    private static void processCmp(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 2){
+            BytecodeInterpreter.setError(instruction, "Value1 and Value2 stack items required");
+            return;
+        }
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode());
+        final MethodItem item1 = stack.pop();
+        if(item1.getType() != type){
+            BytecodeInterpreter.setError(instruction, "Value1 must be of type " + type + ", not " + item1.getType());
+            return;
+        }
+        final MethodItem item2 = stack.pop();
+        if(item2.getType() != type){
+            BytecodeInterpreter.setError(instruction, "Value2 must be of type " + type + ", not " + item2.getType());
+            return;
+        }
+        final String mnemonic = instruction.getOpcode().getMnemonic();
+        String value = item1.getValue() + " ";
+        if(type == PrimitiveType.LONG || mnemonic.charAt(mnemonic.length() - 1) == 'g'){
+            value += "> ";
+        } else {
+            value += "< ";
+        }
+        value += item2.getValue();
+        BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, PrimitiveType.INTEGER));
     }
 
     private static void processReturn(final Instruction instruction, final MethodStack stack) {
