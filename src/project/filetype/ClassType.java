@@ -106,27 +106,27 @@ public class ClassType extends FileType {
     }
 
     public boolean isEnum() {
-        assert (this.isLoaded());
+        assert this.isLoaded();
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_ENUM);
     }
 
     public boolean isFinal() {
-        assert (this.isLoaded());
+        assert this.isLoaded();
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_FINAL);
     }
 
     public boolean isAbstract() {
-        assert (this.isLoaded());
+        assert this.isLoaded();
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_ABSTRACT);
     }
 
     public boolean isInterface() {
-        assert (this.isLoaded());
+        assert this.isLoaded();
         return AccessFlags.containsFlag(this.accessFlags, AccessFlags.ACC_INTERFACE);
     }
 
     public boolean isMainClass() {
-        assert (this.isLoaded());
+        assert this.isLoaded();
         for(final MethodInfo method : this.methods) {
             if(!method.getTagName(this.constantPool).getValue().equals("main")) {
                 continue;

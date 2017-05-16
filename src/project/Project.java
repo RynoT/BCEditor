@@ -72,12 +72,15 @@ public abstract class Project {
                 System.err.println("[Project]     An error occurred when indexing file: " + file.getFullPath());
             }
         }
+        System.out.println("[Project] Indexing complete");
+
+        // We must update the icons for the initial root node since it cannot be collapsed or expanded.
+        // We could update the icons after they're indexed but updating them all afterwards works too.
         System.out.println("[Project]     Updating explorer tiles...");
-        for(final ITileNode node : Canvas.getProjectExplorer().getRootNode()){
-            if(node == null){
+        for(final ITileNode node : Canvas.getProjectExplorer().getRootNode().getChildren()){
+            if(node == null || !(node instanceof IFileNode)){
                 continue;
             }
-            assert (node instanceof IFileNode);
             if(node.isVisible()){
                 // We only have to update the icons which are visible in the explorer
                 ((IFileNode) node).updateIcon();
@@ -85,6 +88,5 @@ public abstract class Project {
             // We need to update the comment of every tile
             ((IFileNode) node).updateComment();
         }
-        System.out.println("[Project] Indexing complete");
     }
 }
