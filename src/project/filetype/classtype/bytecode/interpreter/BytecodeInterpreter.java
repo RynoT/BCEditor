@@ -196,6 +196,26 @@ public class BytecodeInterpreter {
                     BytecodeInterpreter.processReturn(instruction, stack);
                     break;
 
+                // If mnemonics
+                case _ifeq:
+                case _ifge:
+                case _ifgt:
+                case _ifle:
+                case _iflt:
+                case _ifne:
+                case _ifnull:
+                case _ifnonnull:
+                case _if_acmpeq:
+                case _if_acmpne:
+                case _if_icmpeq:
+                case _if_icmpge:
+                case _if_icmpgt:
+                case _if_icmple:
+                case _if_icmplt:
+                case _if_icmpne:
+                    BytecodeInterpreter.processIf(instruction, stack);
+                    break;
+
                 // Const mnemonics
                 case _aconst_null:
                     BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, "null"));
@@ -250,6 +270,16 @@ public class BytecodeInterpreter {
                 case _dload_3:
                     BytecodeInterpreter.processLoad(instruction, local, stack, true);
                     break;
+                case _aaload:
+                case _baload:
+                case _caload:
+                case _faload:
+                case _daload:
+                case _saload:
+                case _iaload:
+                case _laload:
+                    BytecodeInterpreter.processArrayLoad(instruction, stack);
+                    break;
 
                 // Store mnemonics
                 case _astore:
@@ -280,6 +310,16 @@ public class BytecodeInterpreter {
                 case _dstore_2:
                 case _dstore_3:
                     BytecodeInterpreter.processStore(instruction, local, stack, true);
+                    break;
+                case _aastore:
+                case _bastore:
+                case _castore:
+                case _fastore:
+                case _dastore:
+                case _sastore:
+                case _iastore:
+                case _lastore:
+                    BytecodeInterpreter.processArrayStore(instruction, stack);
                     break;
 
                 // Math mnemonics
@@ -324,7 +364,7 @@ public class BytecodeInterpreter {
                     break;
 
                 default:
-                    System.out.println("[BytecodeInterpreter] Unsupported opcode: " + opcode.name().substring(1));
+                    BytecodeInterpreter.setError(instruction, "Unsupported opcode: " + opcode.name().substring(1));
             }
         }
     }
@@ -332,7 +372,7 @@ public class BytecodeInterpreter {
     private static void setError(final Instruction instruction, final String message) {
         instruction.setAttributes(Instruction.ATTRIBUTE_ERROR);
         instruction.setErrorMessage(message);
-        System.out.println("[BytecodeInterpreter] Error: " + message + " (instruction: " + instruction.toString() + ")");
+        System.err.println("[BytecodeInterpreter] Error: " + message + " (instruction: " + instruction.toString() + ")");
     }
 
     private static String getOpcodeIndex(final Opcode opcode) {
@@ -443,6 +483,32 @@ public class BytecodeInterpreter {
         }
     }
 
+    private static void processArrayLoad(final Instruction instruction, final MethodStack stack) {
+        if(stack.getCount() < 2){
+            BytecodeInterpreter.setError(instruction, "Arrayref and index stack items required");
+            return;
+        }
+        final MethodItem index = stack.pop();
+        assert index != null;
+        if(index.getType() != PrimitiveType.INTEGER){
+            BytecodeInterpreter.setError(instruction, "Index must be of type " + PrimitiveType.INTEGER + " not " + index.getType());
+            return;
+        }
+        final MethodItem arrayref = stack.pop();
+        assert arrayref != null;
+        if(!(arrayref instanceof ArrayRefItem)){
+            BytecodeInterpreter.setError(instruction, "Arrayref required");
+            return;
+        }
+        final String value = arrayref.getValue() + "[" + index.getValue() + "]";
+        final PrimitiveType type = PrimitiveType.get(instruction.getOpcode().name().charAt(1));
+        if(type == PrimitiveType.OBJECT) {
+            BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, value));
+        } else {
+            BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, type));
+        }
+    }
+
     private static void processLoad(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
         final int index = BytecodeInterpreter.getIndex(instruction, predefined);
         if(index == -1) {
@@ -467,6 +533,10 @@ public class BytecodeInterpreter {
                 BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, value, type));
             }
         }
+    }
+
+    private static void processArrayStore(final Instruction instruction, final MethodStack stack) {
+
     }
 
     private static void processStore(final Instruction instruction, final MethodLocal local, final MethodStack stack, final boolean predefined) {
@@ -662,6 +732,47 @@ public class BytecodeInterpreter {
         }
     }
 
+    private static void processIf(final Instruction instruction, final MethodStack stack){
+        if(instruction.getOperandCount() == 0) {
+            BytecodeInterpreter.setError(instruction, "Branch byte operand required");
+            return;
+        }
+        final String mnemonic = instruction.getOpcode().getMnemonic();
+        // if mnemonic contains _ (and therefore is comparing two stack variables)
+        final boolean compare = mnemonic.charAt(2) == '_';
+
+        if(stack.getCount() < (compare ? 2 : 1)) {
+            BytecodeInterpreter.setError(instruction, compare ? "Two stack items required to compare" : "Stack item required");
+            return;
+        }
+        final MethodItem value1 = stack.pop();
+        assert value1 != null;
+        if(!compare){
+            // if not ifnull or ifnonnull
+            if(mnemonic.length() == 4){
+                if(!PrimitiveType.isNumber(value1.getType())){
+                    BytecodeInterpreter.setError(instruction, "Stack item must be a number");
+                }
+            } else {
+                if(value1.getType() != PrimitiveType.OBJECT) {
+                    BytecodeInterpreter.setError(instruction, "Stack item must be an object");
+                }
+            }
+        } else {
+            final MethodItem value2 = stack.pop();
+            assert value2 != null;
+            if(mnemonic.charAt(3) == 'a'){
+                if(value1.getType() != PrimitiveType.OBJECT || value2.getType() != PrimitiveType.OBJECT){
+                    BytecodeInterpreter.setError(instruction, "Stack items must both be objects, not " + value1.getType() + " and " + value2.getType());
+                }
+            } else {
+                if(!PrimitiveType.isNumber(value1.getType()) || !PrimitiveType.isNumber(value2.getType())){
+                    BytecodeInterpreter.setError(instruction, "Stack items must both be numbers, not " + value1.getType() + " and " + value2.getType());
+                }
+            }
+        }
+    }
+
     private static void processNewArray(final Instruction instruction, final MethodStack stack, final ConstantPool pool) {
         assert instruction.getOpcode() != Opcode._multianewarray : "This method doesn't support this array type";
         if(instruction.getOperandCount() < 1) {
@@ -678,7 +789,7 @@ public class BytecodeInterpreter {
                 return;
             }
             input = ArrayRefItem.getType(operand);
-            primitive = ArrayRefItem.getPrimitive(operand);
+            primitive = ArrayRefItem.getPrimitiveType(operand);
         } else {
             if(operand <= 0 || operand >= pool.getEntryCount()) {
                 BytecodeInterpreter.setError(instruction, "Invalid ConstantPool index");
@@ -789,32 +900,32 @@ public class BytecodeInterpreter {
             return;
         }
         // Construct method call expression
-        String expression = "";
+        final StringBuilder expression = new StringBuilder();
         if(instruction.getOpcode() == Opcode._invokestatic) {
-            expression += ((TagRef) entry).getTagClass(pool).getContentString(pool);
+            expression.append(((TagRef) entry).getTagClass(pool).getContentString(pool));
         } else {
             assert ref != null;
-            expression += ref.getValue();
+            expression.append(ref.getValue());
         }
-        expression += "." + ((TagRef) entry).getTagNameAndType(pool).getTagName(pool).getValue() + "(";
+        expression.append(".").append(((TagRef) entry).getTagNameAndType(pool).getTagName(pool).getValue()).append("(");
         for(int i = 0; i < parameters.length; i++) {
-            expression += parameters[i].getValue();
+            expression.append(parameters[i].getValue());
             if(i < parameters.length - 1) {
-                expression += ", ";
+                expression.append(", ");
             }
         }
-        expression += ")";
+        expression.append(")");
 
         final String decoded = Descriptor.decode(descriptor), returnType = decoded.substring(decoded.lastIndexOf(')') + 1);
         final int dimensions = BytecodeInterpreter.getDimensionsCount(returnType);
         final PrimitiveType type = PrimitiveType.get(returnType);
         if(dimensions > 0){
-            BytecodeInterpreter.processStackPush(instruction, stack, new ArrayRefItem(instruction, expression, type, dimensions));
+            BytecodeInterpreter.processStackPush(instruction, stack, new ArrayRefItem(instruction, expression.toString(), type, dimensions));
         } else {
             if(type == PrimitiveType.OBJECT) {
-                BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression));
+                BytecodeInterpreter.processStackPush(instruction, stack, new ObjectItem(instruction, expression.toString()));
             } else {
-                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression, type));
+                BytecodeInterpreter.processStackPush(instruction, stack, new NumberItem(instruction, expression.toString(), type));
             }
         }
     }

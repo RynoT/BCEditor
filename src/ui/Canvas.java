@@ -80,8 +80,8 @@ public class Canvas extends JFrame {
     }
 
     public static void setProject(final Project project) {
-        assert (project == null || project.isLoaded());
-        assert (SwingUtilities.isEventDispatchThread());
+        assert project == null || project.isLoaded();
+        assert SwingUtilities.isEventDispatchThread();
 
         final IProjectExplorer explorer = Canvas.getProjectExplorer();
         if(explorer.getProject() != null) {

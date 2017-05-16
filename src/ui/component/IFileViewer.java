@@ -420,17 +420,17 @@ public class IFileViewer extends IComponent {
                     ITabCloseButton.this.repaint();
                 }
             });
-            AssetManager.loadImage(AssetManager.CLOSE_HOVER_ICON, new AsyncEvent<BufferedImage>() {
-                @Override
-                public void onComplete(final BufferedImage item) {
-                    ITabCloseButton.this.hover = item;
-                    ITabCloseButton.this.repaint();
-                }
-            });
             super.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(final MouseEvent e) {
                     ITabCloseButton.this.hovered = true;
+                    AssetManager.loadImage(AssetManager.CLOSE_HOVER_ICON, new AsyncEvent<BufferedImage>() {
+                        @Override
+                        public void onComplete(final BufferedImage item) {
+                            ITabCloseButton.this.hover = item;
+                            ITabCloseButton.this.repaint();
+                        }
+                    });
                     ITabCloseButton.this.repaint();
                 }
 

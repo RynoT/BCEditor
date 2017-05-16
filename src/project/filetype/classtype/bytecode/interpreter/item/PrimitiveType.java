@@ -20,6 +20,11 @@ public enum PrimitiveType {
         return this.stackSize;
     }
 
+    public static boolean isNumber(final PrimitiveType type){
+        return type == PrimitiveType.INTEGER || type == PrimitiveType.FLOAT
+                || type == PrimitiveType.LONG || type == PrimitiveType.DOUBLE;
+    }
+
     public static PrimitiveType get(final Opcode opcode) {
         return PrimitiveType.get(opcode.name().charAt(1));
     }
@@ -41,16 +46,16 @@ public enum PrimitiveType {
     }
 
     public static PrimitiveType get(final String str) {
-        if(str.startsWith("int")) {
+        if(str.equals("int") || str.equals("boolean")) {
             return PrimitiveType.INTEGER;
         }
-        if(str.startsWith("float")) {
+        if(str.equals("float")) {
             return PrimitiveType.FLOAT;
         }
-        if(str.startsWith("long")) {
+        if(str.equals("long")) {
             return PrimitiveType.LONG;
         }
-        if(str.startsWith("double")) {
+        if(str.equals("double")) {
             return PrimitiveType.DOUBLE;
         }
         return PrimitiveType.OBJECT;

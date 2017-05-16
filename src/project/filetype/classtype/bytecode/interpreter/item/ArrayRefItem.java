@@ -38,7 +38,7 @@ public class ArrayRefItem extends ObjectItem {
         return ArrayRefItem.TYPES[type - 4];
     }
 
-    public static PrimitiveType getPrimitive(final int type){
+    public static PrimitiveType getPrimitiveType(final int type){
         assert type >= 4 && type <= 11 : "Invalid type index";
         switch(type){
             case 4:

@@ -28,7 +28,7 @@ public class Async {
     }
 
     public static void shutdown() {
-        assert (!Async.async.shutdown);
+        assert !Async.async.shutdown;
         Async.async.shutdown = true;
         Async.async.single.shutdown();
         Async.async.multi.shutdown();
@@ -65,7 +65,7 @@ public class Async {
     }
 
     private <T> Future<T> launch(final Callable<T> callable, final AsyncType type) {
-        assert (callable != null);
+        assert callable != null;
         switch(type) {
             case SINGLE:
                 return this.single.submit(callable);
@@ -78,7 +78,7 @@ public class Async {
     }
 
     private void launch(final Runnable runnable, final AsyncType type) {
-        assert (runnable != null);
+        assert runnable != null;
         switch(type) {
             case SINGLE:
                 this.single.execute(runnable);

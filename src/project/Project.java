@@ -23,7 +23,7 @@ public abstract class Project {
     protected final Map<String, FileType> files = new HashMap<>();
 
     protected Project(final String path) {
-        assert (new File(path).exists());
+        assert new File(path).exists();
         this.path = path.replaceAll("\\\\", "/");
         if(path.contains(".")) {
             final int idx = this.path.lastIndexOf('/');
